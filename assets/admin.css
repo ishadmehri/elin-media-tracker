@@ -1,0 +1,71 @@
+.mtrk-badge {
+  display: inline-block;
+  border: 0;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: nowrap;
+}
+button.mtrk-badge { cursor: pointer; }
+button.mtrk-badge:hover { filter: brightness(.95); }
+button.mtrk-badge:focus-visible { outline: 2px solid #2271b1; outline-offset: 1px; }
+.mtrk-used { background: #e6f4ea; color: #0a5328; }
+.mtrk-unused { background: #fcebea; color: #8a1f17; }
+.mtrk-none, .mtrk-new { background: #f0f0f1; color: #3c434a; }
+.fixed .column-mtrk { width: 10em; }
+
+.mtrk-dialog {
+  width: min(640px, calc(100vw - 32px));
+  max-height: 80vh;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+  color: #1d2327;
+}
+.mtrk-dialog::backdrop { background: rgba(0, 0, 0, .5); }
+.mtrk-dialog-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #dcdcde;
+}
+.mtrk-dialog-bar h2 { margin: 0; font-size: 16px; }
+.mtrk-close {
+  border: 0;
+  background: none;
+  font-size: 24px;
+  line-height: 1;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: #3c434a;
+}
+.mtrk-body { padding: 16px; }
+.mtrk-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.mtrk-head img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
+.mtrk-list { margin: 0; }
+.mtrk-list li { margin: 0; padding: 10px 0; border-bottom: 1px solid #f0f0f1; }
+.mtrk-list li:last-child { border-bottom: 0; }
+.mtrk-meta, .mtrk-note, .mtrk-how { color: #646970; font-size: 12px; }
+.mtrk-note { margin-top: 16px; }
+
+.mtrk-page progress { width: 100%; max-width: 480px; height: 16px; }
+.mtrk-cards { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+.mtrk-card {
+  min-width: 140px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #1d2327;
+}
+.mtrk-card strong { display: block; font-size: 22px; line-height: 1.4; }
+.mtrk-card:hover { border-color: #2271b1; }
+.mtrk-card-unused strong { color: #8a1f17; }

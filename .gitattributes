@@ -1,0 +1,5 @@
+* text=auto
+
+# Keep the dev check out of `git archive` release zips.
+/tests export-ignore
+/.gitattributes export-ignore
