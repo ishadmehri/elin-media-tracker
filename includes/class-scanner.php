@@ -185,6 +185,7 @@ final class Scanner
     /** Works through batches for BUDGET seconds. Batches are idempotent (INSERT IGNORE), so a retried request is harmless. */
     public static function run_step(): array
     {
+        global $wpdb;
         $job = self::job();
         if (!$job) {
             return ['done' => true];
@@ -212,6 +213,10 @@ final class Scanner
             } while ($job['i'] < count($job['steps']) && microtime(true) < $deadline);
 
             if ($job['i'] >= count($job['steps'])) {
+                $wpdb->query($wpdb->prepare( // "keep" marks survive rescans (and protect twins via share())
+                    'INSERT IGNORE INTO ' . self::table() . " (attachment_id, source_type, source_id, source_key, how) SELECT post_id, 'keep', 0, '', 'id' FROM $wpdb->postmeta WHERE meta_key = %s",
+                    Cleanup::KEEP
+                ));
                 $scanner->share();
                 update_option(self::LAST, [
                     'time' => time(),

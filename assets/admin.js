@@ -18,10 +18,14 @@
     return json.data;
   };
 
-  // Usage modal: a native <dialog>, so focus trap, Esc and the backdrop come from the browser.
+  const fmt = (s, ...a) => s.replace(/%(\d)\$s/g, (_, i) => a[i - 1]).replace('%s', a[0]);
+  const mb = (b) => (b / 1048576).toFixed(1);
+
+  // One modal for "where is it used" (media library) and "preview" (plugin page): a native <dialog>, so focus
+  // trap, Esc and the backdrop come from the browser.
   let dialog;
   let seq = 0;
-  const openUsage = async (id) => {
+  const openDialog = async (action, id) => {
     if (!dialog) {
       dialog = document.createElement('dialog');
       dialog.className = 'mtrk-dialog';
@@ -47,24 +51,206 @@
       document.body.append(dialog);
     }
     const content = dialog.querySelector('.mtrk-body');
+    const title = dialog.querySelector('#mtrk-dialog-title');
     const mine = ++seq;
+    title.textContent = action === 'mtrk_preview' ? t.preview : t.title;
+    dialog.classList.toggle('mtrk-dialog-wide', action === 'mtrk_preview');
     content.textContent = t.loading;
     if (!dialog.open) dialog.showModal();
     try {
-      const data = await post('mtrk_usage', { id });
-      if (mine === seq) content.innerHTML = data.html;
+      const data = await post(action, { id });
+      if (mine !== seq) return;
+      content.innerHTML = data.html;
+      if (data.title) title.textContent = data.title;
     } catch (e) {
       if (mine === seq) content.textContent = e.message;
     }
   };
 
+  // Actions on media (plugin page): quarantine, restore, keep, unkeep, delete. The page reloads with a notice.
+  const act = async (name, ids, btn) => {
+    if (!ids.length) return;
+    if (name === 'delete' && !window.confirm(fmt(t.confirmDelete, ids.length))) return;
+    if (btn) btn.disabled = true;
+    try {
+      const r = await post('mtrk_act', { act: name, ids });
+      const url = new URL(window.location.href);
+      url.searchParams.delete('paged'); // the current page may be gone now
+      url.searchParams.set('done', name);
+      url.searchParams.set('n', r.done.length);
+      url.searchParams.set('b', r.bytes);
+      window.location.href = url.toString();
+    } catch (e) {
+      window.alert(e.message);
+      if (btn) btn.disabled = false;
+    }
+  };
+
+  const picked = () => [...document.querySelectorAll('.mtrk-pick:checked')].map((b) => b.value);
+  const syncBulk = () => {
+    const ids = picked();
+    document.querySelectorAll('.mtrk-bulk[data-scope]').forEach((bar) => {
+      bar.querySelectorAll('[data-act]').forEach((b) => { b.disabled = !ids.length; });
+      bar.querySelector('.mtrk-count').textContent = ids.length ? fmt(t.selected, ids.length) : '';
+    });
+  };
+
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.mtrk-open');
-    if (!btn) return;
-    e.preventDefault();
-    e.stopPropagation(); // keep the media grid from treating it as a selection click
-    openUsage(btn.dataset.id);
+    const usage = e.target.closest('.mtrk-open');
+    const preview = e.target.closest('.mtrk-preview');
+    const action = e.target.closest('[data-act]');
+    if (usage || preview) {
+      e.preventDefault();
+      e.stopPropagation(); // keep the media grid from treating it as a selection click
+      openDialog(usage ? 'mtrk_usage' : 'mtrk_preview', (usage || preview).dataset.id);
+    } else if (action && (action.dataset.id || action.closest('.mtrk-bulk[data-scope]'))) {
+      e.preventDefault();
+      act(action.dataset.act, action.dataset.id ? [action.dataset.id] : picked(), action);
+    }
   }, true);
+
+  document.addEventListener('change', (e) => {
+    if (e.target.matches('.mtrk-bulk[data-scope] .mtrk-all')) {
+      document.querySelectorAll('.mtrk-pick').forEach((b) => { b.checked = e.target.checked; });
+    }
+    if (e.target.matches('.mtrk-pick, .mtrk-all')) syncBulk();
+  });
+
+  // Quarantine tab: do requests for missing upload files reach WordPress here? (nginx rules or a CDN can stop them)
+  const probe = document.querySelector('.mtrk-probe[data-url]');
+  if (probe) {
+    fetch(probe.dataset.url, { cache: 'no-store', credentials: 'omit' })
+      .then((r) => r.headers.get('X-Mtrk') === 'ok')
+      .catch(() => false)
+      .then((ok) => {
+        probe.textContent = ok ? t.probeOk : t.probeFail;
+        probe.classList.add(ok ? 'notice-success' : 'notice-warning');
+      });
+  }
+
+  // Orphan files: walk the media folders in batches, list what no attachment owns, delete the checked ones.
+  const orphans = document.getElementById('mtrk-orphans');
+  if (orphans) {
+    const status = orphans.querySelector('.mtrk-orphans-status');
+    const result = orphans.querySelector('.mtrk-orphans-result');
+    const tbody = orphans.querySelector('tbody');
+    const checkBtn = orphans.querySelector('.mtrk-orphans-check');
+    const delBtn = orphans.querySelector('.mtrk-orphans-delete');
+    const all = orphans.querySelector('.mtrk-orphans-all');
+    const more = orphans.querySelector('.mtrk-orphans-more');
+    const count = orphans.querySelector('.mtrk-count');
+    const isImage = /\.(jpe?g|png|gif|webp|avif|svg)$/i;
+    const PAGE = 300;
+    let files = [];
+    let shown = 0;
+
+    const cell = (child) => {
+      const td = document.createElement('td');
+      td.append(child);
+      return td;
+    };
+    const text = (s, tag = 'span') => {
+      const el = document.createElement(tag);
+      el.textContent = s;
+      return el;
+    };
+    const row = (f) => {
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.className = 'mtrk-orphan';
+      box.value = f.path;
+      box.disabled = f.kept;
+      box.setAttribute('aria-label', f.path);
+      const th = document.createElement('th');
+      th.className = 'check-column';
+      th.scope = 'row';
+      th.append(box);
+      const name = document.createElement('div');
+      name.className = 'mtrk-qmedia';
+      if (isImage.test(f.path)) {
+        const img = document.createElement('img');
+        img.src = `${orphans.dataset.base}/${f.path.split('/').map(encodeURIComponent).join('/')}`;
+        img.alt = '';
+        img.loading = 'lazy';
+        name.append(img);
+      }
+      const path = text(f.path, 'bdi');
+      path.dir = 'ltr';
+      name.append(path);
+      const kind = f.kept ? t.orphanKept : (f.type === 'size' ? fmt(t.orphanSize, f.owner) : t.orphanFile);
+      const tr = document.createElement('tr');
+      tr.append(th, cell(name), cell(text(kind)), cell(text(`${mb(f.bytes)} ${t.mb}`)));
+      return tr;
+    };
+    const renderMore = () => {
+      files.slice(shown, shown + PAGE).forEach((f) => tbody.append(row(f)));
+      shown = Math.min(files.length, shown + PAGE);
+      more.hidden = shown >= files.length;
+      more.textContent = `${t.more} (${files.length - shown})`;
+    };
+    const selected = () => [...tbody.querySelectorAll('.mtrk-orphan:checked')].map((b) => b.value);
+    const sync = () => {
+      const n = selected().length;
+      delBtn.disabled = !n;
+      count.textContent = n ? fmt(t.selected, n) : '';
+    };
+
+    const check = async () => {
+      checkBtn.disabled = true;
+      files = [];
+      try {
+        let cursor = 0;
+        let folders = 0;
+        do {
+          const r = await post('mtrk_orphans', { do: 'step', cursor });
+          files = files.concat(r.files);
+          folders = Math.min(r.total, folders + 20);
+          status.textContent = fmt(t.orphansChecking, folders);
+          cursor = r.next;
+        } while (cursor !== null);
+        files.sort((a, b) => (a.kept - b.kept) || (b.bytes - a.bytes)); // deletable and biggest first
+        tbody.replaceChildren();
+        shown = 0;
+        renderMore();
+        all.checked = false;
+        sync();
+        result.hidden = !files.length;
+        const free = files.filter((f) => !f.kept);
+        status.textContent = files.length ? fmt(t.orphansFound, free.length, mb(free.reduce((n, f) => n + f.bytes, 0))) : t.orphansNone;
+      } catch (e) {
+        status.textContent = e.message;
+      }
+      checkBtn.disabled = false;
+    };
+
+    checkBtn.addEventListener('click', check);
+    more.addEventListener('click', renderMore);
+    orphans.addEventListener('change', (e) => {
+      if (e.target === all) {
+        while (all.checked && shown < files.length) renderMore(); // "all" means all, not only the rows drawn
+        tbody.querySelectorAll('.mtrk-orphan:not(:disabled)').forEach((b) => { b.checked = all.checked; });
+      }
+      sync();
+    });
+    delBtn.addEventListener('click', async () => {
+      const paths = selected();
+      if (!window.confirm(fmt(t.confirmDelete, paths.length))) return;
+      delBtn.disabled = true;
+      let removed = 0;
+      let bytes = 0;
+      try {
+        for (let i = 0; i < paths.length; i += 200) {
+          const r = await post('mtrk_orphans', { do: 'delete', paths: paths.slice(i, i + 200) });
+          removed += r.files;
+          bytes += r.bytes;
+        }
+        await check();
+        status.textContent = fmt(t.sizesDeleted, removed, mb(bytes));
+      } catch (e) {
+        status.textContent = e.message;
+      }
+    });
+  }
 
   // Unregistered sizes: walk every attachment in batches to report, then again to delete the checked sizes.
   const sizes = document.getElementById('mtrk-sizes');
@@ -75,8 +261,6 @@
     const checkBtn = sizes.querySelector('.mtrk-sizes-check');
     const cleanBtn = sizes.querySelector('.mtrk-sizes-clean');
     const all = sizes.querySelector('.mtrk-sizes-all');
-    const mb = (b) => (b / 1048576).toFixed(1);
-    const fmt = (s, ...a) => s.replace(/%(\d)\$s/g, (_, i) => a[i - 1]).replace('%s', a[0]);
     const sum = (list, key) => list.reduce((n, s) => n + s[key], 0);
     let report = {};
 

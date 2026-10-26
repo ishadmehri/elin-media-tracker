@@ -80,7 +80,7 @@ final class Sizes
                     $o['files']++;
                     $o['bytes'] += (int) filesize($path);
                     if ($delete) {
-                        self::unlink($path);
+                        array_map('wp_delete_file', Cleanup::copies($path)); // with its WebP/AVIF copies
                     }
                 }
                 unset($meta['sizes'][$name]);
@@ -97,16 +97,5 @@ final class Sizes
     private static function active(string $name, array $registered): bool
     {
         return in_array($name, $registered, true) || strpos($name, 'site_icon') === 0;
-    }
-
-    /** The file plus the WebP/AVIF copies optimization plugins put next to it. */
-    private static function unlink(string $path): void
-    {
-        $bare = preg_replace('/\.[^.\/]+$/', '', $path);
-        foreach ([$path, "$path.webp", "$path.avif", "$bare.webp", "$bare.avif"] as $file) {
-            if (is_file($file)) {
-                wp_delete_file($file);
-            }
-        }
     }
 }

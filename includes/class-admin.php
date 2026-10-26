@@ -4,17 +4,16 @@ namespace MediaTracker;
 
 defined('ABSPATH') || exit;
 
-/** Scan page, AJAX endpoints, and the usage column/filter/modal in the media library. */
+/** Media library integration (usage column, filter, modal) and the assets shared with the plugin page. */
 final class Admin
 {
     public static function init(): void
     {
+        Page::init();
         add_action('admin_menu', [self::class, 'menu']);
         add_action('admin_enqueue_scripts', [self::class, 'assets']);
         add_action('wp_enqueue_media', [self::class, 'enqueue']);
-        add_action('wp_ajax_mtrk_scan', [self::class, 'ajax_scan']);
         add_action('wp_ajax_mtrk_usage', [self::class, 'ajax_usage']);
-        add_action('wp_ajax_mtrk_sizes', [self::class, 'ajax_sizes']);
         add_filter('manage_media_columns', [self::class, 'column']);
         add_action('manage_media_custom_column', [self::class, 'cell'], 10, 2);
         add_action('restrict_manage_posts', [self::class, 'filter_select']);
@@ -25,7 +24,7 @@ final class Admin
 
     public static function menu(): void
     {
-        add_media_page(__('ردیاب رسانه', 'media-tracker'), __('ردیاب رسانه', 'media-tracker'), Scanner::CAP, 'media-tracker', [self::class, 'page']);
+        add_media_page(__('ردیاب رسانه', 'media-tracker'), __('ردیاب رسانه', 'media-tracker'), Scanner::CAP, 'media-tracker', [Page::class, 'render']);
     }
 
     public static function assets(string $hook): void
@@ -62,128 +61,28 @@ final class Admin
                 'sizesConfirm' => __('%1$s فایل (%2$s مگابایت) برای همیشه حذف می‌شود. ادامه می‌دهید؟', 'media-tracker'),
                 /* translators: 1: number of files, 2: size in MB */
                 'sizesDeleted' => __('%1$s فایل حذف شد (%2$s مگابایت).', 'media-tracker'),
+                'preview' => __('پیش‌نمایش', 'media-tracker'),
+                /* translators: %s: number of items */
+                'selected' => __('%s مورد انتخاب شده', 'media-tracker'),
+                /* translators: %s: number of media items */
+                'confirmDelete' => __('%s رسانه و همه‌ی فایل‌هایش برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست. ادامه می‌دهید؟', 'media-tracker'),
+                /* translators: %s: number of files */
+                'orphansChecking' => __('در حال بررسی… %s پوشه', 'media-tracker'),
+                'orphansNone' => __('فایل اضافه‌ای پیدا نشد.', 'media-tracker'),
+                /* translators: 1: number of files, 2: size in MB */
+                'orphansFound' => __('%1$s فایل، %2$s مگابایت قابل حذف.', 'media-tracker'),
+                /* translators: %s: attachment id */
+                'orphanSize' => __('سایز اضافه‌ی پیوست #%s', 'media-tracker'),
+                'orphanFile' => __('خارج از کتابخانه', 'media-tracker'),
+                'orphanKept' => __('آدرسش جایی آمده؛ نگه داشته می‌شود', 'media-tracker'),
+                'more' => __('نمایش بیشتر', 'media-tracker'),
+                'probeOk' => __('درخواست فایل‌های قرنطینه به وردپرس می‌رسد: به بازدیدکننده تحویل داده می‌شوند و ثبت می‌شوند.', 'media-tracker'),
+                'probeFail' => __('درخواست فایل‌های ناموجود به وردپرس نمی‌رسد (احتمالاً یک قانون nginx/LiteSpeed برای فایل‌های تصویری، یا CDN). فایل قرنطینه‌شده برای بازدیدکننده خطای ۴۰۴ می‌دهد و بازدیدی ثبت نمی‌شود. با این وضعیت، قرنطینه فقط یک «حذف برگشت‌پذیر» است.', 'media-tracker'),
             ],
         ]) . ';', 'before');
     }
 
-    // ---- scan page -------------------------------------------------------------------------------------------
-
-    public static function page(): void
-    {
-        $last = Scanner::last();
-        $summary = Scanner::summary();
-        $job = Scanner::job();
-        $list = admin_url('upload.php?mode=list&mtrk_usage=');
-        ?>
-        <div class="wrap mtrk-page">
-            <h1><?php esc_html_e('ردیاب رسانه', 'media-tracker'); ?></h1>
-
-            <?php if ($last) : ?>
-                <p>
-                    <?php
-                    printf(
-                        /* translators: 1: date, 2: scope, 3: duration */
-                        esc_html__('آخرین اسکن: %1$s — %2$s — مدت: %3$s', 'media-tracker'),
-                        esc_html(wp_date(get_option('date_format') . ' H:i', $last['time'])),
-                        esc_html(self::scope($last)),
-                        esc_html(human_time_diff(0, max(1, $last['secs'])))
-                    );
-                    ?>
-                </p>
-                <div class="mtrk-cards">
-                    <a class="mtrk-card" href="<?php echo esc_url($list . 'used'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['used'])); ?></strong><?php esc_html_e('استفاده‌شده', 'media-tracker'); ?></a>
-                    <a class="mtrk-card mtrk-card-unused" href="<?php echo esc_url($list . 'unused'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['unused'])); ?></strong><?php esc_html_e('بدون ارجاع', 'media-tracker'); ?></a>
-                    <a class="mtrk-card" href="<?php echo esc_url($list . 'new'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['new'])); ?></strong><?php esc_html_e('جدید، بدون ارجاع', 'media-tracker'); ?></a>
-                </div>
-                <p class="description"><?php esc_html_e('«بدون ارجاع» یعنی در محدوده‌ی اسکن ارجاعی پیدا نشد. بعد از اسکن، تغییرات نوشته‌ها، متاها، دسته‌ها، کاربران و تنظیمات زنده ثبت می‌شود؛ جدول‌های افزونه‌ها و فایل‌های کد فقط با اسکن کامل به‌روز می‌شوند. استفاده از بیرون سایت (ایمیل، شبکه‌های اجتماعی، سایت‌های دیگر) قابل تشخیص نیست؛ قبل از حذف، بکاپ بگیرید.', 'media-tracker'); ?></p>
-            <?php elseif (!$job) : ?>
-                <p><?php esc_html_e('هنوز اسکنی انجام نشده است.', 'media-tracker'); ?></p>
-            <?php endif; ?>
-
-            <h2><?php esc_html_e('اسکن جدید', 'media-tracker'); ?></h2>
-            <form id="mtrk-form" <?php echo $job ? 'hidden' : ''; ?>>
-                <fieldset>
-                    <legend class="screen-reader-text"><?php esc_html_e('محدوده‌ی اسکن', 'media-tracker'); ?></legend>
-                    <p>
-                        <label><input type="radio" name="code" value="0" checked> <strong><?php esc_html_e('فقط دیتابیس', 'media-tracker'); ?></strong></label><br>
-                        <span class="description"><?php esc_html_e('سریع. نوشته‌ها و برگه‌ها، متاها (المنتور، ووکامرس، ACF)، تنظیمات و ابزارک‌ها، دسته‌ها، کاربران و دیدگاه‌ها.', 'media-tracker'); ?></span>
-                    </p>
-                    <p>
-                        <label><input type="radio" name="code" value="1"> <strong><?php esc_html_e('دیتابیس + سورس کد', 'media-tracker'); ?></strong></label><br>
-                        <span class="description"><?php esc_html_e('به‌علاوه‌ی فایل‌های قالب فعال، افزونه‌های فعال، mu-plugins و فایل‌های CSS/JS داخل پوشه‌ی uploads (مثل CSS ساخته‌شده‌ی المنتور).', 'media-tracker'); ?></span>
-                    </p>
-                    <p>
-                        <label><input type="checkbox" name="tables" value="1" checked> <?php esc_html_e('جدول‌های اختصاصی افزونه‌ها هم بررسی شوند', 'media-tracker'); ?></label><br>
-                        <span class="description"><?php esc_html_e('مثل اسلایدرها و فرم‌سازها. جدول‌های لاگ، سشن و کش کنار گذاشته می‌شوند.', 'media-tracker'); ?></span>
-                    </p>
-                </fieldset>
-                <p class="description"><?php esc_html_e('نتیجه‌ی اسکن قبلی پاک می‌شود. اگر وسط اسکن صفحه را ببندید، دفعه‌ی بعد از همان‌جا ادامه پیدا می‌کند.', 'media-tracker'); ?></p>
-                <?php submit_button(__('شروع اسکن', 'media-tracker'), 'primary', 'submit', false); ?>
-            </form>
-
-            <div id="mtrk-progress" <?php echo $job ? '' : 'hidden'; ?> data-running="<?php echo esc_attr(wp_json_encode($job ? Scanner::progress($job) : null)); ?>">
-                <progress max="100" value="0"></progress>
-                <p class="mtrk-label" aria-live="polite"></p>
-                <button type="button" class="button mtrk-cancel"><?php esc_html_e('توقف اسکن', 'media-tracker'); ?></button>
-                <button type="button" class="button button-primary mtrk-retry" hidden><?php esc_html_e('ادامه', 'media-tracker'); ?></button>
-            </div>
-
-            <h2><?php esc_html_e('سایزهای ثبت‌نشده', 'media-tracker'); ?></h2>
-            <p class="description"><?php esc_html_e('فایل‌هایی که برای سایزهایی ساخته شده‌اند که دیگر هیچ قالب یا افزونه‌ای ثبتشان نکرده (مثلاً سایزهای قالب قبلی). وردپرس دیگر آن‌ها را تحویل نمی‌دهد، ولی تا وقتی تصویر استفاده می‌شود روی دیسک می‌مانند. فایلی که آدرس دقیقش جایی آمده، یا با یک سایز فعال یکی است، نگه داشته می‌شود.', 'media-tracker'); ?></p>
-            <?php if (empty($last['paths'])) : ?>
-                <p><?php esc_html_e('برای این بخش اول یک اسکن کامل اجرا کنید.', 'media-tracker'); ?></p>
-            <?php else : ?>
-                <?php if (!$last['code']) : ?>
-                    <div class="notice notice-warning inline"><p><?php esc_html_e('آخرین اسکن «فقط دیتابیس» بود؛ آدرس‌هایی که مستقیم در کد قالب یا افزونه نوشته شده‌اند بررسی نشده‌اند. قبل از حذف، اسکن «دیتابیس + سورس کد» را اجرا کنید.', 'media-tracker'); ?></p></div>
-                <?php endif; ?>
-                <div id="mtrk-sizes">
-                    <p><button type="button" class="button mtrk-sizes-check"><?php esc_html_e('بررسی سایزها', 'media-tracker'); ?></button></p>
-                    <p class="mtrk-sizes-status" aria-live="polite"></p>
-                    <div class="mtrk-sizes-result" hidden>
-                        <table class="widefat striped mtrk-sizes-table">
-                            <thead><tr>
-                                <td class="check-column"><input type="checkbox" class="mtrk-sizes-all" aria-label="<?php esc_attr_e('انتخاب همه', 'media-tracker'); ?>"></td>
-                                <th scope="col"><?php esc_html_e('سایز', 'media-tracker'); ?></th>
-                                <th scope="col"><?php esc_html_e('ابعاد', 'media-tracker'); ?></th>
-                                <th scope="col"><?php esc_html_e('فایل قابل حذف', 'media-tracker'); ?></th>
-                                <th scope="col"><?php esc_html_e('حجم', 'media-tracker'); ?></th>
-                                <th scope="col"><?php esc_html_e('نگه‌داشته‌شده', 'media-tracker'); ?></th>
-                            </tr></thead>
-                            <tbody></tbody>
-                        </table>
-                        <p class="description"><?php esc_html_e('حذف برگشت‌پذیر نیست؛ قبل از آن بکاپ بگیرید. نسخه‌های WebP/AVIF همان فایل‌ها هم حذف می‌شوند.', 'media-tracker'); ?></p>
-                        <p><button type="button" class="button button-primary mtrk-sizes-clean" disabled><?php esc_html_e('حذف فایل‌های سایزهای انتخاب‌شده', 'media-tracker'); ?></button></p>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </div>
-        <?php
-    }
-
-    private static function scope(array $last): string
-    {
-        $scope = $last['code'] ? __('دیتابیس + سورس کد', 'media-tracker') : __('فقط دیتابیس', 'media-tracker');
-        return $last['tables'] ? $scope . __('، با جدول‌های افزونه‌ها', 'media-tracker') : $scope;
-    }
-
     // ---- ajax ------------------------------------------------------------------------------------------------
-
-    public static function ajax_scan(): void
-    {
-        self::guard();
-        $do = sanitize_key(wp_unslash($_POST['do'] ?? ''));
-        if ($do === 'start') {
-            wp_send_json_success(Scanner::start(!empty($_POST['code']), !empty($_POST['tables'])));
-        }
-        if ($do === 'step') {
-            wp_send_json_success(Scanner::run_step());
-        }
-        if ($do === 'cancel') {
-            Scanner::cancel();
-            wp_send_json_success();
-        }
-        wp_send_json_error(__('درخواست نامعتبر است.', 'media-tracker'), 400);
-    }
 
     public static function ajax_usage(): void
     {
@@ -195,21 +94,7 @@ final class Admin
         wp_send_json_success(['html' => self::usage_html($id)]);
     }
 
-    public static function ajax_sizes(): void
-    {
-        self::guard();
-        if (empty(Scanner::last()['paths'])) {
-            wp_send_json_error(__('اول یک اسکن کامل اجرا کنید.', 'media-tracker'), 409);
-        }
-        $do = sanitize_key(wp_unslash($_POST['do'] ?? ''));
-        $names = array_map('sanitize_text_field', (array) wp_unslash($_POST['names'] ?? []));
-        if ($do === 'clean' && !$names) {
-            wp_send_json_error(__('هیچ سایزی انتخاب نشده است.', 'media-tracker'), 400);
-        }
-        wp_send_json_success(Sizes::step(absint($_POST['cursor'] ?? 0), $names, $do === 'clean'));
-    }
-
-    private static function guard(): void
+    public static function guard(): void
     {
         if (!check_ajax_referer('mtrk', false, false)) {
             wp_send_json_error(__('نشست منقضی شده است؛ صفحه را دوباره بارگذاری کنید.', 'media-tracker'), 403);
@@ -241,6 +126,12 @@ final class Admin
                 <?php echo self::badge($id, count($groups), false); // phpcs:ignore WordPress.Security.EscapeOutput ?>
             </div>
         </div>
+        <?php if (get_post_meta($id, Cleanup::META, true)) : ?>
+            <p>
+                <?php esc_html_e('این رسانه در قرنطینه است: فایل‌هایش از مسیر اصلی برداشته شده‌اند و درخواست‌ها برایشان ثبت می‌شود.', 'media-tracker'); ?>
+                <a href="<?php echo esc_url(admin_url('upload.php?page=media-tracker&tab=quarantine')); ?>"><?php esc_html_e('قرنطینه', 'media-tracker'); ?></a>
+            </p>
+        <?php endif; ?>
         <?php if ($status === 'none') : ?>
             <p>
                 <?php esc_html_e('هنوز اسکنی انجام نشده است.', 'media-tracker'); ?>
@@ -267,7 +158,7 @@ final class Admin
                     /* translators: 1: date, 2: scope */
                     esc_html__('آخرین اسکن کامل: %1$s — %2$s. تغییرات بعد از آن در نوشته‌ها، متاها، دسته‌ها، کاربران و تنظیمات زنده ثبت می‌شود؛ جدول‌های افزونه‌ها و کد فقط با اسکن کامل. استفاده از بیرون سایت (ایمیل، شبکه‌های اجتماعی، سایت‌های دیگر) قابل تشخیص نیست.', 'media-tracker'),
                     esc_html(wp_date(get_option('date_format') . ' H:i', $last['time'])),
-                    esc_html(self::scope($last))
+                    esc_html(Page::scope($last))
                 );
                 ?>
             </p>
@@ -390,10 +281,11 @@ final class Admin
         return $label . ' <span class="mtrk-how">(' . esc_html($how) . ')</span>';
     }
 
-    private static function badge(int $id, int $count, bool $button = true): string
+    public static function badge(int $id, int $count, bool $button = true): string
     {
-        $status = Scanner::status($id, $count);
+        $status = get_post_meta($id, Cleanup::META, true) ? 'quarantine' : Scanner::status($id, $count);
         $text = [
+            'quarantine' => __('در قرنطینه', 'media-tracker'),
             'none' => __('اسکن نشده', 'media-tracker'),
             /* translators: %s: number of places */
             'used' => sprintf(__('%s محل استفاده', 'media-tracker'), number_format_i18n($count)),
