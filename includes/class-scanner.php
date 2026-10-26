@@ -407,7 +407,8 @@ final class Scanner
         $refs = [];
         foreach ($rows as $r) {
             foreach ($cols as $c) {
-                $this->add($refs, $this->in_text((string) $r[$c]), $type, (int) ($r['sid'] ?? $r['pk'] ?? 0), $key ?? "$table.$c");
+                $v = (string) $r[$c];
+                $this->add($refs, $this->in_text($v) + $this->only($this->in_serialized($v)), $type, (int) ($r['sid'] ?? $r['pk'] ?? 0), $key ?? "$table.$c");
             }
         }
         $this->save($refs);
@@ -482,6 +483,9 @@ final class Scanner
     /** Upload paths in any text: URLs (absolute, relative, CDN), JSON-escaped, percent-encoded or \u-escaped. */
     private function in_text(string $text): array
     {
+        if (stripos($text, '%2F') !== false) { // URL-encoded storage, e.g. Elementor dynamic tag settings
+            $text .= "\n" . urldecode($text);
+        }
         if (strpos($text, '\/') !== false) {
             $text = str_replace('\/', '/', $text);
         }
@@ -524,6 +528,25 @@ final class Scanner
                 $ids = array_merge($ids, explode(',', $list));
             }
         }
+        return $this->only($ids) + $this->in_acf_blocks($c);
+    }
+
+    /** ACF blocks keep field values in the block comment: {"data":{"img":12,"_img":"field_abc"}} or {"data":{"field_abc":12}}. */
+    private function in_acf_blocks(string $c): array
+    {
+        if (!$this->acf || strpos($c, '<!-- wp:acf/') === false || !preg_match_all('~<!-- wp:acf/[\w-]+ (\{.*?\}) /?-->~s', $c, $m)) {
+            return [];
+        }
+        $ids = [];
+        foreach ($m[1] as $json) {
+            $data = json_decode($json, true)['data'] ?? [];
+            foreach (is_array($data) ? $data : [] as $k => $v) {
+                $field = strpos((string) $k, 'field_') === 0 ? $k : ($data["_$k"] ?? '');
+                if (is_string($field) && isset($this->acf[$field])) {
+                    $ids = array_merge($ids, array_filter((array) $v, 'is_scalar'));
+                }
+            }
+        }
         return $this->only($ids);
     }
 
@@ -534,8 +557,14 @@ final class Scanner
             $ids[] = $v;
         } elseif ($key === '_product_image_gallery') {
             $ids = array_merge($ids, explode(',', $v));
-        } elseif ($key === '_elementor_data' && preg_match_all('/"id":(\d+)/', $v, $m)) {
-            $ids = array_merge($ids, $m[1]); // element ids are quoted strings; bare numbers are media
+        } elseif ($key === '_elementor_data') {
+            if (strpos($v, 'elementor-tag') !== false) {
+                $v .= urldecode($v); // dynamic tag settings (fallback images) are URL-encoded JSON
+            }
+            // Classic controls: {"url":..,"id":12} (element ids are quoted strings). V4 atomic: image-attachment-id.
+            if (preg_match_all('/"id":(\d+)|"image-attachment-id","value":(\d+)/', $v, $m)) {
+                $ids = array_merge($ids, $m[1], $m[2]);
+            }
         }
         return $this->only($ids);
     }

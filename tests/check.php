@@ -10,6 +10,8 @@ use MediaTracker\Scanner;
 
 defined('ABSPATH') || exit;
 
+require __DIR__ . '/helpers.php';
+
 global $wpdb;
 
 $fail = 0;
@@ -26,8 +28,6 @@ foreach ([
 ] as $in => $want) {
     $is(Scanner::key($in) === $want, "key($in)");
 }
-
-wp_set_current_user((int) (get_users(['role' => 'administrator', 'number' => 1, 'fields' => 'ID'])[0] ?? 0));
 
 $posts = [];
 $media = function (string $file) use (&$posts): int {
@@ -105,17 +105,8 @@ $wpdb->query("CREATE TABLE `$table` (id int unsigned NOT NULL AUTO_INCREMENT PRI
 $wpdb->insert($table, ['data' => serialize(['bg' => "$base/2026/10/mtrk-l.jpg"])]);
 
 try {
-    $started = microtime(true);
-    Scanner::start(true, true);
-    do {
-        $p = Scanner::run_step();
-    } while (empty($p['done']));
-    printf("scan took %.1fs\n", microtime(true) - $started);
-
-    $counts = Scanner::counts(array_keys($expect));
-    foreach ($expect as $id => [$used, $what]) {
-        $is(Scanner::status($id, $counts[$id] ?? 0) === ($used ? 'used' : 'unused'), ($used ? 'used:   ' : 'unused: ') . $what);
-    }
+    mtrk_fixture_scan();
+    mtrk_fixture_assert($expect, $fail);
     $sources = array_column(Scanner::refs($a), 'source_id');
     $is($sources === [(string) $p1], 'refs point at the right post');
 } finally {
