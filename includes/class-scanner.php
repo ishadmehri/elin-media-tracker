@@ -25,6 +25,10 @@ final class Scanner
     private const CODE_EXT = '/\.(php|css|js|json|html?|twig|scss|less)$/i';
     private const SKIP_DIRS = ['node_modules', 'vendor', '.git'];
     private const ACF_TYPES = ['image', 'file', 'gallery'];
+    private const MEDIA_TYPES = [ // Meta Box, JetEngine: field types whose value is media
+        'image', 'image_advanced', 'image_upload', 'plupload_image', 'thickbox_image', 'single_image',
+        'file', 'file_advanced', 'file_upload', 'video', 'media', 'gallery',
+    ];
     private const META = [ // table => [source type, owner column, primary key]
         'postmeta' => ['post', 'post_id', 'meta_id'],
         'termmeta' => ['term', 'term_id', 'meta_id'],
@@ -45,6 +49,8 @@ final class Scanner
     private array $sized = [];
     /** @var int[][] attachments that point at the very same file (WPML/Polylang media translations, duplicators) */
     private array $groups = [];
+    /** @var array<string,?string[]> meta keys holding media ids in field plugins: null = the whole value, or sub-keys */
+    private array $media_keys;
     /** @var string[] */
     private array $patterns;
     /** @var array<string,true> ACF field keys whose value is a media id */
@@ -148,7 +154,9 @@ final class Scanner
         if ($base !== '') {
             $this->patterns[] = '~' . preg_quote($base, '~') . "/($chars+$ext)~i";
         }
+        $this->patterns[] = "~\\\$upload\\\$/($chars+$ext)~i"; // Smart Slider stores uploads paths as $upload$/...
         $this->acf = $this->acf_media_fields();
+        $this->media_keys = $this->media_fields();
     }
 
     // ---- job -------------------------------------------------------------------------------------------------
@@ -483,7 +491,8 @@ final class Scanner
         $refs = [];
         foreach ($rows as $i => $r) {
             $v = (string) $r['v'];
-            $this->add($refs, $this->in_text($v) + $this->in_meta($r['k'], $v) + ($acf[$i] ?? []), $type, (int) $r['sid'], $r['k']);
+            $field = array_key_exists($r['k'], $this->media_keys) ? $this->only($this->media_ids($v, $this->media_keys[$r['k']])) : [];
+            $this->add($refs, $this->in_text($v) + $this->in_meta($r['k'], $v) + ($acf[$i] ?? []) + $field, $type, (int) $r['sid'], $r['k']);
         }
         $this->save($refs);
         return $rows ? (int) end($rows)['pk'] : null;
@@ -788,6 +797,102 @@ final class Scanner
             }
         }
         return $keys;
+    }
+
+    /**
+     * Meta keys that field plugins other than ACF use for media ids, from their own field registries. Values may be
+     * an id, "1,2,3", a serialized or JSON array, {"id":..,"url":..}, or (null => sub-keys) a group/repeater.
+     * @return array<string,?string[]>
+     */
+    private function media_fields(): array
+    {
+        global $wpdb;
+        $keys = [];
+
+        // Meta Box (registered in code): the field id is the meta key; a group keeps its sub-fields in one value.
+        if (function_exists('rwmb_get_registry')) {
+            foreach (rwmb_get_registry('meta_box')->all() as $box) {
+                foreach ((array) ($box->meta_box['fields'] ?? []) as $f) {
+                    $sub = ($f['type'] ?? '') === 'group' ? self::media_subfields((array) ($f['fields'] ?? []), 'id', 'fields') : null;
+                    if ($sub) {
+                        $keys[$f['id']] = $sub;
+                    } elseif (in_array($f['type'] ?? '', self::MEDIA_TYPES, true) && !empty($f['id'])) {
+                        $keys[$f['id']] = null;
+                    }
+                }
+            }
+        }
+
+        // Pods: field definitions are _pods_field posts; values sit under the field name (and _pods_<name>).
+        foreach ($wpdb->get_col("SELECT p.post_name FROM $wpdb->posts p JOIN $wpdb->postmeta m ON m.post_id = p.ID AND m.meta_key = 'type' AND m.meta_value = 'file' WHERE p.post_type = '_pods_field'") as $name) {
+            $keys[$name] = null;
+            $keys["_pods_$name"] = null;
+        }
+
+        // JetEngine: meta boxes in an option, post type and taxonomy fields in its own tables.
+        $fields = [];
+        foreach ((array) get_option('jet_engine_meta_boxes', []) as $box) {
+            $fields = array_merge($fields, (array) ($box['meta_fields'] ?? []));
+        }
+        foreach (['jet_post_types', 'jet_taxonomies'] as $name) {
+            $table = $wpdb->prefix . $name;
+            if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)))) {
+                foreach ($wpdb->get_col("SELECT meta_fields FROM `$table`") as $list) {
+                    $fields = array_merge($fields, (array) maybe_unserialize($list));
+                }
+            }
+        }
+        foreach ($fields as $f) {
+            if (empty($f['name'])) {
+                continue;
+            }
+            $sub = ($f['type'] ?? '') === 'repeater' ? self::media_subfields((array) ($f['repeater-fields'] ?? []), 'name', 'repeater-fields') : null;
+            if ($sub) {
+                $keys[$f['name']] = $sub;
+            } elseif (in_array($f['type'] ?? '', self::MEDIA_TYPES, true)) {
+                $keys[$f['name']] = null;
+            }
+        }
+
+        return (array) apply_filters('mtrk_media_meta_keys', $keys);
+    }
+
+    /** Names of media sub-fields, at any depth (groups in groups). */
+    private static function media_subfields(array $fields, string $idKey, string $childKey): array
+    {
+        $out = [];
+        foreach ($fields as $f) {
+            if (in_array($f['type'] ?? '', self::MEDIA_TYPES, true) && !empty($f[$idKey])) {
+                $out[] = $f[$idKey];
+            }
+            $out = array_merge($out, self::media_subfields((array) ($f[$childKey] ?? []), $idKey, $childKey));
+        }
+        return $out;
+    }
+
+    /** Media ids in a field value; with $sub, only under those keys (at any depth). */
+    private function media_ids(string $v, ?array $sub): array
+    {
+        $data = maybe_unserialize($v);
+        if (is_string($data) && preg_match('/^\s*[\[{]/', $data)) {
+            $data = json_decode($data, true) ?? $data;
+        }
+        $ids = [];
+        $walk = function ($x, bool $in) use (&$walk, &$ids, $sub): void {
+            if (is_array($x)) {
+                if ($in && isset($x['id']) && is_scalar($x['id'])) {
+                    $ids[] = $x['id']; // {"id":12,"url":"..."}: the id, not width/height and friends
+                    return;
+                }
+                foreach ($x as $k => $y) {
+                    $walk($y, $in || ($sub !== null && in_array($k, $sub, true)));
+                }
+            } elseif ($in && is_scalar($x) && preg_match('/^\s*\d+(\s*,\s*\d+)*\s*$/', (string) $x)) {
+                $ids = array_merge($ids, explode(',', (string) $x));
+            }
+        };
+        $walk($data, $sub === null);
+        return $ids;
     }
 
     private function only(array $ids): array

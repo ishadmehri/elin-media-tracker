@@ -243,6 +243,67 @@ try {
         echo "SKIP WooCommerce (not active)\n";
     }
 
+    // ---- Meta Box (fields registered in code) -----------------------------------------------------------------
+    if (function_exists('rwmb_get_registry')) {
+        $box = rwmb_get_registry('meta_box')->make(['id' => 'mtrkfix_mb', 'post_types' => ['post'], 'fields' => [
+            ['id' => 'mtrk_mb_single', 'type' => 'single_image'],
+            ['id' => 'mtrk_mb_gallery', 'type' => 'image_advanced'],
+            ['id' => 'mtrk_mb_num', 'type' => 'number'],
+            ['id' => 'mtrk_mb_group', 'type' => 'group', 'clone' => true, 'fields' => [['id' => 'img', 'type' => 'single_image'], ['id' => 'num', 'type' => 'number']]],
+        ]]);
+        $box->register_fields();
+        $mb = $post(['post_title' => 'mtrk meta box']);
+        rwmb_set_meta($mb, 'mtrk_mb_single', $media('mb-single', true, 'Meta Box single image'));
+        rwmb_set_meta($mb, 'mtrk_mb_gallery', [$media('mb-gal1', true, 'Meta Box image_advanced, 1st'), $media('mb-gal2', true, 'Meta Box image_advanced, 2nd')]);
+        rwmb_set_meta($mb, 'mtrk_mb_num', $media('mb-num', false, 'Meta Box number field with the same number'));
+        rwmb_set_meta($mb, 'mtrk_mb_group', [['img' => $media('mb-group', true, 'Meta Box image inside a cloned group'), 'num' => $media('mb-gnum', false, 'Meta Box number inside the group')]]);
+    } else {
+        echo "SKIP Meta Box (not active)\n";
+    }
+
+    // ---- Pods ------------------------------------------------------------------------------------------------
+    if (function_exists('pods_api')) {
+        $api = pods_api();
+        $api->save_pod(['name' => 'mtrkfix_book', 'type' => 'post_type', 'storage' => 'meta', 'label' => 'mtrk book']);
+        $cleanup[] = fn() => $api->delete_pod(['name' => 'mtrkfix_book']);
+        $api->save_field(['pod' => 'mtrkfix_book', 'name' => 'mtrk_cover', 'label' => 'cover', 'type' => 'file', 'file_format_type' => 'single']);
+        $api->save_field(['pod' => 'mtrkfix_book', 'name' => 'mtrk_pages', 'label' => 'pages', 'type' => 'file', 'file_format_type' => 'multi']);
+        $made[] = pods('mtrkfix_book')->add([
+            'post_title' => 'mtrk book',
+            'post_status' => 'publish',
+            'mtrk_cover' => $media('pods-cover', true, 'Pods single file field'),
+            'mtrk_pages' => [$media('pods-p1', true, 'Pods multi file field, 1st'), $media('pods-p2', true, 'Pods multi file field, 2nd')],
+        ]);
+    } else {
+        echo "SKIP Pods (not active)\n";
+    }
+
+    // ---- JetEngine: premium, so its stored config (format as on a real site) stands in for the plugin -------
+    $jet = get_option('jet_engine_meta_boxes', null);
+    update_option('jet_engine_meta_boxes', ['meta-mtrk' => ['args' => ['object_type' => 'post', 'allowed_post_type' => ['post']], 'meta_fields' => [
+        ['name' => 'mtrk_je_img', 'type' => 'media', 'value_format' => 'id'],
+        ['name' => 'mtrk_je_both', 'type' => 'media', 'value_format' => 'both'],
+        ['name' => 'mtrk_je_gal', 'type' => 'gallery', 'value_format' => 'id'],
+        ['name' => 'mtrk_je_num', 'type' => 'number'],
+        ['name' => 'mtrk_je_rep', 'type' => 'repeater', 'repeater-fields' => [['name' => 'pic', 'type' => 'media'], ['name' => 'label', 'type' => 'text']]],
+    ]]], false);
+    $cleanup[] = fn() => $jet === null ? delete_option('jet_engine_meta_boxes') : update_option('jet_engine_meta_boxes', $jet, false);
+    $je = $post(['post_title' => 'mtrk jetengine']);
+    update_post_meta($je, 'mtrk_je_img', (string) $media('je-img', true, 'JetEngine media field (id)'));
+    update_post_meta($je, 'mtrk_je_both', ['id' => $media('je-both', true, 'JetEngine media field (id + CDN url)'), 'url' => $cdn]);
+    update_post_meta($je, 'mtrk_je_gal', $media('je-g1', true, 'JetEngine gallery "1,2", 1st') . ',' . $media('je-g2', true, 'JetEngine gallery "1,2", 2nd'));
+    update_post_meta($je, 'mtrk_je_num', (string) $media('je-num', false, 'JetEngine number field with the same number'));
+    update_post_meta($je, 'mtrk_je_rep', ['item-0' => ['pic' => (string) $media('je-rep', true, 'JetEngine media inside a repeater'), 'label' => '7']]);
+
+    // ---- Smart Slider 3: stores uploads paths as $upload$/... in its own table --------------------------------
+    $slides = $wpdb->prefix . 'nextend2_smartslider3_slides';
+    if (!$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $slides))) {
+        $wpdb->query("CREATE TABLE `$slides` (id int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY, params longtext)");
+        $cleanup[] = fn() => $wpdb->query("DROP TABLE IF EXISTS `$slides`");
+        $ss = $media('ss', true, 'Smart Slider $upload$ path');
+        $wpdb->insert($slides, ['params' => wp_json_encode(['backgroundImage' => '$upload$' . '/2026/10/mtrk-ss.jpg'])]);
+    }
+
     // ---- Contact Form 7 --------------------------------------------------------------------------------------
     if (class_exists('WPCF7_ContactForm')) {
         $c7 = $media('cf7', true, 'Contact Form 7 form markup <img>');
