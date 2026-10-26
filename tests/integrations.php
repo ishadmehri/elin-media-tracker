@@ -295,6 +295,53 @@ try {
     update_post_meta($je, 'mtrk_je_num', (string) $media('je-num', false, 'JetEngine number field with the same number'));
     update_post_meta($je, 'mtrk_je_rep', ['item-0' => ['pic' => (string) $media('je-rep', true, 'JetEngine media inside a repeater'), 'label' => '7']]);
 
+    // JetEngine's own tables (schema as in its includes/core/db.php, 3.9): post types, options pages, CCTs.
+    $jet_types = $wpdb->prefix . 'jet_post_types';
+    if (!$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $jet_types))) {
+        $wpdb->query("CREATE TABLE `$jet_types` (id bigint(20) NOT NULL AUTO_INCREMENT, slug text, status text, labels longtext, args longtext, meta_fields longtext, PRIMARY KEY (id))");
+        $cleanup[] = fn() => $wpdb->query("DROP TABLE IF EXISTS `$jet_types`");
+    }
+    $jet_row = function (string $slug, string $status, array $args, array $fields) use ($wpdb, $jet_types, &$cleanup): void {
+        $wpdb->insert($jet_types, ['slug' => $slug, 'status' => $status, 'labels' => serialize(['name' => $slug]), 'args' => serialize($args), 'meta_fields' => serialize($fields)]);
+        $id = $wpdb->insert_id;
+        $cleanup[] = fn() => $wpdb->delete($jet_types, ['id' => $id]);
+    };
+    $jet_row('mtrkfix_cpt', 'publish', [], [['name' => 'mtrk_je_cpt_img', 'type' => 'media', 'value_format' => 'id']]);
+    update_post_meta($je, 'mtrk_je_cpt_img', (string) $media('je-cpt', true, 'JetEngine post type field (id)'));
+
+    $jet_row('mtrkfix-settings', 'page', ['storage_type' => 'default', 'option_prefix' => true], [
+        ['name' => 'logo', 'type' => 'media', 'value_format' => 'id'],
+        ['name' => 'banners', 'type' => 'gallery', 'value_format' => 'id'],
+        ['name' => 'slides', 'type' => 'repeater', 'repeater-fields' => [['name' => 'pic', 'type' => 'media'], ['name' => 'title', 'type' => 'text']]],
+        ['name' => 'count', 'type' => 'number'],
+    ]);
+    update_option('mtrkfix-settings', [
+        'logo' => (string) $media('je-opt-logo', true, 'JetEngine options page media (default storage)'),
+        'banners' => $media('je-opt-b1', true, 'JetEngine options page gallery, 1st') . ',' . $media('je-opt-b2', true, 'JetEngine options page gallery, 2nd'),
+        'slides' => ['item-0' => ['pic' => (string) $media('je-opt-rep', true, 'JetEngine options page repeater media'), 'title' => '5']],
+        'count' => (string) $media('je-opt-num', false, 'JetEngine options page number with the same number'),
+    ], false);
+    $cleanup[] = fn() => delete_option('mtrkfix-settings');
+
+    $jet_row('mtrkfix-sep', 'page', ['storage_type' => 'separate', 'option_prefix' => true], [['name' => 'hero', 'type' => 'media', 'value_format' => 'both']]);
+    update_option('mtrkfix-sep_hero', ['id' => $media('je-sep', true, 'JetEngine options page, separate storage, id + CDN url'), 'url' => $cdn], false);
+    $cleanup[] = fn() => delete_option('mtrkfix-sep_hero');
+
+    $jet_row('mtrkfix_books', 'content-type', ['slug' => 'mtrkfix_books'], [
+        ['name' => 'cover', 'type' => 'media', 'value_format' => 'id'],
+        ['name' => 'photos', 'type' => 'gallery', 'value_format' => 'id'],
+        ['name' => 'note', 'type' => 'text'],
+    ]);
+    $cct = $wpdb->prefix . 'jet_cct_mtrkfix_books';
+    $wpdb->query("CREATE TABLE `$cct` (_ID bigint(20) NOT NULL AUTO_INCREMENT, cct_status text, cover text, photos longtext, note text, PRIMARY KEY (_ID))");
+    $cleanup[] = fn() => $wpdb->query("DROP TABLE IF EXISTS `$cct`");
+    $wpdb->insert($cct, [
+        'cct_status' => 'publish',
+        'cover' => (string) $media('je-cct', true, 'JetEngine CCT media column'),
+        'photos' => $media('je-cct-g1', true, 'JetEngine CCT gallery column, 1st') . ',' . $media('je-cct-g2', true, 'JetEngine CCT gallery column, 2nd'),
+        'note' => (string) $media('je-cct-num', false, 'JetEngine CCT text column with the same number'),
+    ]);
+
     // ---- Smart Slider 3: stores uploads paths as $upload$/... in its own table --------------------------------
     $slides = $wpdb->prefix . 'nextend2_smartslider3_slides';
     if (!$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $slides))) {

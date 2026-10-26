@@ -51,6 +51,10 @@ final class Scanner
     private array $sized = [];
     /** @var array<string,?string[]> meta keys holding media ids in field plugins: null = the whole value, or sub-keys */
     private array $media_keys;
+    /** @var array<string,?string[]> option names holding media ids (JetEngine options pages), same shape */
+    private array $option_keys = [];
+    /** @var array<string,array<string,?string[]>> table => column => sub-keys (JetEngine Custom Content Types) */
+    private array $table_keys = [];
     /** @var string[] */
     private array $patterns;
     /** @var array<string,true> ACF field keys whose value is a media id */
@@ -593,7 +597,8 @@ final class Scanner
             if (in_array($r['k'], self::ID_OPTIONS, true)) {
                 $ids[] = $v;
             }
-            $this->add($refs, $this->in_text($v) + $this->only($ids) + ($acf[$i] ?? []), 'option', 0, $r['k']);
+            $field = array_key_exists($r['k'], $this->option_keys) ? $this->only($this->media_ids($v, $this->option_keys[$r['k']])) : [];
+            $this->add($refs, $this->in_text($v) + $this->only($ids) + ($acf[$i] ?? []) + $field, 'option', 0, $r['k']);
         }
         $this->save($refs);
         return $rows ? (int) end($rows)['pk'] : null;
@@ -628,7 +633,8 @@ final class Scanner
         foreach ($rows as $r) {
             foreach ($cols as $c) {
                 $v = (string) $r[$c];
-                $this->add($refs, $this->in_text($v) + $this->only($this->in_serialized($v)), $type, (int) ($r['sid'] ?? $r['pk'] ?? 0), $key ?? "$table.$c");
+                $field = array_key_exists($c, $this->table_keys[$table] ?? []) ? $this->only($this->media_ids($v, $this->table_keys[$table][$c])) : [];
+                $this->add($refs, $this->in_text($v) + $this->only($this->in_serialized($v)) + $field, $type, (int) ($r['sid'] ?? $r['pk'] ?? 0), $key ?? "$table.$c");
             }
         }
         $this->save($refs);
@@ -935,32 +941,92 @@ final class Scanner
             $keys["_pods_$name"] = null;
         }
 
-        // JetEngine: meta boxes in an option, post type and taxonomy fields in its own tables.
-        $fields = [];
-        foreach ((array) get_option('jet_engine_meta_boxes', []) as $box) {
-            $fields = array_merge($fields, (array) ($box['meta_fields'] ?? []));
-        }
-        foreach (['jet_post_types', 'jet_taxonomies'] as $name) {
-            $table = $wpdb->prefix . $name;
-            if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)))) {
-                foreach ($wpdb->get_col("SELECT meta_fields FROM `$table`") as $list) {
-                    $fields = array_merge($fields, (array) maybe_unserialize($list));
-                }
-            }
-        }
-        foreach ($fields as $f) {
-            if (empty($f['name'])) {
-                continue;
-            }
-            $sub = ($f['type'] ?? '') === 'repeater' ? self::media_subfields((array) ($f['repeater-fields'] ?? []), 'name', 'repeater-fields') : null;
-            if ($sub) {
-                $keys[$f['name']] = $sub;
-            } elseif (in_array($f['type'] ?? '', self::MEDIA_TYPES, true)) {
-                $keys[$f['name']] = null;
-            }
-        }
+        $jet = self::jet_engine();
+        $this->option_keys = $jet['options'];
+        $this->table_keys = $jet['tables'];
+        return (array) apply_filters('mtrk_media_meta_keys', $keys + $jet['meta']);
+    }
 
-        return (array) apply_filters('mtrk_media_meta_keys', $keys);
+    /**
+     * JetEngine's media fields, wherever their values live (format from its source, 3.9):
+     * meta boxes (option jet_engine_meta_boxes), post types and taxonomies ({prefix}jet_post_types / jet_taxonomies)
+     * → meta keys; options pages (jet_post_types, status 'page') → one option named after the page, or one per
+     * field; Custom Content Types (status 'content-type') → columns of {prefix}jet_cct_<slug>.
+     * @return array{meta: array, options: array, tables: array} key => null (whole value) or media sub-keys
+     */
+    public static function jet_engine(): array
+    {
+        global $wpdb;
+        $out = ['meta' => [], 'options' => [], 'tables' => []];
+        $meta = [];
+        foreach ((array) get_option('jet_engine_meta_boxes', []) as $box) {
+            $meta = array_merge($meta, (array) ($box['meta_fields'] ?? []));
+        }
+        $taxonomies = $wpdb->prefix . 'jet_taxonomies';
+        if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($taxonomies)))) {
+            foreach ($wpdb->get_col("SELECT meta_fields FROM `$taxonomies`") as $list) {
+                $meta = array_merge($meta, (array) maybe_unserialize($list));
+            }
+        }
+        $types = $wpdb->prefix . 'jet_post_types';
+        $rows = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($types)))
+            ? $wpdb->get_results("SELECT slug, status, args, meta_fields FROM `$types`", ARRAY_A) : [];
+        foreach ($rows as $row) {
+            $fields = (array) maybe_unserialize($row['meta_fields']);
+            if ($row['status'] === 'page') {
+                $args = (array) maybe_unserialize($row['args']);
+                if (($args['storage_type'] ?? 'default') === 'separate') {
+                    $prefix = ($args['option_prefix'] ?? true) ? $row['slug'] . '_' : '';
+                    foreach ($fields as $f) {
+                        if ($media = self::jet_media((array) $f)) {
+                            $out['options'][$prefix . $media[0]] = $media[1];
+                        }
+                    }
+                } elseif ($names = self::jet_media_names($fields)) {
+                    $out['options'][$row['slug']] = $names;
+                }
+            } elseif ($row['status'] === 'content-type') {
+                foreach ($fields as $f) {
+                    if ($media = self::jet_media((array) $f)) {
+                        $out['tables'][$wpdb->prefix . 'jet_cct_' . $row['slug']][$media[0]] = $media[1];
+                    }
+                }
+            } else {
+                $meta = array_merge($meta, $fields);
+            }
+        }
+        foreach ($meta as $f) {
+            if ($media = self::jet_media((array) $f)) {
+                $out['meta'][$media[0]] = $media[1];
+            }
+        }
+        return $out;
+    }
+
+    /** @return array{0:string,1:?string[]}|null [field name, media sub-fields of a repeater or null] */
+    private static function jet_media(array $f): ?array
+    {
+        if (empty($f['name'])) {
+            return null;
+        }
+        if (($f['type'] ?? '') === 'repeater') {
+            $sub = self::media_subfields((array) ($f['repeater-fields'] ?? []), 'name', 'repeater-fields');
+            return $sub ? [$f['name'], $sub] : null;
+        }
+        return in_array($f['type'] ?? '', self::MEDIA_TYPES, true) ? [$f['name'], null] : null;
+    }
+
+    /** Names of every media field (repeaters: their media sub-fields), for values stored together in one array. */
+    private static function jet_media_names(array $fields): array
+    {
+        $names = [];
+        foreach ($fields as $f) {
+            $media = self::jet_media((array) $f);
+            if ($media) {
+                $names = array_merge($names, $media[1] ?? [$media[0]]);
+            }
+        }
+        return $names;
     }
 
     /** Names of media sub-fields, at any depth (groups in groups). */

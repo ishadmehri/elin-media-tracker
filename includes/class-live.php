@@ -83,6 +83,11 @@ final class Live
             return false;
         }
         $s = is_scalar($value) ? (string) $value : serialize($value);
+        static $field_options = null; // JetEngine options pages store bare ids
+        $field_options = $field_options ?? Scanner::jet_engine()['options'];
+        if (array_key_exists($name, $field_options)) {
+            return true;
+        }
         if (ctype_digit($s)) { // a bare id: only in options known to hold one, or ACF option fields
             return in_array($name, Scanner::ID_OPTIONS, true) || strpos($name, 'options_') === 0;
         }
