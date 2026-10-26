@@ -401,7 +401,7 @@ final class Page
 
         ob_start();
         ?>
-        <div class="mtrk-preview">
+        <div class="mtrk-preview-layout">
         <div class="mtrk-preview-media">
             <?php if (strpos($mime, 'image/') === 0) : ?>
                 <?php echo wp_get_attachment_image($id, 'large', false, ['alt' => '']); ?>

@@ -121,9 +121,9 @@ button.mtrk-badge:focus-visible { outline: 2px solid #2271b1; outline-offset: 1p
 .mtrk-item-meta { color: #50575e; font-size: 12px; }
 
 .mtrk-dialog.mtrk-dialog-wide { width: min(900px, calc(100vw - 32px)); }
-.mtrk-preview { display: grid; gap: 16px; }
+.mtrk-preview-layout { display: grid; gap: 16px; }
 @media (min-width: 782px) {
-  .mtrk-preview { grid-template-columns: minmax(0, 3fr) minmax(240px, 2fr); align-items: start; }
+  .mtrk-preview-layout { grid-template-columns: minmax(0, 3fr) minmax(240px, 2fr); align-items: start; }
 }
 .mtrk-preview-media { text-align: center; background: #f0f0f1; border-radius: 4px; }
 .mtrk-preview-media img, .mtrk-preview-media video { max-width: 100%; max-height: 60vh; height: auto; display: inline-block; vertical-align: middle; }

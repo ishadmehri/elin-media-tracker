@@ -55,22 +55,25 @@ final class Admin
                 'sizesChecking' => __('در حال بررسی… %s تصویر', 'media-tracker'),
                 'sizesNone' => __('سایز ثبت‌نشده‌ای پیدا نشد.', 'media-tracker'),
                 'mb' => __('مگابایت', 'media-tracker'),
-                /* translators: 1: number of files, 2: size in MB */
-                'sizesFound' => __('%1$s فایل، %2$s مگابایت قابل حذف.', 'media-tracker'),
-                /* translators: 1: number of files, 2: size in MB */
-                'sizesConfirm' => __('%1$s فایل (%2$s مگابایت) برای همیشه حذف می‌شود. ادامه می‌دهید؟', 'media-tracker'),
-                /* translators: 1: number of files, 2: size in MB */
-                'sizesDeleted' => __('%1$s فایل حذف شد (%2$s مگابایت).', 'media-tracker'),
+                'kb' => __('کیلوبایت', 'media-tracker'),
+                /* translators: 1: number of files, 2: size with unit */
+                'sizesFound' => __('%1$s فایل، %2$s قابل حذف.', 'media-tracker'),
+                /* translators: 1: number of files, 2: size with unit */
+                'sizesConfirm' => __('%1$s فایل (%2$s) برای همیشه حذف می‌شود. ادامه می‌دهید؟', 'media-tracker'),
+                /* translators: 1: number of files, 2: size with unit */
+                'sizesDeleted' => __('%1$s فایل حذف شد (%2$s).', 'media-tracker'),
                 'preview' => __('پیش‌نمایش', 'media-tracker'),
                 /* translators: %s: number of items */
                 'selected' => __('%s مورد انتخاب شده', 'media-tracker'),
                 /* translators: %s: number of media items */
                 'confirmDelete' => __('%s رسانه و همه‌ی فایل‌هایش برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست. ادامه می‌دهید؟', 'media-tracker'),
                 /* translators: %s: number of files */
+                'confirmFiles' => __('%s فایل برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست. ادامه می‌دهید؟', 'media-tracker'),
+                /* translators: %s: number of folders */
                 'orphansChecking' => __('در حال بررسی… %s پوشه', 'media-tracker'),
                 'orphansNone' => __('فایل اضافه‌ای پیدا نشد.', 'media-tracker'),
-                /* translators: 1: number of files, 2: size in MB */
-                'orphansFound' => __('%1$s فایل، %2$s مگابایت قابل حذف.', 'media-tracker'),
+                /* translators: 1: number of files, 2: size with unit */
+                'orphansFound' => __('%1$s فایل، %2$s قابل حذف.', 'media-tracker'),
                 /* translators: %s: attachment id */
                 'orphanSize' => __('سایز اضافه‌ی پیوست #%s', 'media-tracker'),
                 'orphanFile' => __('خارج از کتابخانه', 'media-tracker'),
@@ -227,6 +230,10 @@ final class Admin
 
             case 'file':
                 return self::line(__('فایل کد', 'media-tracker'), '', ['<code dir="ltr">' . esc_html($key) . '</code>']);
+
+            case 'keep':
+                return self::line(__('نگه‌داشته‌شده به دست شما', 'media-tracker'), '', [esc_html__('برای استفاده‌ی بیرون از سایت علامت خورده است.', 'media-tracker')])
+                    . sprintf(' <button type="button" class="button-link" data-act="unkeep" data-id="%d">%s</button>', (int) $rows[0]['attachment_id'], esc_html__('برداشتن علامت', 'media-tracker'));
 
             case 'shared':
                 /* translators: %d: attachment id */

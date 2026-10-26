@@ -320,7 +320,7 @@ final class Scanner
     public static function refs(int $id): array
     {
         global $wpdb;
-        return $wpdb->get_results($wpdb->prepare('SELECT source_type, source_id, source_key, how FROM ' . self::table() . ' WHERE attachment_id = %d ORDER BY source_type, source_id, source_key LIMIT 500', $id), ARRAY_A);
+        return $wpdb->get_results($wpdb->prepare('SELECT attachment_id, source_type, source_id, source_key, how FROM ' . self::table() . ' WHERE attachment_id = %d ORDER BY source_type, source_id, source_key LIMIT 500', $id), ARRAY_A);
     }
 
     public static function summary(): array

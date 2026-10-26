@@ -75,7 +75,7 @@ try {
     foreach (array_reverse($made) as $post) {
         wp_delete_post($post, true);
     }
-    foreach (array_merge(glob("$dir/mtrk-*") ?: [], glob("$plugin_dir/*") ?: []) as $f) {
+    foreach (array_merge(glob("$dir/mtrk-orph*") ?: [], glob("$dir/mtrk-ftp*") ?: [], glob("$dir/mtrk-x.php") ?: [], glob("$plugin_dir/*") ?: []) as $f) {
         unlink($f);
     }
     @rmdir($plugin_dir);

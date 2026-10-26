@@ -19,7 +19,8 @@
   };
 
   const fmt = (s, ...a) => s.replace(/%(\d)\$s/g, (_, i) => a[i - 1]).replace('%s', a[0]);
-  const mb = (b) => (b / 1048576).toFixed(1);
+  // Human sizes: KB under a megabyte (small leftovers would all read 0.0 MB), MB above.
+  const size = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} ${t.mb}` : `${Math.max(1, Math.round(b / 1024))} ${t.kb}`);
 
   // One modal for "where is it used" (media library) and "preview" (plugin page): a native <dialog>, so focus
   // trap, Esc and the backdrop come from the browser.
@@ -97,7 +98,7 @@
 
   document.addEventListener('click', (e) => {
     const usage = e.target.closest('.mtrk-open');
-    const preview = e.target.closest('.mtrk-preview');
+    const preview = e.target.closest('button.mtrk-preview');
     const action = e.target.closest('[data-act]');
     if (usage || preview) {
       e.preventDefault();
@@ -179,7 +180,7 @@
       name.append(path);
       const kind = f.kept ? t.orphanKept : (f.type === 'size' ? fmt(t.orphanSize, f.owner) : t.orphanFile);
       const tr = document.createElement('tr');
-      tr.append(th, cell(name), cell(text(kind)), cell(text(`${mb(f.bytes)} ${t.mb}`)));
+      tr.append(th, cell(name), cell(text(kind)), cell(text(size(f.bytes))));
       return tr;
     };
     const renderMore = () => {
@@ -216,7 +217,7 @@
         sync();
         result.hidden = !files.length;
         const free = files.filter((f) => !f.kept);
-        status.textContent = files.length ? fmt(t.orphansFound, free.length, mb(free.reduce((n, f) => n + f.bytes, 0))) : t.orphansNone;
+        status.textContent = files.length ? fmt(t.orphansFound, free.length, size(free.reduce((n, f) => n + f.bytes, 0))) : t.orphansNone;
       } catch (e) {
         status.textContent = e.message;
       }
@@ -234,7 +235,7 @@
     });
     delBtn.addEventListener('click', async () => {
       const paths = selected();
-      if (!window.confirm(fmt(t.confirmDelete, paths.length))) return;
+      if (!window.confirm(fmt(t.confirmFiles, paths.length))) return;
       delBtn.disabled = true;
       let removed = 0;
       let bytes = 0;
@@ -245,7 +246,7 @@
           bytes += r.bytes;
         }
         await check();
-        status.textContent = fmt(t.sizesDeleted, removed, mb(bytes));
+        status.textContent = fmt(t.sizesDeleted, removed, size(bytes));
       } catch (e) {
         status.textContent = e.message;
       }
@@ -299,7 +300,7 @@
         th.scope = 'row';
         th.append(box);
         const tr = document.createElement('tr');
-        tr.append(th, ...[name, s.dims, s.files, `${mb(s.bytes)} ${t.mb}`, s.kept].map((v) => {
+        tr.append(th, ...[name, s.dims, s.files, size(s.bytes), s.kept].map((v) => {
           const td = document.createElement('td');
           const bdi = document.createElement('bdi'); // keep "1170×600" and size names in their own direction in RTL
           bdi.textContent = v;
@@ -312,7 +313,7 @@
       cleanBtn.disabled = true;
       result.hidden = !names.length;
       const list = Object.values(report);
-      status.textContent = names.length ? fmt(t.sizesFound, sum(list, 'files'), mb(sum(list, 'bytes'))) : t.sizesNone;
+      status.textContent = names.length ? fmt(t.sizesFound, sum(list, 'files'), size(sum(list, 'bytes'))) : t.sizesNone;
     };
 
     const selected = () => [...tbody.querySelectorAll('.mtrk-size:checked')].map((b) => b.value);
@@ -337,13 +338,13 @@
     cleanBtn.addEventListener('click', async () => {
       const names = selected();
       const picked = names.map((n) => report[n]);
-      if (!window.confirm(fmt(t.sizesConfirm, sum(picked, 'files'), mb(sum(picked, 'bytes'))))) return;
+      if (!window.confirm(fmt(t.sizesConfirm, sum(picked, 'files'), size(sum(picked, 'bytes'))))) return;
       checkBtn.disabled = true;
       cleanBtn.disabled = true;
       try {
         const done = Object.values(await walk({ do: 'clean', names }));
         await check();
-        status.textContent = fmt(t.sizesDeleted, sum(done, 'files'), mb(sum(done, 'bytes')));
+        status.textContent = fmt(t.sizesDeleted, sum(done, 'files'), size(sum(done, 'bytes')));
       } catch (e) {
         status.textContent = e.message;
         checkBtn.disabled = false;
