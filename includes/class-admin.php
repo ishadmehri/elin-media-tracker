@@ -14,6 +14,7 @@ final class Admin
         add_action('wp_enqueue_media', [self::class, 'enqueue']);
         add_action('wp_ajax_mtrk_scan', [self::class, 'ajax_scan']);
         add_action('wp_ajax_mtrk_usage', [self::class, 'ajax_usage']);
+        add_action('wp_ajax_mtrk_sizes', [self::class, 'ajax_sizes']);
         add_filter('manage_media_columns', [self::class, 'column']);
         add_action('manage_media_custom_column', [self::class, 'cell'], 10, 2);
         add_action('restrict_manage_posts', [self::class, 'filter_select']);
@@ -51,6 +52,16 @@ final class Admin
                 'error' => __('خطا در ارتباط با سرور.', 'media-tracker'),
                 'done' => __('اسکن تمام شد.', 'media-tracker'),
                 'stopping' => __('در حال توقف…', 'media-tracker'),
+                /* translators: %s: number of images checked */
+                'sizesChecking' => __('در حال بررسی… %s تصویر', 'media-tracker'),
+                'sizesNone' => __('سایز ثبت‌نشده‌ای پیدا نشد.', 'media-tracker'),
+                'mb' => __('مگابایت', 'media-tracker'),
+                /* translators: 1: number of files, 2: size in MB */
+                'sizesFound' => __('%1$s فایل، %2$s مگابایت قابل حذف.', 'media-tracker'),
+                /* translators: 1: number of files, 2: size in MB */
+                'sizesConfirm' => __('%1$s فایل (%2$s مگابایت) برای همیشه حذف می‌شود. ادامه می‌دهید؟', 'media-tracker'),
+                /* translators: 1: number of files, 2: size in MB */
+                'sizesDeleted' => __('%1$s فایل حذف شد (%2$s مگابایت).', 'media-tracker'),
             ],
         ]) . ';', 'before');
     }
@@ -116,6 +127,35 @@ final class Admin
                 <button type="button" class="button mtrk-cancel"><?php esc_html_e('توقف اسکن', 'media-tracker'); ?></button>
                 <button type="button" class="button button-primary mtrk-retry" hidden><?php esc_html_e('ادامه', 'media-tracker'); ?></button>
             </div>
+
+            <h2><?php esc_html_e('سایزهای ثبت‌نشده', 'media-tracker'); ?></h2>
+            <p class="description"><?php esc_html_e('فایل‌هایی که برای سایزهایی ساخته شده‌اند که دیگر هیچ قالب یا افزونه‌ای ثبتشان نکرده (مثلاً سایزهای قالب قبلی). وردپرس دیگر آن‌ها را تحویل نمی‌دهد، ولی تا وقتی تصویر استفاده می‌شود روی دیسک می‌مانند. فایلی که آدرس دقیقش جایی آمده، یا با یک سایز فعال یکی است، نگه داشته می‌شود.', 'media-tracker'); ?></p>
+            <?php if (empty($last['paths'])) : ?>
+                <p><?php esc_html_e('برای این بخش اول یک اسکن کامل اجرا کنید.', 'media-tracker'); ?></p>
+            <?php else : ?>
+                <?php if (!$last['code']) : ?>
+                    <div class="notice notice-warning inline"><p><?php esc_html_e('آخرین اسکن «فقط دیتابیس» بود؛ آدرس‌هایی که مستقیم در کد قالب یا افزونه نوشته شده‌اند بررسی نشده‌اند. قبل از حذف، اسکن «دیتابیس + سورس کد» را اجرا کنید.', 'media-tracker'); ?></p></div>
+                <?php endif; ?>
+                <div id="mtrk-sizes">
+                    <p><button type="button" class="button mtrk-sizes-check"><?php esc_html_e('بررسی سایزها', 'media-tracker'); ?></button></p>
+                    <p class="mtrk-sizes-status" aria-live="polite"></p>
+                    <div class="mtrk-sizes-result" hidden>
+                        <table class="widefat striped mtrk-sizes-table">
+                            <thead><tr>
+                                <td class="check-column"><input type="checkbox" class="mtrk-sizes-all" aria-label="<?php esc_attr_e('انتخاب همه', 'media-tracker'); ?>"></td>
+                                <th scope="col"><?php esc_html_e('سایز', 'media-tracker'); ?></th>
+                                <th scope="col"><?php esc_html_e('ابعاد', 'media-tracker'); ?></th>
+                                <th scope="col"><?php esc_html_e('فایل قابل حذف', 'media-tracker'); ?></th>
+                                <th scope="col"><?php esc_html_e('حجم', 'media-tracker'); ?></th>
+                                <th scope="col"><?php esc_html_e('نگه‌داشته‌شده', 'media-tracker'); ?></th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                        <p class="description"><?php esc_html_e('حذف برگشت‌پذیر نیست؛ قبل از آن بکاپ بگیرید. نسخه‌های WebP/AVIF همان فایل‌ها هم حذف می‌شوند.', 'media-tracker'); ?></p>
+                        <p><button type="button" class="button button-primary mtrk-sizes-clean" disabled><?php esc_html_e('حذف فایل‌های سایزهای انتخاب‌شده', 'media-tracker'); ?></button></p>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -153,6 +193,20 @@ final class Admin
             wp_send_json_error(__('رسانه پیدا نشد.', 'media-tracker'), 404);
         }
         wp_send_json_success(['html' => self::usage_html($id)]);
+    }
+
+    public static function ajax_sizes(): void
+    {
+        self::guard();
+        if (empty(Scanner::last()['paths'])) {
+            wp_send_json_error(__('اول یک اسکن کامل اجرا کنید.', 'media-tracker'), 409);
+        }
+        $do = sanitize_key(wp_unslash($_POST['do'] ?? ''));
+        $names = array_map('sanitize_text_field', (array) wp_unslash($_POST['names'] ?? []));
+        if ($do === 'clean' && !$names) {
+            wp_send_json_error(__('هیچ سایزی انتخاب نشده است.', 'media-tracker'), 400);
+        }
+        wp_send_json_success(Sizes::step(absint($_POST['cursor'] ?? 0), $names, $do === 'clean'));
     }
 
     private static function guard(): void

@@ -12,6 +12,7 @@ defined('ABSPATH') || exit;
 final class Scanner
 {
     public const CAP = 'manage_options';
+    private const DB = 2; // schema version; bump when install() changes
 
     private const JOB = 'mtrk_job';
     private const LAST = 'mtrk_last_scan';
@@ -38,6 +39,8 @@ final class Scanner
     private array $keys = [];
     /** @var array<int,true> */
     private array $ids = [];
+    /** @var array<string,true> md5 of exactly referenced sized files, flushed by save() */
+    private array $sized = [];
     /** @var string[] */
     private array $patterns;
     /** @var array<string,true> ACF field keys whose value is a media id */
@@ -51,10 +54,17 @@ final class Scanner
         return $wpdb->prefix . 'mtrk_refs';
     }
 
+    public static function paths_table(): string
+    {
+        global $wpdb;
+        return $wpdb->prefix . 'mtrk_paths';
+    }
+
     public static function install(): void
     {
         global $wpdb;
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        $charset = $wpdb->get_charset_collate();
         dbDelta('CREATE TABLE ' . self::table() . " (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             attachment_id bigint(20) unsigned NOT NULL,
@@ -65,19 +75,53 @@ final class Scanner
             PRIMARY KEY  (id),
             UNIQUE KEY ref (attachment_id,source_type,source_id,source_key(150)),
             KEY source (source_type,source_id)
-        ) " . $wpdb->get_charset_collate() . ';');
+        ) $charset;");
+        // md5 of every sized file a reference names exactly ("2024/05/a-750x500"), so size cleanup can keep it.
+        dbDelta('CREATE TABLE ' . self::paths_table() . " (
+            hash char(32) NOT NULL,
+            PRIMARY KEY  (hash)
+        ) $charset;");
+        update_option('mtrk_db', self::DB);
     }
 
-    /** Normalized uploads path: "2024/05/a-300x200.jpg.webp", "2024/05/a-scaled.jpg" and "2024/05/a.jpg" all become "2024/05/a". */
-    public static function key(string $path): string
+    public static function upgrade(): void
+    {
+        if ((int) get_option('mtrk_db') !== self::DB) {
+            self::install();
+        }
+    }
+
+    /** Normalized uploads path without its extension(s): lowercase, NFC, no leading slash. */
+    public static function stem(string $path): string
     {
         $path = strtolower(ltrim(wp_normalize_path($path), '/'));
         if (class_exists('Normalizer') && preg_match('/[^\x00-\x7f]/', $path)) {
             // WordPress stores names NFC-normalized; a decomposed reference (macOS, some editors) must still match.
             $path = \Normalizer::normalize($path, \Normalizer::FORM_C) ?: $path;
         }
-        $path = preg_replace('/(\.[a-z0-9]{2,5}){1,2}$/', '', $path);
-        return preg_replace('/(-\d+x\d+|-scaled|-rotated|-e\d{13})+$/', '', $path);
+        return preg_replace('/(\.[a-z0-9]{2,5}){1,2}$/', '', $path);
+    }
+
+    /** Matching key: "2024/05/a-300x200.jpg.webp", "2024/05/a-scaled.jpg" and "2024/05/a.jpg" all become "2024/05/a". */
+    public static function key(string $path): string
+    {
+        return self::unsize(self::stem($path));
+    }
+
+    private static function unsize(string $stem): string
+    {
+        return preg_replace('/(-\d+x\d+|-scaled|-rotated|-e\d{13})+$/', '', $stem);
+    }
+
+    /** @return array<string,true> which of these stems some reference names exactly (by md5) */
+    public static function referenced(array $stems): array
+    {
+        global $wpdb;
+        $hashes = array_map(fn($s) => "'" . md5(self::stem($s)) . "'", $stems);
+        if (!$hashes) {
+            return [];
+        }
+        return array_fill_keys($wpdb->get_col('SELECT hash FROM ' . self::paths_table() . ' WHERE hash IN (' . implode(',', $hashes) . ')'), true);
     }
 
     public function __construct()
@@ -116,6 +160,7 @@ final class Scanner
         }
 
         $wpdb->query('TRUNCATE TABLE ' . self::table());
+        $wpdb->query('TRUNCATE TABLE ' . self::paths_table());
         delete_option(self::LAST);
         $job = [
             'steps' => $steps,
@@ -166,6 +211,7 @@ final class Scanner
                     'code' => $job['code'],
                     'tables' => $job['tables'],
                     'secs' => time() - $job['started'],
+                    'paths' => true, // exact sized-file references recorded (size cleanup needs them)
                 ], false);
                 delete_option(self::JOB);
                 delete_option(self::FILES);
@@ -517,6 +563,10 @@ final class Scanner
             $values = array_map(fn($r) => $wpdb->prepare('(%d,%s,%d,%s,%s)', $r[0], $r[1], $r[2], mb_substr($r[3], 0, 255), $r[4]), $chunk);
             $wpdb->query('INSERT IGNORE INTO ' . self::table() . ' (attachment_id, source_type, source_id, source_key, how) VALUES ' . implode(',', $values));
         }
+        foreach (array_chunk(array_keys($this->sized), 500) as $chunk) {
+            $wpdb->query('INSERT IGNORE INTO ' . self::paths_table() . " (hash) VALUES ('" . implode("'),('", $chunk) . "')");
+        }
+        $this->sized = [];
     }
 
     // ---- extraction ------------------------------------------------------------------------------------------
@@ -545,8 +595,13 @@ final class Scanner
                 if (strpos($path, '\u') !== false) {
                     $path = (string) json_decode('"' . $path . '"');
                 }
-                foreach ($this->keys[self::key($path)] ?? [] as $id) {
+                $stem = self::stem($path);
+                $ids = $this->keys[self::unsize($stem)] ?? [];
+                foreach ($ids as $id) {
                     $found[$id] = 'url';
+                }
+                if ($ids && preg_match('/-\d+x\d+$/', $stem)) {
+                    $this->sized[md5($stem)] = true;
                 }
             }
         }
