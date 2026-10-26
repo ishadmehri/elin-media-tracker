@@ -351,11 +351,7 @@ final class Cleanup
             if (get_post_type($id) !== 'attachment') {
                 continue;
             }
-            $file = (string) get_post_meta($id, '_wp_attached_file', true);
-            $group = $file === '' ? [$id] : array_map('intval', $wpdb->get_col($wpdb->prepare(
-                "SELECT post_id FROM $wpdb->postmeta WHERE meta_key = '_wp_attached_file' AND meta_value = %s ORDER BY post_id",
-                $file
-            )));
+            $group = Scanner::twins($id);
             $out[$group[0]] = $group;
         }
         return array_values($out);

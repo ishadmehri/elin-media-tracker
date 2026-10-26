@@ -12,7 +12,7 @@ defined('ABSPATH') || exit;
 final class Scanner
 {
     public const CAP = 'manage_options';
-    private const DB = 2; // schema version; bump when install() changes
+    private const DB = 3; // schema version; bump when install() changes
 
     private const JOB = 'mtrk_job';
     private const LAST = 'mtrk_last_scan';
@@ -41,14 +41,14 @@ final class Scanner
     private const LOG_OPTIONS = '/^(itsec_file_change|rank_math_seo_analysis_results$|simple_history)/'; // logs and caches
     private const SKIP_META ="'_wp_attached_file','_wp_attachment_metadata','_wp_attachment_backup_sizes'";
 
-    /** @var array<string,int[]> normalized upload path => attachment ids */
+    /** @var array<string,string> normalized upload path => attachment ids "12,34": lookups made so far */
     private array $keys = [];
-    /** @var array<int,true> */
+    /** @var array<int,bool> attachment id => is an attachment: lookups made so far */
     private array $ids = [];
+    /** @var array<int,true> attachments whose references this instance wrote; their twins are re-checked */
+    private array $touched = [];
     /** @var array<string,true> md5 of every exactly referenced upload path (stem), flushed by save() */
     private array $sized = [];
-    /** @var int[][] attachments that point at the very same file (WPML/Polylang media translations, duplicators) */
-    private array $groups = [];
     /** @var array<string,?string[]> meta keys holding media ids in field plugins: null = the whole value, or sub-keys */
     private array $media_keys;
     /** @var string[] */
@@ -68,6 +68,54 @@ final class Scanner
     {
         global $wpdb;
         return $wpdb->prefix . 'mtrk_paths';
+    }
+
+    public static function files_table(): string
+    {
+        global $wpdb;
+        return $wpdb->prefix . 'mtrk_files';
+    }
+
+    /**
+     * The attachments' own index: normalized path (for lookups) and a hash of the exact file (for twins), so no
+     * request has to hold every attachment in memory or scan postmeta.meta_value, which has no index.
+     */
+    public static function rebuild_index(): void
+    {
+        global $wpdb;
+        $table = self::files_table();
+        $wpdb->query("TRUNCATE TABLE $table");
+        $cursor = 0;
+        do {
+            $rows = $wpdb->get_results($wpdb->prepare("SELECT meta_id, post_id, meta_value FROM $wpdb->postmeta WHERE meta_key = '_wp_attached_file' AND meta_id > %d ORDER BY meta_id LIMIT 2000", $cursor), ARRAY_N);
+            $values = [];
+            foreach ($rows as [$meta_id, $id, $file]) {
+                $values[] = $wpdb->prepare('(%d,%s,%s)', $id, mb_substr(self::key((string) $file), 0, 255), md5((string) $file));
+                $cursor = (int) $meta_id;
+            }
+            if ($values) {
+                $wpdb->query("REPLACE INTO $table (attachment_id, path_key, file_hash) VALUES " . implode(',', $values));
+            }
+        } while (count($rows) === 2000);
+        update_option('mtrk_files_ready', self::DB);
+    }
+
+    /** Keeps the index current when an attachment's file is set or changed (uploads, edits, imports). */
+    public static function file_meta($meta_id, $object_id, $key, $value): void
+    {
+        global $wpdb;
+        if ($key === '_wp_attached_file' && is_string($value)) {
+            $wpdb->replace(self::files_table(), ['attachment_id' => (int) $object_id, 'path_key' => mb_substr(self::key($value), 0, 255), 'file_hash' => md5($value)]);
+        }
+    }
+
+    /** @return int[] attachments pointing at the same file as $id, itself included */
+    public static function twins(int $id): array
+    {
+        global $wpdb;
+        $table = self::files_table();
+        $ids = array_map('intval', $wpdb->get_col($wpdb->prepare("SELECT f.attachment_id FROM $table f JOIN $table a ON a.file_hash = f.file_hash WHERE a.attachment_id = %d ORDER BY f.attachment_id", $id)));
+        return $ids ?: [$id];
     }
 
     public static function install(): void
@@ -90,6 +138,14 @@ final class Scanner
         dbDelta('CREATE TABLE ' . self::paths_table() . " (
             hash char(32) NOT NULL,
             PRIMARY KEY  (hash)
+        ) $charset;");
+        dbDelta('CREATE TABLE ' . self::files_table() . " (
+            attachment_id bigint(20) unsigned NOT NULL,
+            path_key varchar(255) NOT NULL DEFAULT '',
+            file_hash char(32) NOT NULL DEFAULT '',
+            PRIMARY KEY  (attachment_id),
+            KEY path_key (path_key(191)),
+            KEY file_hash (file_hash)
         ) $charset;");
         update_option('mtrk_db', self::DB);
     }
@@ -136,16 +192,9 @@ final class Scanner
 
     public function __construct()
     {
-        global $wpdb;
-        // ponytail: rebuilt per request, scan batches and live saves alike (one indexed query); cache it if
-        // 100k+ attachment sites feel slow on save.
-        $byfile = [];
-        foreach ($wpdb->get_results("SELECT post_id, meta_value FROM $wpdb->postmeta WHERE meta_key = '_wp_attached_file'", ARRAY_N) as [$id, $file]) {
-            $this->ids[(int) $id] = true;
-            $this->keys[self::key((string) $file)][] = (int) $id;
-            $byfile[$file][] = (int) $id;
+        if ((int) get_option('mtrk_files_ready') !== self::DB) {
+            self::rebuild_index(); // once after an upgrade; every full scan rebuilds it anyway
         }
-        $this->groups = array_values(array_filter($byfile, fn($ids) => count($ids) > 1));
 
         $chars = '[^\s"\'<>()\[\]{}|?#,;*]';
         $ext = '\.[a-z0-9]{2,5}(?![a-z0-9])';
@@ -176,6 +225,7 @@ final class Scanner
 
         $wpdb->query('TRUNCATE TABLE ' . self::table());
         $wpdb->query('TRUNCATE TABLE ' . self::paths_table());
+        self::rebuild_index();
         delete_option(self::LAST);
         $job = [
             'steps' => $steps,
@@ -389,7 +439,11 @@ final class Scanner
                 continue;
             }
             $list = implode(',', array_map(fn($id) => $type === 'option' ? $wpdb->prepare('%s', $id) : (int) $id, $ids));
-            $wpdb->query('DELETE FROM ' . self::table() . " WHERE source_type = '$type' AND " . ($type === 'option' ? 'source_key' : 'source_id') . " IN ($list)");
+            $where = " WHERE source_type = '$type' AND " . ($type === 'option' ? 'source_key' : 'source_id') . " IN ($list)";
+            foreach ($wpdb->get_col('SELECT DISTINCT attachment_id FROM ' . self::table() . $where) as $id) {
+                $scanner->touched[(int) $id] = true; // losing a reference may release a twin
+            }
+            $wpdb->query('DELETE FROM ' . self::table() . $where);
             foreach ($steps[$type] as $step => $col) {
                 $scanner->restrict = "AND t.`$col` IN ($list)";
                 $job = ['cursor' => 0];
@@ -398,32 +452,56 @@ final class Scanner
                 } while ($job['cursor'] !== null);
             }
         }
-        $scanner->share();
+        $scanner->share(array_keys($scanner->touched));
+    }
+
+    /** Re-checks the twins of these attachments (after a reference was added or removed outside a scan). */
+    public static function reshare(array $ids): void
+    {
+        (new self())->share(array_map('intval', $ids));
     }
 
     public static function forget(int $post_id): void
     {
         global $wpdb;
         $wpdb->query($wpdb->prepare('DELETE FROM ' . self::table() . " WHERE attachment_id = %d OR (source_type IN ('post', 'shared') AND source_id = %d)", $post_id, $post_id));
+        $wpdb->delete(self::files_table(), ['attachment_id' => $post_id]);
     }
 
     /**
      * Deleting an attachment deletes its file even when another attachment points at the same file (WordPress only
      * checks that for the legacy "thumb"). So when one member of such a group is used, the others are marked used
-     * too, with a 'shared' reference to the used one.
+     * too, with a 'shared' reference to the used one. After a full scan all groups are checked; with $affected
+     * (live saves) only the groups of those attachments.
      */
-    private function share(): void
+    private function share(?array $affected = null): void
     {
         global $wpdb;
         $table = self::table();
-        $wpdb->query("DELETE FROM $table WHERE source_type = 'shared'");
-        if (!$this->groups) {
+        $files = self::files_table();
+        $in = '';
+        if ($affected !== null) {
+            if (!$affected) {
+                return;
+            }
+            $in = " WHERE file_hash IN (SELECT file_hash FROM $files WHERE attachment_id IN (" . implode(',', array_map('intval', $affected)) . '))';
+        }
+        $groups = [];
+        foreach ($wpdb->get_col("SELECT GROUP_CONCAT(attachment_id ORDER BY attachment_id) FROM $files$in GROUP BY file_hash HAVING COUNT(*) > 1") as $list) {
+            $groups[] = array_map('intval', explode(',', $list));
+        }
+        $members = $groups ? array_merge(...$groups) : [];
+        if ($affected === null) {
+            $wpdb->query("DELETE FROM $table WHERE source_type = 'shared'");
+        } elseif ($members) {
+            $wpdb->query("DELETE FROM $table WHERE source_type = 'shared' AND attachment_id IN (" . implode(',', $members) . ')');
+        }
+        if (!$groups) {
             return;
         }
-        $members = array_merge(...$this->groups);
         $used = array_fill_keys(array_map('intval', $wpdb->get_col("SELECT DISTINCT attachment_id FROM $table WHERE attachment_id IN (" . implode(',', $members) . ')')), true);
         $refs = [];
-        foreach ($this->groups as $group) {
+        foreach ($groups as $group) {
             foreach (array_filter($group, fn($id) => isset($used[$id])) as $source) {
                 foreach ($group as $id) {
                     if ($id !== $source) {
@@ -598,7 +676,9 @@ final class Scanner
         if (!$ids) {
             return [];
         }
-        return $wpdb->get_results("SELECT t.`$pk` AS pk, $cols FROM `$table` t WHERE t.`$pk` IN (" . implode(',', $ids) . ") ORDER BY t.`$pk`", ARRAY_A);
+        $rows = $wpdb->get_results("SELECT t.`$pk` AS pk, $cols FROM `$table` t WHERE t.`$pk` IN (" . implode(',', $ids) . ") ORDER BY t.`$pk`", ARRAY_A);
+        $this->prefetch($rows);
+        return $rows;
     }
 
     private function add(array &$refs, array $found, string $type, int $sid, string $key): void
@@ -614,6 +694,9 @@ final class Scanner
     private function save(array $refs): void
     {
         global $wpdb;
+        foreach ($refs as $r) {
+            $this->touched[$r[0]] = true;
+        }
         foreach (array_chunk($refs, 300) as $chunk) {
             $values = array_map(fn($r) => $wpdb->prepare('(%d,%s,%d,%s,%s)', $r[0], $r[1], $r[2], mb_substr($r[3], 0, 255), $r[4]), $chunk);
             $wpdb->query('INSERT IGNORE INTO ' . self::table() . ' (attachment_id, source_type, source_id, source_key, how) VALUES ' . implode(',', $values));
@@ -629,6 +712,20 @@ final class Scanner
     /** Upload paths in any text: URLs (absolute, relative, CDN), JSON-escaped, percent-encoded or \u-escaped. */
     private function in_text(string $text): array
     {
+        $found = [];
+        foreach ($this->paths_in($text) as $path) {
+            $stem = self::stem($path);
+            foreach ($this->lookup(self::unsize($stem)) as $id) {
+                $found[$id] = 'url';
+            }
+            $this->sized[md5($stem)] = true; // every exact path: size cleanup and orphan files check against it
+        }
+        return $found;
+    }
+
+    /** @return string[] upload-relative paths, decoded (URL-encoded, \u-escaped, entities, JSON slashes) */
+    private function paths_in(string $text): array
+    {
         if (stripos($text, '%2F') !== false) { // URL-encoded storage, e.g. Elementor dynamic tag settings
             $text .= "\n" . urldecode($text);
         }
@@ -638,7 +735,7 @@ final class Scanner
         if (strpos($text, '\/') !== false) {
             $text = str_replace('\/', '/', $text);
         }
-        $found = [];
+        $paths = [];
         foreach ($this->patterns as $re) {
             if (!preg_match_all($re, $text, $m)) {
                 continue;
@@ -650,15 +747,24 @@ final class Scanner
                 if (strpos($path, '\u') !== false) {
                     $path = (string) json_decode('"' . $path . '"');
                 }
-                $stem = self::stem($path);
-                $ids = $this->keys[self::unsize($stem)] ?? [];
-                foreach ($ids as $id) {
-                    $found[$id] = 'url';
-                }
-                $this->sized[md5($stem)] = true; // every exact path: size cleanup and orphan files check against it
+                $paths[$path] = true;
             }
         }
-        return $found;
+        return array_keys($paths);
+    }
+
+    /** Resolves every path in a batch of rows with one query instead of one per path. */
+    private function prefetch(array $rows): void
+    {
+        $keys = [];
+        foreach ($rows as $row) {
+            foreach ($row as $value) {
+                foreach (is_string($value) && $value !== '' ? $this->paths_in($value) : [] as $path) {
+                    $keys[] = self::unsize(self::stem($path));
+                }
+            }
+        }
+        $this->resolve($keys);
     }
 
     /** Ids in post content: image classes, core media blocks, gallery-style shortcodes. */
@@ -895,12 +1001,50 @@ final class Scanner
         return $ids;
     }
 
+    /** @return int[] attachments whose path normalizes to $key */
+    private function lookup(string $key): array
+    {
+        if (!isset($this->keys[$key])) {
+            $this->resolve([$key]);
+        }
+        $list = $this->keys[$key] ?? '';
+        return $list === '' ? [] : array_map('intval', explode(',', $list));
+    }
+
+    /** Looks these normalized paths up in the attachments index (indexed IN query) and remembers the answers. */
+    private function resolve(array $keys): void
+    {
+        global $wpdb;
+        $todo = array_values(array_filter(array_unique(array_map('strval', $keys)), fn($k) => !isset($this->keys[$k])));
+        foreach (array_chunk($todo, 500) as $chunk) {
+            $found = array_fill_keys($chunk, '');
+            $in = implode(',', array_map(fn($k) => $wpdb->prepare('%s', mb_substr($k, 0, 255)), $chunk));
+            foreach ($wpdb->get_results('SELECT attachment_id, path_key FROM ' . self::files_table() . " WHERE path_key IN ($in)", ARRAY_N) as [$id, $key]) {
+                if (isset($found[$key])) { // exact: the column's collation may match more loosely than PHP
+                    $found[$key] .= ($found[$key] === '' ? '' : ',') . $id;
+                    $this->ids[(int) $id] = true;
+                }
+            }
+            foreach ($found as $key => $list) {
+                $this->keys[(string) $key] = $list;
+            }
+        }
+    }
+
     private function only(array $ids): array
     {
+        $ids = array_unique(array_filter(array_map('intval', $ids)));
+        $unknown = array_diff($ids, array_keys($this->ids));
+        if ($unknown) {
+            global $wpdb;
+            $found = array_map('intval', $wpdb->get_col('SELECT attachment_id FROM ' . self::files_table() . ' WHERE attachment_id IN (' . implode(',', $unknown) . ')'));
+            foreach ($unknown as $id) {
+                $this->ids[$id] = in_array($id, $found, true);
+            }
+        }
         $out = [];
         foreach ($ids as $id) {
-            $id = (int) $id;
-            if (isset($this->ids[$id])) {
+            if (!empty($this->ids[$id])) {
                 $out[$id] = 'id';
             }
         }

@@ -21,8 +21,8 @@ if ($qdir) {
     }
 }
 
-$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}mtrk_refs, {$wpdb->prefix}mtrk_paths");
-foreach (['mtrk_job', 'mtrk_last_scan', 'mtrk_files', 'mtrk_lock', 'mtrk_db', 'mtrk_quarantine', 'mtrk_quarantine_dir'] as $option) {
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}mtrk_refs, {$wpdb->prefix}mtrk_paths, {$wpdb->prefix}mtrk_files");
+foreach (['mtrk_job', 'mtrk_last_scan', 'mtrk_files', 'mtrk_lock', 'mtrk_db', 'mtrk_files_ready', 'mtrk_quarantine', 'mtrk_quarantine_dir'] as $option) {
     delete_option($option);
 }
 delete_post_meta_by_key('_mtrk_quarantine');
