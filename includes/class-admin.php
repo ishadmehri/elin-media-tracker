@@ -15,6 +15,9 @@ final class Admin
         add_action('wp_enqueue_media', [self::class, 'enqueue']);
         add_action('wp_ajax_mtrk_usage', [self::class, 'ajax_usage']);
         add_filter('manage_media_columns', [self::class, 'column']);
+        add_filter('manage_upload_sortable_columns', fn($cols) => $cols + ['mtrk' => ['mtrk', false]]);
+        add_filter('posts_clauses', [self::class, 'sort_clauses'], 10, 2);
+        add_filter('ajax_query_attachments_args', [self::class, 'grid_query']);
         add_action('manage_media_custom_column', [self::class, 'cell'], 10, 2);
         add_action('restrict_manage_posts', [self::class, 'filter_select']);
         add_action('pre_get_posts', [self::class, 'filter_query']);
@@ -31,6 +34,9 @@ final class Admin
     {
         if (in_array($hook, ['upload.php', 'post.php', 'media_page_media-tracker'], true)) {
             self::enqueue();
+        }
+        if ($hook === 'upload.php' && current_user_can(Scanner::CAP)) { // the grid's usage filter extends media-views
+            wp_enqueue_script('mtrk-grid', plugins_url('assets/grid.js', MTRK_FILE), ['media-views', 'mtrk'], MTRK_VERSION, true);
         }
     }
 
@@ -63,6 +69,11 @@ final class Admin
                 /* translators: 1: number of files, 2: size with unit */
                 'sizesDeleted' => __('%1$s فایل حذف شد (%2$s).', 'media-tracker'),
                 'preview' => __('پیش‌نمایش', 'media-tracker'),
+                'usageLabel' => __('وضعیت استفاده', 'media-tracker'),
+                'usageAll' => __('وضعیت استفاده: همه', 'media-tracker'),
+                'usageUsed' => __('استفاده‌شده', 'media-tracker'),
+                'usageUnused' => __('بدون ارجاع', 'media-tracker'),
+                'usageNew' => __('جدید، بدون ارجاع', 'media-tracker'),
                 /* translators: %s: number of items */
                 'selected' => __('%s مورد انتخاب شده', 'media-tracker'),
                 /* translators: %s: number of media items */
@@ -352,6 +363,29 @@ final class Admin
         if ($q->is_main_query() && $pagenow === 'upload.php' && !empty($_GET['mtrk_usage']) && current_user_can(Scanner::CAP)) {
             $q->set('mtrk_usage', sanitize_key(wp_unslash($_GET['mtrk_usage'])));
         }
+    }
+
+    /** List view sorted by the usage column: fewest places first (ascending), so unreferenced media leads. */
+    public static function sort_clauses(array $clauses, \WP_Query $q): array
+    {
+        global $wpdb;
+        if ($q->get('orderby') !== 'mtrk' || !is_admin() || !current_user_can(Scanner::CAP)) {
+            return $clauses;
+        }
+        $clauses['join'] .= ' LEFT JOIN (SELECT attachment_id, COUNT(*) AS n FROM ' . Scanner::table() . " GROUP BY attachment_id) mtrk ON mtrk.attachment_id = $wpdb->posts.ID";
+        $dir = strtoupper((string) $q->get('order')) === 'DESC' ? 'DESC' : 'ASC';
+        $clauses['orderby'] = "COALESCE(mtrk.n, 0) $dir, $wpdb->posts.post_date DESC";
+        return $clauses;
+    }
+
+    /** Grid view: WordPress drops unknown query args before this filter, so the usage filter comes from the request. */
+    public static function grid_query(array $query): array
+    {
+        $usage = sanitize_key(wp_unslash($_REQUEST['query']['mtrk_usage'] ?? ''));
+        if ($usage && current_user_can(Scanner::CAP)) {
+            $query['mtrk_usage'] = $usage;
+        }
+        return $query;
     }
 
     public static function filter_where(string $where, \WP_Query $q): string

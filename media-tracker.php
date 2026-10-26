@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Media Tracker
  * Description: پیدا کردن رسانه‌های بدون استفاده و نمایش جاهایی که هر رسانه در آن‌ها استفاده شده است.
- * Version: 0.4.3
+ * Version: 0.4.4
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: ishadmehri
@@ -12,7 +12,7 @@
 
 defined('ABSPATH') || exit;
 
-define('MTRK_VERSION', '0.4.3');
+define('MTRK_VERSION', '0.4.4');
 define('MTRK_FILE', __FILE__);
 
 require __DIR__ . '/includes/class-scanner.php';
