@@ -53,11 +53,21 @@ try {
     $is('used', $new, 'uploaded after the scan, then inserted');
     $is('new', $idle, 'uploaded after the scan, never inserted');
 
+    // Two attachments on one file (media translation): using one protects the other.
+    $twin_a = mtrk_fixture_media('mtrk-live-twin.jpg', $made);
+    $twin_b = wp_insert_attachment(['post_title' => 'mtrk twin', 'post_mime_type' => 'image/jpeg', 'post_status' => 'inherit'], (string) get_attached_file($twin_a));
+    $made[] = $twin_b;
+    update_post_meta($p, '_thumbnail_id', $twin_a);
+    Live::flush();
+    $is('used', $twin_b, 'twin of a newly used attachment');
+
     delete_post_meta($q, '_thumbnail_id');
+    delete_post_meta($p, '_thumbnail_id');
     delete_option('mtrkfix_live');
     Live::flush();
     $is('unused', $featured, 'featured image removed');
     $is('unused', $widget, 'option deleted');
+    $is('new', $twin_b, 'twin released when the other is no longer used');
 
     wp_delete_post($q, true);
     Live::flush();

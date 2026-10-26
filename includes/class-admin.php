@@ -337,6 +337,11 @@ final class Admin
             case 'file':
                 return self::line(__('فایل کد', 'media-tracker'), '', ['<code dir="ltr">' . esc_html($key) . '</code>']);
 
+            case 'shared':
+                /* translators: %d: attachment id */
+                $title = get_the_title($sid) ?: sprintf(__('پیوست #%d', 'media-tracker'), $sid);
+                return self::line($title, get_edit_post_link($sid, 'raw') ?: '', [esc_html__('همین فایل را دارد و استفاده شده است؛ حذف این پیوست فایل مشترک را پاک می‌کند و تصویر آن یکی هم می‌شکند.', 'media-tracker')]);
+
             default:
                 return self::plugin_row($key, $sid);
         }

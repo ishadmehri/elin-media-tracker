@@ -41,6 +41,8 @@ final class Scanner
     private array $ids = [];
     /** @var array<string,true> md5 of exactly referenced sized files, flushed by save() */
     private array $sized = [];
+    /** @var int[][] attachments that point at the very same file (WPML/Polylang media translations, duplicators) */
+    private array $groups = [];
     /** @var string[] */
     private array $patterns;
     /** @var array<string,true> ACF field keys whose value is a media id */
@@ -129,10 +131,13 @@ final class Scanner
         global $wpdb;
         // ponytail: rebuilt per request, scan batches and live saves alike (one indexed query); cache it if
         // 100k+ attachment sites feel slow on save.
+        $byfile = [];
         foreach ($wpdb->get_results("SELECT post_id, meta_value FROM $wpdb->postmeta WHERE meta_key = '_wp_attached_file'", ARRAY_N) as [$id, $file]) {
             $this->ids[(int) $id] = true;
             $this->keys[self::key((string) $file)][] = (int) $id;
+            $byfile[$file][] = (int) $id;
         }
+        $this->groups = array_values(array_filter($byfile, fn($ids) => count($ids) > 1));
 
         $chars = '[^\s"\'<>()\[\]{}|?#,;*]';
         $ext = '\.[a-z0-9]{2,5}(?![a-z0-9])';
@@ -205,6 +210,7 @@ final class Scanner
             } while ($job['i'] < count($job['steps']) && microtime(true) < $deadline);
 
             if ($job['i'] >= count($job['steps'])) {
+                $scanner->share();
                 update_option(self::LAST, [
                     'time' => time(),
                     'max_id' => $job['max_id'],
@@ -377,12 +383,41 @@ final class Scanner
                 } while ($job['cursor'] !== null);
             }
         }
+        $scanner->share();
     }
 
     public static function forget(int $post_id): void
     {
         global $wpdb;
-        $wpdb->query($wpdb->prepare('DELETE FROM ' . self::table() . " WHERE attachment_id = %d OR (source_type = 'post' AND source_id = %d)", $post_id, $post_id));
+        $wpdb->query($wpdb->prepare('DELETE FROM ' . self::table() . " WHERE attachment_id = %d OR (source_type IN ('post', 'shared') AND source_id = %d)", $post_id, $post_id));
+    }
+
+    /**
+     * Deleting an attachment deletes its file even when another attachment points at the same file (WordPress only
+     * checks that for the legacy "thumb"). So when one member of such a group is used, the others are marked used
+     * too, with a 'shared' reference to the used one.
+     */
+    private function share(): void
+    {
+        global $wpdb;
+        $table = self::table();
+        $wpdb->query("DELETE FROM $table WHERE source_type = 'shared'");
+        if (!$this->groups) {
+            return;
+        }
+        $members = array_merge(...$this->groups);
+        $used = array_fill_keys(array_map('intval', $wpdb->get_col("SELECT DISTINCT attachment_id FROM $table WHERE attachment_id IN (" . implode(',', $members) . ')')), true);
+        $refs = [];
+        foreach ($this->groups as $group) {
+            foreach (array_filter($group, fn($id) => isset($used[$id])) as $source) {
+                foreach ($group as $id) {
+                    if ($id !== $source) {
+                        $refs[] = [$id, 'shared', $source, '', 'id'];
+                    }
+                }
+            }
+        }
+        $this->save($refs);
     }
 
     // ---- batches ---------------------------------------------------------------------------------------------

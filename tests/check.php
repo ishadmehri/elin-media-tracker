@@ -63,6 +63,10 @@ $expect = [ // attachment id => [expected used?, what]
     ($num = $media('mtrk-num.jpg')) => [false, 'same number in an ACF number field'],
     ($self = $media('mtrk-self.jpg')) => [false, 'only in its own meta'],
     ($none = $media('mtrk-none.jpg')) => [false, 'nowhere'],
+    ($twin_a = $media('mtrk-twin.jpg')) => [true, 'shared file: the one used (by id only)'],
+    ($twin_b = $media('mtrk-twin.jpg')) => [true, 'shared file: its twin pointing at the same file'],
+    ($idle_a = $media('mtrk-idle.jpg')) => [false, 'shared file, neither used (1)'],
+    ($idle_b = $media('mtrk-idle.jpg')) => [false, 'shared file, neither used (2)'],
 ];
 
 $p1 = $post(['post_content' => implode("\n", [
@@ -89,6 +93,7 @@ update_post_meta($self, '_mtrk_note', "$base/2026/10/mtrk-self.jpg");
 
 $p2 = $post(['post_type' => 'product', 'post_status' => 'draft']);
 update_post_meta($p2, '_product_image_gallery', "$e,999998");
+update_post_meta($p2, '_thumbnail_id', $twin_a);
 
 $r = $post(['post_type' => 'revision', 'post_status' => 'inherit', 'post_parent' => $p1, 'post_name' => "$p1-revision-v1", 'post_content' => "<img src=\"$base/2026/10/mtrk-rev.jpg\">"]);
 add_metadata('post', $r, '_elementor_data', wp_slash(wp_json_encode([['settings' => ['image' => ['id' => $rev]]]])));
