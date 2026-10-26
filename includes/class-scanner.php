@@ -33,7 +33,9 @@ final class Scanner
     ];
     private const ID_META = ['_thumbnail_id', 'thumbnail_id'];
     public const ID_OPTIONS = ['site_icon', 'site_logo', 'woocommerce_placeholder_image'];
-    private const SKIP_META = "'_wp_attached_file','_wp_attachment_metadata','_wp_attachment_backup_sizes'";
+    private const LOG_TYPES = '(^|_)logs?$'; // MySQL REGEXP: post types that are logs (taxopress_logs, wp_log)
+    private const LOG_OPTIONS = '/^(itsec_file_change|rank_math_seo_analysis_results$|simple_history)/'; // logs and caches
+    private const SKIP_META ="'_wp_attached_file','_wp_attachment_metadata','_wp_attachment_backup_sizes'";
 
     /** @var array<string,int[]> normalized upload path => attachment ids */
     private array $keys = [];
@@ -452,7 +454,7 @@ final class Scanner
     {
         global $wpdb;
         $rows = $this->rows($wpdb->posts, 'ID', 't.post_content, t.post_excerpt', 'LENGTH(t.post_content) + LENGTH(t.post_excerpt)',
-            "AND t.post_type NOT IN ('revision', 'attachment') AND t.post_status <> 'auto-draft'", $cursor, $job);
+            "AND t.post_type NOT IN ('revision', 'attachment') AND t.post_type NOT REGEXP '" . self::LOG_TYPES . "' AND t.post_status <> 'auto-draft'", $cursor, $job);
         $refs = [];
         foreach ($rows as $r) {
             $text = $r['post_content'] . "\n" . $r['post_excerpt'];
@@ -469,7 +471,7 @@ final class Scanner
         $table = $wpdb->$name;
         $where = 'AND t.meta_key NOT IN (' . self::SKIP_META . ')';
         if ($name === 'postmeta') {
-            $where .= " AND NOT EXISTS (SELECT 1 FROM $wpdb->posts p WHERE p.ID = t.post_id AND p.post_type = 'revision')";
+            $where .= " AND NOT EXISTS (SELECT 1 FROM $wpdb->posts p WHERE p.ID = t.post_id AND (p.post_type = 'revision' OR p.post_type REGEXP '" . self::LOG_TYPES . "'))";
         }
         $rows = $this->rows($table, $pk, "t.`$owner` AS sid, t.meta_key AS k, t.meta_value AS v", 'LENGTH(t.meta_value)', $where, $cursor, $job);
         $acf = $this->acf_ids($table, $owner, 'meta_key', 'meta_value', $rows);
@@ -489,7 +491,11 @@ final class Scanner
             "AND t.option_name NOT LIKE '%\\_transient\\_%' AND t.option_name NOT LIKE 'mtrk\\_%'", $cursor, $job);
         $acf = $this->acf_ids($wpdb->options, '', 'option_name', 'option_value', $rows);
         $refs = [];
+        $skip = apply_filters('mtrk_skip_options', self::LOG_OPTIONS);
         foreach ($rows as $i => $r) {
+            if (preg_match($skip, $r['k'])) {
+                continue;
+            }
             $v = (string) $r['v'];
             $ids = $this->in_serialized($v);
             if (in_array($r['k'], self::ID_OPTIONS, true)) {
@@ -797,7 +803,8 @@ final class Scanner
     {
         global $wpdb;
         $core = array_merge(array_values($wpdb->tables('all')), [self::table()]);
-        $skip = apply_filters('mtrk_skip_tables', '/_(log|logs|sessions|cache)$|actionscheduler_|wc_admin_|_lookup$|_stats$/i');
+        // Logs, sessions, caches and indexes derived from content: they mention files without using them.
+        $skip = apply_filters('mtrk_skip_tables', '/_(log|logs|sessions|cache)$|actionscheduler_|wc_admin_|_lookup$|_stats$|simple_history|rank_math_internal_links$/i');
         $out = [];
         foreach ($wpdb->get_col($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($wpdb->prefix) . '%')) as $t) {
             $other_site = is_multisite() && preg_match('/^' . preg_quote($wpdb->base_prefix, '/') . '\d+_/', $t) && $wpdb->prefix === $wpdb->base_prefix;
