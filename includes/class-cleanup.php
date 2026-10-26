@@ -150,9 +150,12 @@ final class Cleanup
      */
     public static function delete(array $ids): array
     {
+        $out = ['ids' => [], 'bytes' => 0];
+        if (!Scanner::trusted()) {
+            return $out; // not even quarantined media: the scan that put it there may be the faulty one
+        }
         $map = (array) get_option(self::MAP, []);
         $dir = self::qdir();
-        $out = ['ids' => [], 'bytes' => 0];
         foreach (self::groups($ids) as $group) {
             $q = get_post_meta($group[0], self::META, true);
             if (is_array($q)) {
@@ -359,7 +362,7 @@ final class Cleanup
 
     private static function unreferenced(array $group): bool
     {
-        if (!Scanner::last()) {
+        if (!Scanner::trusted()) {
             return false;
         }
         $counts = Scanner::counts($group);

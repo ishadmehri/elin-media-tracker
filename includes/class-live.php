@@ -91,6 +91,6 @@ final class Live
         if (ctype_digit($s)) { // a bare id: only in options known to hold one, or ACF option fields
             return in_array($name, Scanner::ID_OPTIONS, true) || strpos($name, 'options_') === 0;
         }
-        return (bool) preg_match('~uploads|(?:19|20)\d\d\\\\?/[01]\d|attachment_id|media_id|image_id|thumbnail_id|custom_logo|site_logo|site_icon|"ids"~', $s);
+        return (bool) preg_match('~uploads|(?:19|20)\d\d\\\\?/[01]\d|' . Scanner::MEDIA_KEY . '|custom_logo|site_logo|site_icon|"ids"~i', $s);
     }
 }

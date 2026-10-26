@@ -23,6 +23,17 @@ final class Page
         return add_query_arg(['page' => 'media-tracker', 'tab' => $tab] + $args, admin_url('upload.php'));
     }
 
+    public static function suspect_text(): string
+    {
+        $ids = (array) (Scanner::last()['suspect'] ?? []);
+        return sprintf(
+            /* translators: 1: number of images, 2: attachment ids */
+            __('این اسکن قابل اعتماد نیست: %1$s تصویر شاخص (مثل %2$s) که حتماً استفاده می‌شوند، بدون ارجاع آمدند. پس قرنطینه و حذف غیرفعال است. اسکن را دوباره اجرا کنید؛ اگر باز تکرار شد، گزارش دهید.', 'media-tracker'),
+            number_format_i18n(count($ids)),
+            '#' . implode('، #', array_slice($ids, 0, 5))
+        );
+    }
+
     public static function scope(array $last): string
     {
         $scope = $last['code'] ? __('دیتابیس + سورس کد', 'media-tracker') : __('فقط دیتابیس', 'media-tracker');
@@ -53,6 +64,9 @@ final class Page
                 <?php endforeach; ?>
             </nav>
             <?php self::done_notice(); ?>
+            <?php if (!empty($last['suspect'])) : ?>
+                <div class="notice notice-error"><p><?php echo esc_html(self::suspect_text()); ?></p></div>
+            <?php endif; ?>
             <?php
             if (!$last && $tab !== 'scan' && $tab !== 'quarantine') {
                 printf(
@@ -464,7 +478,8 @@ final class Page
         Admin::guard();
         $do = sanitize_key(wp_unslash($_POST['do'] ?? ''));
         if ($do === 'start') {
-            wp_send_json_success(Scanner::start(!empty($_POST['code']), !empty($_POST['tables'])));
+            $started = Scanner::start(!empty($_POST['code']), !empty($_POST['tables']));
+            isset($started['error']) ? wp_send_json_error($started['error'], 500) : wp_send_json_success($started);
         }
         if ($do === 'step') {
             wp_send_json_success(Scanner::run_step());
@@ -487,6 +502,9 @@ final class Page
         if ($do === 'clean' && !$names) {
             wp_send_json_error(__('هیچ سایزی انتخاب نشده است.', 'media-tracker'), 400);
         }
+        if ($do === 'clean' && !Scanner::trusted()) {
+            wp_send_json_error(self::suspect_text(), 409);
+        }
         wp_send_json_success(Sizes::step(absint($_POST['cursor'] ?? 0), $names, $do === 'clean'));
     }
 
@@ -497,6 +515,9 @@ final class Page
             wp_send_json_error(__('اسکن را با این نسخه دوباره اجرا کنید.', 'media-tracker'), 409);
         }
         if (sanitize_key(wp_unslash($_POST['do'] ?? '')) === 'delete') {
+            if (!Scanner::trusted()) {
+                wp_send_json_error(self::suspect_text(), 409);
+            }
             // Paths are only looked up: Orphans::delete() deletes nothing its own fresh listing doesn't show.
             $paths = array_map(fn($p) => (string) $p, (array) wp_unslash($_POST['paths'] ?? []));
             wp_send_json_success(Orphans::delete($paths));
@@ -511,6 +532,9 @@ final class Page
         $ids = array_filter(array_map('absint', (array) ($_POST['ids'] ?? [])));
         if (!$ids) {
             wp_send_json_error(__('چیزی انتخاب نشده است.', 'media-tracker'), 400);
+        }
+        if (in_array($act, ['quarantine', 'delete'], true) && !Scanner::trusted()) {
+            wp_send_json_error(self::suspect_text(), 409);
         }
         $bytes = 0;
         switch ($act) {

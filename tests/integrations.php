@@ -342,6 +342,19 @@ try {
         'note' => (string) $media('je-cct-num', false, 'JetEngine CCT text column with the same number'),
     ]);
 
+    // ---- Lightweight Player for Aparat (formats from its own source) -------------------------------------------
+    // A chosen poster sits in the block's posterId or the shortcode's poster=""; an automatic one (no poster
+    // chosen) is imported into the library and recorded only in the option lwpa_video_<hash> as poster_id.
+    $aparat = $post(['post_title' => 'mtrk aparat', 'post_content' => implode("\n", [
+        '<!-- wp:elinweb/aparat-player ' . wp_json_encode(['url' => 'https://www.aparat.com/v/mtrkA1', 'posterId' => $media('ap-block', true, 'Aparat block posterId (no URL kept)'), 'posterURL' => '']) . ' /-->',
+        '[lwpa_aparat url="https://www.aparat.com/v/mtrkB2" poster="' . $media('ap-short', true, 'Aparat shortcode poster=""') . '"]',
+        '<!-- wp:elinweb/aparat-player {"url":"https://www.aparat.com/v/mtrkC3"} /-->',
+    ])]);
+    $auto = $media('ap-auto', true, 'Aparat automatic poster (option lwpa_video_<hash>)');
+    update_post_meta($auto, '_lwpa_hash', 'mtrkC3');
+    update_option('lwpa_video_mtrkC3', ['title' => 'mtrk', 'poster_id' => $auto, 'resolved_at' => time()], false);
+    $cleanup[] = fn() => delete_option('lwpa_video_mtrkC3');
+
     // ---- Smart Slider 3: stores uploads paths as $upload$/... in its own table --------------------------------
     $slides = $wpdb->prefix . 'nextend2_smartslider3_slides';
     if (!$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $slides))) {

@@ -6,6 +6,7 @@
  * Run: wp eval-file wp-content/plugins/media-tracker/tests/check.php
  */
 
+use MediaTracker\Cleanup;
 use MediaTracker\Scanner;
 
 defined('ABSPATH') || exit;
@@ -118,6 +119,21 @@ try {
     mtrk_fixture_assert($expect, $fail);
     $sources = array_column(Scanner::refs($a), 'source_id');
     $is($sources === [(string) $p1], 'refs point at the right post');
+
+    // Safety guard: a scan that loses featured images must not be trusted with deletions.
+    $is(Scanner::trusted() && Scanner::missed_featured() === [], 'guard: a clean scan is trusted, no featured image missed');
+    $wpdb->delete(Scanner::table(), ['attachment_id' => $b]);
+    $is(Scanner::missed_featured() === [$b], 'guard: a featured image without references is caught');
+    $last = Scanner::last();
+    $last['suspect'] = [$b];
+    update_option('mtrk_last_scan', $last, false);
+    $is(!Scanner::trusted() && Cleanup::delete([$none])['ids'] === [] && Cleanup::quarantine([$none]) === [], 'guard: a suspect scan refuses delete and quarantine');
+    $wpdb->query('DROP TABLE ' . Scanner::files_table()); // the index failing on a host
+    $before = Scanner::last();
+    $is(isset(Scanner::start(false, false)['error']) && Scanner::last() === $before, 'guard: a broken index stops the scan and keeps the previous result');
+    Scanner::install();
+    mtrk_fixture_scan(false, false);
+    $is(Scanner::trusted(), 'guard: the next clean scan is trusted again');
 } finally {
     foreach (array_reverse($posts) as $id) {
         wp_delete_post($id, true);

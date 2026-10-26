@@ -25,6 +25,8 @@ final class Scanner
     private const CODE_EXT = '/\.(php|css|js|json|html?|twig|scss|less)$/i';
     private const SKIP_DIRS = ['node_modules', 'vendor', '.git'];
     private const ACF_TYPES = ['image', 'file', 'gallery'];
+    // Keys that hold a media id: attachment_id, image_id, poster_id / posterId, bgImgID, logo_id, cover_id, ...
+    public const MEDIA_KEY = '(?:image|img|media|poster|cover|logo|icon|banner|background|bg|avatar|photo|picture|thumbnail|thumb|attachment|video|audio|file)_?id';
     private const MEDIA_TYPES = [ // Meta Box, JetEngine: field types whose value is media
         'image', 'image_advanced', 'image_upload', 'plupload_image', 'thickbox_image', 'single_image',
         'file', 'file_advanced', 'file_upload', 'video', 'media', 'gallery',
@@ -84,7 +86,7 @@ final class Scanner
      * The attachments' own index: normalized path (for lookups) and a hash of the exact file (for twins), so no
      * request has to hold every attachment in memory or scan postmeta.meta_value, which has no index.
      */
-    public static function rebuild_index(): void
+    public static function rebuild_index(): bool
     {
         global $wpdb;
         $table = self::files_table();
@@ -101,7 +103,32 @@ final class Scanner
                 $wpdb->query("REPLACE INTO $table (attachment_id, path_key, file_hash) VALUES " . implode(',', $values));
             }
         } while (count($rows) === 2000);
+        // A missing or short index (table not created, a host refusing TRUNCATE/REPLACE) would make every id-based
+        // reference vanish and featured images look unreferenced: check it rather than trust it.
+        $want = (int) $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $wpdb->postmeta WHERE meta_key = '_wp_attached_file'");
+        $have = (int) $wpdb->get_var("SELECT COUNT(*) FROM $table");
+        if ($have !== $want) {
+            delete_option('mtrk_files_ready');
+            return false;
+        }
         update_option('mtrk_files_ready', self::DB);
+        return true;
+    }
+
+    /**
+     * Featured images the scan left unreferenced. Every one of them is used, so any here means the scan went wrong
+     * on this site; deletions are refused until a clean scan.
+     * @return int[]
+     */
+    public static function missed_featured(): array
+    {
+        global $wpdb;
+        return array_map('intval', $wpdb->get_col("SELECT DISTINCT a.ID FROM $wpdb->postmeta m
+            JOIN $wpdb->posts p ON p.ID = m.post_id
+            JOIN $wpdb->posts a ON a.ID = m.meta_value AND a.post_type = 'attachment'
+            WHERE m.meta_key = '_thumbnail_id' AND p.post_type NOT IN ('revision', 'attachment') AND p.post_status NOT IN ('auto-draft', 'trash')
+              AND p.post_type NOT REGEXP '" . self::LOG_TYPES . "'
+              AND NOT EXISTS (SELECT 1 FROM " . self::table() . ' r WHERE r.attachment_id = a.ID) LIMIT 50'));
     }
 
     /** Keeps the index current when an attachment's file is set or changed (uploads, edits, imports). */
@@ -227,9 +254,15 @@ final class Scanner
             $steps[] = 'files';
         }
 
+        if (!self::rebuild_index()) { // keep the previous results rather than produce wrong ones
+            return ['error' => sprintf(
+                /* translators: %s: database error */
+                __('ساخت فهرست رسانه‌ها روی این سایت ناموفق بود، پس اسکن شروع نشد و نتیجه‌ی قبلی دست نخورد. خطای دیتابیس: %s', 'media-tracker'),
+                $wpdb->last_error ?: '—'
+            )];
+        }
         $wpdb->query('TRUNCATE TABLE ' . self::table());
         $wpdb->query('TRUNCATE TABLE ' . self::paths_table());
-        self::rebuild_index();
         delete_option(self::LAST);
         $job = [
             'steps' => $steps,
@@ -287,6 +320,7 @@ final class Scanner
                     'tables' => $job['tables'],
                     'secs' => time() - $job['started'],
                     'paths' => 2, // exact referenced paths recorded: 1 = sized files only, 2 = all (orphan files need 2)
+                    'suspect' => self::missed_featured(), // non-empty: this scan is not trusted, deletions refused
                 ], false);
                 delete_option(self::JOB);
                 delete_option(self::FILES);
@@ -309,6 +343,13 @@ final class Scanner
     {
         $job = get_option(self::JOB);
         return is_array($job) ? $job : null;
+    }
+
+    /** A finished scan that passed its own check; only then may anything be quarantined or deleted. */
+    public static function trusted(): bool
+    {
+        $last = self::last();
+        return $last && empty($last['suspect']);
     }
 
     public static function last(): ?array
@@ -780,6 +821,14 @@ final class Scanner
         if (preg_match_all('/\bwp-image-(\d+)/', $c, $m)) {
             $ids = $m[1];
         }
+        // Any block (plugin blocks too): attributes named like a media id, e.g. posterId, bgImgID, logo_id.
+        if (preg_match_all('~<!-- wp:[\w/-]+ (\{.*?\}) /?-->~s', $c, $m)) {
+            foreach ($m[1] as $json) {
+                if (preg_match_all('/"[a-z_]*' . self::MEDIA_KEY . '"\s*:\s*"?(\d+)/i', $json, $mm)) {
+                    $ids = array_merge($ids, $mm[1]);
+                }
+            }
+        }
         if (preg_match_all('~<!-- wp:(?:core/)?(?:image|cover|media-text|video|audio|file|gallery) (\{.*?\}) /?-->~s', $c, $m)) {
             foreach ($m[1] as $json) {
                 if (preg_match_all('/"(?:id|mediaId)":(\d+)|"ids":\[([\d,]+)\]/', $json, $mm)) {
@@ -787,7 +836,7 @@ final class Scanner
                 }
             }
         }
-        if (preg_match_all('/\[[\w-]+\s[^\]]*?\b(?:ids|include|image|images|attachment_id|image_id)\s*=\s*["\']?([\d, ]+)/i', $c, $m)) {
+        if (preg_match_all('/\[[\w-]+\s[^\]]*?\b(?:ids|include|images?|poster|cover|logo|background|thumbnail|photo|[a-z_]*' . self::MEDIA_KEY . ')\s*=\s*["\']?([\d, ]+)/i', $c, $m)) {
             foreach ($m[1] as $list) {
                 $ids = array_merge($ids, explode(',', $list));
             }
@@ -840,7 +889,7 @@ final class Scanner
             return [];
         }
         $ids = [];
-        if (preg_match_all('/"(?:attachment_id|media_id|image_id|thumbnail_id|custom_logo|site_logo|site_icon)"(?:;(?:i:|s:\d+:")|\s*:\s*"?)(\d+)/', $v, $m)) {
+        if (preg_match_all('/"(?:[a-z_]*' . self::MEDIA_KEY . '|custom_logo|site_logo|site_icon)"(?:;(?:i:|s:\d+:")|\s*:\s*"?)(\d+)/i', $v, $m)) {
             $ids = $m[1];
         }
         if (preg_match_all('/"ids";a:\d+:\{([^}]*)\}/', $v, $m)) {

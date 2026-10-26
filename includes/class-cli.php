@@ -32,7 +32,10 @@ final class CLI
      */
     public function scan(array $args, array $assoc): void
     {
-        Scanner::start((bool) Utils\get_flag_value($assoc, 'code', false), (bool) Utils\get_flag_value($assoc, 'tables', true));
+        $started = Scanner::start((bool) Utils\get_flag_value($assoc, 'code', false), (bool) Utils\get_flag_value($assoc, 'tables', true));
+        if (isset($started['error'])) {
+            WP_CLI::error($started['error']);
+        }
         $bar = Utils\make_progress_bar('Scanning', 100);
         $at = 0;
         do {
@@ -64,6 +67,9 @@ final class CLI
         $s = Scanner::summary();
         WP_CLI::log(sprintf('Last scan: %s, %s%s, %ss', wp_date('Y-m-d H:i', $last['time']), $last['code'] ? 'database + code' : 'database only', $last['tables'] ? ' + plugin tables' : '', $last['secs']));
         WP_CLI::log(sprintf('Used: %d  Unreferenced: %d  New, unreferenced: %d  Quarantined: %d', $s['used'], $s['unused'], $s['new'], count(Cleanup::quarantined())));
+        if (!Scanner::trusted()) {
+            WP_CLI::warning('Not trusted: featured images came out unreferenced (#' . implode(', #', $last['suspect']) . '). Quarantine and delete are refused; rerun the scan and report it if it repeats.');
+        }
     }
 
     /**
