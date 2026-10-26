@@ -39,7 +39,7 @@ final class Scanner
     private array $keys = [];
     /** @var array<int,true> */
     private array $ids = [];
-    /** @var array<string,true> md5 of exactly referenced sized files, flushed by save() */
+    /** @var array<string,true> md5 of every exactly referenced upload path (stem), flushed by save() */
     private array $sized = [];
     /** @var int[][] attachments that point at the very same file (WPML/Polylang media translations, duplicators) */
     private array $groups = [];
@@ -78,7 +78,7 @@ final class Scanner
             UNIQUE KEY ref (attachment_id,source_type,source_id,source_key(150)),
             KEY source (source_type,source_id)
         ) $charset;");
-        // md5 of every sized file a reference names exactly ("2024/05/a-750x500"), so size cleanup can keep it.
+        // md5 of every upload path a reference names exactly ("2024/05/a-750x500"), so cleanups can keep it.
         dbDelta('CREATE TABLE ' . self::paths_table() . " (
             hash char(32) NOT NULL,
             PRIMARY KEY  (hash)
@@ -217,7 +217,7 @@ final class Scanner
                     'code' => $job['code'],
                     'tables' => $job['tables'],
                     'secs' => time() - $job['started'],
-                    'paths' => true, // exact sized-file references recorded (size cleanup needs them)
+                    'paths' => 2, // exact referenced paths recorded: 1 = sized files only, 2 = all (orphan files need 2)
                 ], false);
                 delete_option(self::JOB);
                 delete_option(self::FILES);
@@ -635,9 +635,7 @@ final class Scanner
                 foreach ($ids as $id) {
                     $found[$id] = 'url';
                 }
-                if ($ids && preg_match('/-\d+x\d+$/', $stem)) {
-                    $this->sized[md5($stem)] = true;
-                }
+                $this->sized[md5($stem)] = true; // every exact path: size cleanup and orphan files check against it
             }
         }
         return $found;

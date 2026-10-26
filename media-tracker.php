@@ -18,6 +18,7 @@ define('MTRK_FILE', __FILE__);
 require __DIR__ . '/includes/class-scanner.php';
 require __DIR__ . '/includes/class-live.php';
 require __DIR__ . '/includes/class-sizes.php';
+require __DIR__ . '/includes/class-orphans.php';
 require __DIR__ . '/includes/class-admin.php';
 
 register_activation_hook(__FILE__, ['MediaTracker\Scanner', 'install']);
