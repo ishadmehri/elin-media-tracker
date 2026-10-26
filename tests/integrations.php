@@ -19,8 +19,8 @@ $made = [];
 $expect = [];
 $cleanup = [];
 $cdn = 'https://cdn.example.com/x.jpg';
-$media = function (string $name, bool $used, string $what) use (&$made, &$expect): int {
-    $id = mtrk_fixture_media("mtrk-$name.jpg", $made);
+$media = function (string $name, bool $used, string $what, string $dir = '2026/10') use (&$made, &$expect): int {
+    $id = mtrk_fixture_media("mtrk-$name.jpg", $made, $dir);
     $expect[$id] = [$used, $what];
     return $id;
 };
@@ -192,6 +192,55 @@ try {
         ]);
     } else {
         echo "SKIP WPForms (not active)\n";
+    }
+
+    // ---- WooCommerce downloadable products -------------------------------------------------------------------
+    if (class_exists('WC_Product_Simple')) {
+        $protected = 'woocommerce_uploads/2026/10'; // where the product "Downloadable files" uploader puts files
+        $simple = new WC_Product_Simple();
+        $simple->set_name('mtrk downloadable');
+        $simple->set_downloadable(true);
+        $simple->set_virtual(true);
+        $file1 = $url($media('wc-protected-a1b2c3', true, 'Woo download in woocommerce_uploads', $protected));
+        $file2 = $url($media('wc-library', true, 'Woo download from the regular media library'));
+        // Woo also takes paths instead of URLs. Server paths only count as absolute when they start with "/", which
+        // a Windows dev box can't give, so use the site-relative form; both contain wp-content/uploads/.
+        $abs = $media('wc-path', true, 'Woo download given as a path, not a URL', $protected);
+        // Saving downloads as an admin auto-approves their folders; remove only the rules this run adds.
+        $rules = $wpdb->prefix . 'wc_product_download_directories';
+        $last_rule = (int) $wpdb->get_var("SELECT MAX(url_id) FROM $rules");
+        $cleanup[] = fn() => $wpdb->query($wpdb->prepare("DELETE FROM $rules WHERE url_id > %d", $last_rule));
+        $downloads = [];
+        $path = '/' . ltrim(str_replace(wp_normalize_path(ABSPATH), '', wp_normalize_path((string) get_attached_file($abs))), '/');
+        foreach ([$file1, $file2, $path] as $i => $file) {
+            $d = new WC_Product_Download();
+            $d->set_id(wp_generate_uuid4());
+            $d->set_name("file $i");
+            $d->set_file($file);
+            $downloads[] = $d;
+        }
+        $simple->set_downloads($downloads);
+        $made[] = $simple->save();
+
+        $variable = new WC_Product_Variable();
+        $variable->set_name('mtrk variable downloadable');
+        $made[] = $variable->save();
+        $variation = new WC_Product_Variation();
+        $variation->set_parent_id($variable->get_id());
+        $variation->set_downloadable(true);
+        $d = new WC_Product_Download();
+        $d->set_id(wp_generate_uuid4());
+        $d->set_name('variation file');
+        $d->set_file($url($media('wc-variation', true, 'Woo download on a variation', $protected)));
+        $variation->set_downloads([$d]);
+        $made[] = $variation->save();
+
+        $media('wc-orphan', false, 'file in woocommerce_uploads, not attached to a product', $protected);
+        foreach ([$simple->get_id(), $variation->get_id()] as $pid) {
+            $is(count(wc_get_product($pid)->get_downloads()) > 0, "fixture: downloads saved on product #$pid");
+        }
+    } else {
+        echo "SKIP WooCommerce (not active)\n";
     }
 
     // ---- Contact Form 7 --------------------------------------------------------------------------------------

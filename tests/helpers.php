@@ -7,19 +7,19 @@ defined('ABSPATH') || exit;
 
 wp_set_current_user((int) (get_users(['role' => 'administrator', 'number' => 1, 'fields' => 'ID'])[0] ?? 0));
 
-/** A real attachment with a real 2×2 file in uploads/2026/10, so plugins that touch the file don't choke. */
-function mtrk_fixture_media(string $file, array &$made): int
+/** A real attachment with a real 2×2 file in uploads/$dir, so plugins that touch the file don't choke. */
+function mtrk_fixture_media(string $file, array &$made, string $dir = '2026/10'): int
 {
-    $dir = wp_upload_dir('2026/10');
-    wp_mkdir_p($dir['path']);
-    $path = $dir['path'] . '/' . $file;
+    $folder = wp_upload_dir()['basedir'] . "/$dir";
+    wp_mkdir_p($folder);
+    $path = "$folder/$file";
     if (function_exists('imagecreatetruecolor')) {
         imagejpeg(imagecreatetruecolor(2, 2), $path);
     } else {
         file_put_contents($path, 'x');
     }
     $id = wp_insert_attachment(['post_title' => "mtrk $file", 'post_mime_type' => 'image/jpeg', 'post_status' => 'inherit'], $path);
-    update_post_meta($id, '_wp_attachment_metadata', ['file' => "2026/10/$file", 'width' => 2, 'height' => 2, 'sizes' => []]);
+    update_post_meta($id, '_wp_attachment_metadata', ['file' => "$dir/$file", 'width' => 2, 'height' => 2, 'sizes' => []]);
     $made[] = $id;
     return $id;
 }
