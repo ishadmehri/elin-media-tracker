@@ -32,6 +32,11 @@ add_action('delete_attachment', ['MediaTracker\Cleanup', 'forget']);
 add_action('deleted_post', ['MediaTracker\Scanner', 'forget']);
 MediaTracker\Live::init();
 
+if (defined('WP_CLI') && WP_CLI) {
+    require __DIR__ . '/includes/class-cli.php';
+    WP_CLI::add_command('media-tracker', MediaTracker\CLI::class);
+}
+
 if (is_admin()) {
     MediaTracker\Admin::init();
 }
