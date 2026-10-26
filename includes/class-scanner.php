@@ -72,6 +72,10 @@ final class Scanner
     public static function key(string $path): string
     {
         $path = strtolower(ltrim(wp_normalize_path($path), '/'));
+        if (class_exists('Normalizer') && preg_match('/[^\x00-\x7f]/', $path)) {
+            // WordPress stores names NFC-normalized; a decomposed reference (macOS, some editors) must still match.
+            $path = \Normalizer::normalize($path, \Normalizer::FORM_C) ?: $path;
+        }
         $path = preg_replace('/(\.[a-z0-9]{2,5}){1,2}$/', '', $path);
         return preg_replace('/(-\d+x\d+|-scaled|-rotated|-e\d{13})+$/', '', $path);
     }
@@ -522,6 +526,9 @@ final class Scanner
     {
         if (stripos($text, '%2F') !== false) { // URL-encoded storage, e.g. Elementor dynamic tag settings
             $text .= "\n" . urldecode($text);
+        }
+        if (strpos($text, '&#') !== false) { // non-Latin names written as numeric HTML entities
+            $text .= "\n" . html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         }
         if (strpos($text, '\/') !== false) {
             $text = str_replace('\/', '/', $text);
