@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Media Tracker
  * Description: پیدا کردن رسانه‌های بدون استفاده و نمایش جاهایی که هر رسانه در آن‌ها استفاده شده است.
- * Version: 0.1.1
+ * Version: 0.2.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: ishadmehri
@@ -12,16 +12,18 @@
 
 defined('ABSPATH') || exit;
 
-define('MTRK_VERSION', '0.1.1');
+define('MTRK_VERSION', '0.2.0');
 define('MTRK_FILE', __FILE__);
 
 require __DIR__ . '/includes/class-scanner.php';
+require __DIR__ . '/includes/class-live.php';
 require __DIR__ . '/includes/class-admin.php';
 
 register_activation_hook(__FILE__, ['MediaTracker\Scanner', 'install']);
 
-// A deleted attachment or post takes its references with it, so results stay true between scans.
+// A deleted attachment or post takes its references with it; saves are re-indexed live.
 add_action('deleted_post', ['MediaTracker\Scanner', 'forget']);
+MediaTracker\Live::init();
 
 if (is_admin()) {
     MediaTracker\Admin::init();

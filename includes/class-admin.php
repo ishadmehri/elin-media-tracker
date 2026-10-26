@@ -82,9 +82,9 @@ final class Admin
                 <div class="mtrk-cards">
                     <a class="mtrk-card" href="<?php echo esc_url($list . 'used'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['used'])); ?></strong><?php esc_html_e('استفاده‌شده', 'media-tracker'); ?></a>
                     <a class="mtrk-card mtrk-card-unused" href="<?php echo esc_url($list . 'unused'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['unused'])); ?></strong><?php esc_html_e('بدون ارجاع', 'media-tracker'); ?></a>
-                    <a class="mtrk-card" href="<?php echo esc_url($list . 'new'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['new'])); ?></strong><?php esc_html_e('آپلود بعد از اسکن', 'media-tracker'); ?></a>
+                    <a class="mtrk-card" href="<?php echo esc_url($list . 'new'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['new'])); ?></strong><?php esc_html_e('جدید، بدون ارجاع', 'media-tracker'); ?></a>
                 </div>
-                <p class="description"><?php esc_html_e('«بدون ارجاع» یعنی در محدوده‌ی اسکن ارجاعی پیدا نشد. استفاده از بیرون سایت (ایمیل، شبکه‌های اجتماعی، سایت‌های دیگر) قابل تشخیص نیست؛ قبل از حذف، بکاپ بگیرید.', 'media-tracker'); ?></p>
+                <p class="description"><?php esc_html_e('«بدون ارجاع» یعنی در محدوده‌ی اسکن ارجاعی پیدا نشد. بعد از اسکن، تغییرات نوشته‌ها، متاها، دسته‌ها، کاربران و تنظیمات زنده ثبت می‌شود؛ جدول‌های افزونه‌ها و فایل‌های کد فقط با اسکن کامل به‌روز می‌شوند. استفاده از بیرون سایت (ایمیل، شبکه‌های اجتماعی، سایت‌های دیگر) قابل تشخیص نیست؛ قبل از حذف، بکاپ بگیرید.', 'media-tracker'); ?></p>
             <?php elseif (!$job) : ?>
                 <p><?php esc_html_e('هنوز اسکنی انجام نشده است.', 'media-tracker'); ?></p>
             <?php endif; ?>
@@ -193,7 +193,7 @@ final class Admin
                 <a href="<?php echo esc_url(admin_url('upload.php?page=media-tracker')); ?>"><?php esc_html_e('اسکن', 'media-tracker'); ?></a>
             </p>
         <?php elseif ($status === 'new') : ?>
-            <p><?php esc_html_e('این رسانه بعد از آخرین اسکن آپلود شده است؛ برای بررسی، اسکن را دوباره اجرا کنید.', 'media-tracker'); ?></p>
+            <p><?php esc_html_e('این رسانه بعد از آخرین اسکن کامل آپلود شده و تا الان در نوشته‌ها، متاها و تنظیمات استفاده نشده است. جدول‌های افزونه‌ها و فایل‌های کد فقط با اسکن کامل بررسی می‌شوند.', 'media-tracker'); ?></p>
         <?php elseif ($status === 'unused') : ?>
             <p><?php esc_html_e('در محدوده‌ی آخرین اسکن هیچ ارجاعی به این رسانه پیدا نشد.', 'media-tracker'); ?></p>
         <?php else : ?>
@@ -211,7 +211,7 @@ final class Admin
                 <?php
                 printf(
                     /* translators: 1: date, 2: scope */
-                    esc_html__('آخرین اسکن: %1$s — %2$s. استفاده از بیرون سایت (ایمیل، شبکه‌های اجتماعی، سایت‌های دیگر) قابل تشخیص نیست.', 'media-tracker'),
+                    esc_html__('آخرین اسکن کامل: %1$s — %2$s. تغییرات بعد از آن در نوشته‌ها، متاها، دسته‌ها، کاربران و تنظیمات زنده ثبت می‌شود؛ جدول‌های افزونه‌ها و کد فقط با اسکن کامل. استفاده از بیرون سایت (ایمیل، شبکه‌های اجتماعی، سایت‌های دیگر) قابل تشخیص نیست.', 'media-tracker'),
                     esc_html(wp_date(get_option('date_format') . ' H:i', $last['time'])),
                     esc_html(self::scope($last))
                 );
@@ -283,11 +283,30 @@ final class Admin
             case 'file':
                 return self::line(__('فایل کد', 'media-tracker'), '', ['<code dir="ltr">' . esc_html($key) . '</code>']);
 
-            default: // plugin table
-                /* translators: %d: row id */
-                $row = $sid ? sprintf(__('ردیف #%d', 'media-tracker'), $sid) : '';
-                return self::line(__('جدول افزونه', 'media-tracker'), '', array_filter(['<code dir="ltr">' . esc_html($key) . '</code>', esc_html($row)]));
+            default:
+                return self::plugin_row($key, $sid);
         }
+    }
+
+    /** Plugin tables we know get a name and an edit link; the rest show table.column and the row id. */
+    private static function plugin_row(string $key, int $sid): string
+    {
+        global $wpdb;
+        $known = [ // table without prefix => [plugin, table holding the title, edit url]
+            'gf_form_meta' => ['Gravity Forms', 'gf_form', 'admin.php?page=gf_edit_forms&id=%d'],
+            'fluentform_forms' => ['Fluent Forms', 'fluentform_forms', 'admin.php?page=fluent_forms&route=editor&form_id=%d'],
+        ];
+        $table = (string) strtok($key, '.');
+        $name = strpos($table, $wpdb->prefix) === 0 ? substr($table, strlen($wpdb->prefix)) : '';
+        if ($sid && isset($known[$name])) {
+            [$plugin, $titles, $url] = $known[$name];
+            $title = $wpdb->get_var($wpdb->prepare("SELECT title FROM `{$wpdb->prefix}$titles` WHERE id = %d", $sid));
+            /* translators: %d: form id */
+            return self::line($title ?: sprintf(__('فرم #%d', 'media-tracker'), $sid), admin_url(sprintf($url, $sid)), [esc_html($plugin)]);
+        }
+        /* translators: %d: row id */
+        $row = $sid ? sprintf(__('ردیف #%d', 'media-tracker'), $sid) : '';
+        return self::line(__('جدول افزونه', 'media-tracker'), '', array_filter(['<code dir="ltr">' . esc_html($key) . '</code>', esc_html($row)]));
     }
 
     /** $meta parts are already escaped HTML. */
@@ -320,7 +339,7 @@ final class Admin
             /* translators: %s: number of places */
             'used' => sprintf(__('%s محل استفاده', 'media-tracker'), number_format_i18n($count)),
             'unused' => __('بدون ارجاع', 'media-tracker'),
-            'new' => __('بعد از اسکن آپلود شده', 'media-tracker'),
+            'new' => __('جدید، بدون ارجاع', 'media-tracker'),
         ][$status];
         return $button
             ? sprintf('<button type="button" class="mtrk-badge mtrk-%s mtrk-open" data-id="%d" aria-haspopup="dialog">%s</button>', $status, $id, esc_html($text))
@@ -360,7 +379,7 @@ final class Admin
             '' => __('وضعیت استفاده: همه', 'media-tracker'),
             'used' => __('استفاده‌شده', 'media-tracker'),
             'unused' => __('بدون ارجاع', 'media-tracker'),
-            'new' => __('آپلود بعد از اسکن', 'media-tracker'),
+            'new' => __('جدید، بدون ارجاع', 'media-tracker'),
         ];
         echo '<label for="mtrk-usage" class="screen-reader-text">' . esc_html__('وضعیت استفاده', 'media-tracker') . '</label><select name="mtrk_usage" id="mtrk-usage">';
         foreach ($options as $value => $label) {

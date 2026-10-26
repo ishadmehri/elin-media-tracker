@@ -31,7 +31,7 @@ final class Scanner
         'commentmeta' => ['comment', 'comment_id', 'meta_id'],
     ];
     private const ID_META = ['_thumbnail_id', 'thumbnail_id'];
-    private const ID_OPTIONS = ['site_icon', 'site_logo', 'woocommerce_placeholder_image'];
+    public const ID_OPTIONS = ['site_icon', 'site_logo', 'woocommerce_placeholder_image'];
     private const SKIP_META = "'_wp_attached_file','_wp_attachment_metadata','_wp_attachment_backup_sizes'";
 
     /** @var array<string,int[]> normalized upload path => attachment ids */
@@ -42,6 +42,8 @@ final class Scanner
     private array $patterns;
     /** @var array<string,true> ACF field keys whose value is a media id */
     private array $acf;
+    /** Extra WHERE for every batch; set when re-indexing a few sources instead of scanning everything. */
+    private string $restrict = '';
 
     public static function table(): string
     {
@@ -77,7 +79,8 @@ final class Scanner
     public function __construct()
     {
         global $wpdb;
-        // ponytail: rebuilt on every request (one indexed query); cache it if 100k+ attachment sites feel slow.
+        // ponytail: rebuilt per request, scan batches and live saves alike (one indexed query); cache it if
+        // 100k+ attachment sites feel slow on save.
         foreach ($wpdb->get_results("SELECT post_id, meta_value FROM $wpdb->postmeta WHERE meta_key = '_wp_attached_file'", ARRAY_N) as [$id, $file]) {
             $this->ids[(int) $id] = true;
             $this->keys[self::key((string) $file)][] = (int) $id;
@@ -235,17 +238,20 @@ final class Scanner
         return $out;
     }
 
-    /** none = never scanned, new = uploaded after the last scan, used, unused. */
+    /**
+     * none = never scanned, used, unused, new = uploaded after the last full scan and not used anywhere the live
+     * index sees (it may still be in plugin tables or code, which only a full scan reads).
+     */
     public static function status(int $id, int $count): string
     {
         $last = self::last();
         if (!$last) {
             return 'none';
         }
-        if ($id > $last['max_id']) {
-            return 'new';
+        if ($count) {
+            return 'used';
         }
-        return $count ? 'used' : 'unused';
+        return $id > $last['max_id'] ? 'new' : 'unused';
     }
 
     public static function refs(int $id): array
@@ -262,12 +268,12 @@ final class Scanner
             return [];
         }
         $max = (int) $last['max_id'];
-        $scanned = (int) $wpdb->get_var("SELECT COUNT(*) FROM $wpdb->posts WHERE post_type = 'attachment' AND ID <= $max");
-        $used = (int) $wpdb->get_var('SELECT COUNT(DISTINCT r.attachment_id) FROM ' . self::table() . " r JOIN $wpdb->posts p ON p.ID = r.attachment_id");
+        [$scanned, $after] = array_map('intval', $wpdb->get_row("SELECT SUM(ID <= $max), SUM(ID > $max) FROM $wpdb->posts WHERE post_type = 'attachment'", ARRAY_N));
+        [$used, $used_after] = array_map('intval', $wpdb->get_row("SELECT COUNT(DISTINCT r.attachment_id), COUNT(DISTINCT IF(r.attachment_id > $max, r.attachment_id, NULL)) FROM " . self::table() . " r JOIN $wpdb->posts p ON p.ID = r.attachment_id", ARRAY_N));
         return [
             'used' => $used,
-            'unused' => $scanned - $used,
-            'new' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $wpdb->posts WHERE post_type = 'attachment' AND ID > $max"),
+            'unused' => $scanned - ($used - $used_after),
+            'new' => $after - $used_after,
         ];
     }
 
@@ -287,9 +293,40 @@ final class Scanner
             case 'unused':
                 return " AND $wpdb->posts.ID <= $max AND NOT $in";
             case 'new':
-                return " AND $wpdb->posts.ID > $max";
+                return " AND $wpdb->posts.ID > $max AND NOT $in";
         }
         return '';
+    }
+
+    /**
+     * Live index: re-reads just these sources with the same extractors as a full scan and replaces their
+     * references. $sources: type => ids (for 'option': option names).
+     */
+    public static function reindex(array $sources): void
+    {
+        global $wpdb;
+        $steps = [ // source type => [scan step => column that restricts it]
+            'post' => ['posts' => 'ID', 'postmeta' => 'post_id'],
+            'term' => ['termmeta' => 'term_id', 'terms' => 'term_id'],
+            'user' => ['usermeta' => 'user_id'],
+            'comment' => ['commentmeta' => 'comment_id', 'comments' => 'comment_ID'],
+            'option' => ['options' => 'option_name'],
+        ];
+        $scanner = new self();
+        foreach (array_intersect_key($sources, $steps) as $type => $ids) {
+            if (!$ids) {
+                continue;
+            }
+            $list = implode(',', array_map(fn($id) => $type === 'option' ? $wpdb->prepare('%s', $id) : (int) $id, $ids));
+            $wpdb->query('DELETE FROM ' . self::table() . " WHERE source_type = '$type' AND " . ($type === 'option' ? 'source_key' : 'source_id') . " IN ($list)");
+            foreach ($steps[$type] as $step => $col) {
+                $scanner->restrict = "AND t.`$col` IN ($list)";
+                $job = ['cursor' => 0];
+                do {
+                    $job['cursor'] = $scanner->batch($step, $job);
+                } while ($job['cursor'] !== null);
+            }
+        }
     }
 
     public static function forget(int $post_id): void
@@ -443,7 +480,7 @@ final class Scanner
         if (!isset($job['total'])) {
             $job['total'] = (int) $wpdb->get_var("SELECT MAX(`$pk`) FROM `$table`");
         }
-        $sizes = $wpdb->get_results("SELECT t.`$pk`, $size FROM `$table` t WHERE t.`$pk` > $cursor $where ORDER BY t.`$pk` LIMIT " . self::ROWS, ARRAY_N);
+        $sizes = $wpdb->get_results("SELECT t.`$pk`, $size FROM `$table` t WHERE t.`$pk` > $cursor $where {$this->restrict} ORDER BY t.`$pk` LIMIT " . self::ROWS, ARRAY_N);
         $ids = [];
         $bytes = 0;
         foreach ($sizes as [$id, $n]) {
