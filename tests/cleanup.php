@@ -3,7 +3,7 @@
  * The unreferenced list and the actions on it: quarantine, request logging, restore, delete, keep.
  * Truncates scan results.
  *
- * Run: wp eval-file wp-content/plugins/media-tracker/tests/cleanup.php
+ * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/cleanup.php
  */
 
 use MediaTracker\Cleanup;

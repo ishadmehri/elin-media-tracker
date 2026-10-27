@@ -1,4 +1,4 @@
-# Media Tracker
+# Elin Media Tracker
 
 افزونه‌ی وردپرس برای پیدا کردن رسانه‌های بدون ارجاع، دیدن اینکه هر رسانه کجا استفاده شده، و پاک‌سازی امن.
 
@@ -13,7 +13,7 @@ WordPress plugin that finds unreferenced media, shows where each file is used, a
 - **کتابخانه‌ی رسانه:** ستون و فیلتر «وضعیت استفاده» در حالت لیستی و گرید، و پنجره‌ی محل‌های استفاده.
 - **پاک‌سازی:** لیست بدون ارجاع با پیش‌نمایش، قرنطینه با ثبت درخواست‌ها، برگرداندن، نگه‌داشتن، حذف دائمی؛ فایل‌های اضافه روی دیسک؛ فایل‌های سایزهای ثبت‌نشده.
 - **ایمنی:** پیوست‌هایی که یک فایل مشترک دارند با هم جابه‌جا می‌شوند؛ اگر اسکنی تصویر شاخصی را «بدون ارجاع» نشان دهد، غیرقابل اعتماد علامت می‌خورد و حذف و قرنطینه رد می‌شوند.
-- **WP-CLI:** `wp media-tracker scan|status|unused|usage|quarantine|restore|delete|keep`
+- **WP-CLI:** `wp elin-media-tracker scan|status|unused|usage|quarantine|restore|delete|keep`
 
 ## نیازمندی‌ها
 وردپرس 6.0 به بالا و PHP 7.4 به بالا (تا الان فقط روی PHP 8.2 اجرا شده است).
@@ -22,7 +22,7 @@ WordPress plugin that finds unreferenced media, shows where each file is used, a
 روی یک سایت توسعه (نه سایت واقعی؛ نتیجه‌ی اسکن را پاک می‌کنند):
 
 ```bash
-wp eval-file wp-content/plugins/media-tracker/tests/check.php
+wp eval-file wp-content/plugins/elin-media-tracker/tests/check.php
 ```
 
 بقیه: `live`، `cleanup`، `sizes`، `orphans`، `names`، `integrations` (این یکی افزونه‌های نصب‌شده را تست می‌کند و هر کدام نباشد رد می‌شود).

@@ -3,7 +3,7 @@
  * End-to-end check: creates fixture media and one reference of each kind, runs a full scan (DB + code + plugin
  * tables), asserts every status, then removes the fixtures. It truncates previous scan results.
  *
- * Run: wp eval-file wp-content/plugins/media-tracker/tests/check.php
+ * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/check.php
  */
 
 use MediaTracker\Cleanup;

@@ -3,7 +3,7 @@
  * Live index check: after one full scan, changes saved through WordPress APIs must move statuses without a rescan.
  * Live::flush() normally runs at shutdown; it is called here so the results can be read. Truncates scan results.
  *
- * Run: wp eval-file wp-content/plugins/media-tracker/tests/live.php
+ * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/live.php
  */
 
 use MediaTracker\Live;

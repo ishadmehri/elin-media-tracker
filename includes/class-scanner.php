@@ -257,7 +257,7 @@ final class Scanner
         if (!self::rebuild_index()) { // keep the previous results rather than produce wrong ones
             return ['error' => sprintf(
                 /* translators: %s: database error */
-                __('ساخت فهرست رسانه‌ها روی این سایت ناموفق بود، پس اسکن شروع نشد و نتیجه‌ی قبلی دست نخورد. خطای دیتابیس: %s', 'media-tracker'),
+                __('ساخت فهرست رسانه‌ها روی این سایت ناموفق بود، پس اسکن شروع نشد و نتیجه‌ی قبلی دست نخورد. خطای دیتابیس: %s', 'elin-media-tracker'),
                 $wpdb->last_error ?: '—'
             )];
         }
@@ -372,18 +372,18 @@ final class Scanner
     private static function label(string $step): string
     {
         $labels = [
-            'posts' => __('محتوای نوشته‌ها', 'media-tracker'),
-            'postmeta' => __('متای نوشته‌ها', 'media-tracker'),
-            'termmeta' => __('متای دسته‌ها', 'media-tracker'),
-            'usermeta' => __('متای کاربران', 'media-tracker'),
-            'commentmeta' => __('متای دیدگاه‌ها', 'media-tracker'),
-            'options' => __('تنظیمات', 'media-tracker'),
-            'terms' => __('توضیحات دسته‌ها', 'media-tracker'),
-            'comments' => __('دیدگاه‌ها', 'media-tracker'),
-            'files' => __('فایل‌های کد', 'media-tracker'),
+            'posts' => __('محتوای نوشته‌ها', 'elin-media-tracker'),
+            'postmeta' => __('متای نوشته‌ها', 'elin-media-tracker'),
+            'termmeta' => __('متای دسته‌ها', 'elin-media-tracker'),
+            'usermeta' => __('متای کاربران', 'elin-media-tracker'),
+            'commentmeta' => __('متای دیدگاه‌ها', 'elin-media-tracker'),
+            'options' => __('تنظیمات', 'elin-media-tracker'),
+            'terms' => __('توضیحات دسته‌ها', 'elin-media-tracker'),
+            'comments' => __('دیدگاه‌ها', 'elin-media-tracker'),
+            'files' => __('فایل‌های کد', 'elin-media-tracker'),
         ];
         /* translators: %s: database table name */
-        return $labels[$step] ?? sprintf(__('جدول %s', 'media-tracker'), substr($step, 6));
+        return $labels[$step] ?? sprintf(__('جدول %s', 'elin-media-tracker'), substr($step, 6));
     }
 
     // ---- results ---------------------------------------------------------------------------------------------

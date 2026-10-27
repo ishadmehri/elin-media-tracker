@@ -3,7 +3,7 @@
  * Unregistered-size cleanup with real files on disk: what is reported, what is deleted, what must stay.
  * Truncates scan results.
  *
- * Run: wp eval-file wp-content/plugins/media-tracker/tests/sizes.php
+ * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/sizes.php
  */
 
 use MediaTracker\Sizes;

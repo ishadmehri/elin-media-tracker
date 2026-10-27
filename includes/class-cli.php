@@ -12,10 +12,10 @@ defined('ABSPATH') || exit;
  *
  * ## EXAMPLES
  *
- *     wp media-tracker scan --code
- *     wp media-tracker unused --format=csv > unused.csv
- *     wp media-tracker usage 123
- *     wp media-tracker quarantine $(wp media-tracker unused --format=ids)
+ *     wp elin-media-tracker scan --code
+ *     wp elin-media-tracker unused --format=csv > unused.csv
+ *     wp elin-media-tracker usage 123
+ *     wp elin-media-tracker quarantine $(wp elin-media-tracker unused --format=ids)
  */
 final class CLI
 {
@@ -61,7 +61,7 @@ final class CLI
     {
         $last = Scanner::last();
         if (!$last) {
-            WP_CLI::warning('No scan yet: run `wp media-tracker scan --code`.');
+            WP_CLI::warning('No scan yet: run `wp elin-media-tracker scan --code`.');
             return;
         }
         $s = Scanner::summary();

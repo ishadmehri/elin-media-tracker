@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugin Name: Media Tracker
+ * Plugin Name: Elin Media Tracker
  * Description: پیدا کردن رسانه‌های بدون استفاده و نمایش جاهایی که هر رسانه در آن‌ها استفاده شده است.
  * Version: 0.5.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: ishadmehri
- * Text Domain: media-tracker
+ * Text Domain: elin-media-tracker
  * License: GPL-2.0-or-later
  */
 
@@ -36,7 +36,7 @@ MediaTracker\Live::init();
 
 if (defined('WP_CLI') && WP_CLI) {
     require __DIR__ . '/includes/class-cli.php';
-    WP_CLI::add_command('media-tracker', MediaTracker\CLI::class);
+    WP_CLI::add_command('elin-media-tracker', MediaTracker\CLI::class);
 }
 
 if (is_admin()) {
