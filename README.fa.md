@@ -45,5 +45,8 @@ wp eval-file wp-content/plugins/elin-media-tracker/tests/check.php
 ## انتشار
 `scripts/release.ps1` نسخه را از هدر افزونه می‌خواند، `dist/elin-media-tracker-<version>.zip` را از `HEAD` می‌سازد و با `-Publish` تگ و release گیت‌هاب را هم می‌سازد. نسخه‌ی هدر افزونه و `readme.txt` باید با هم بالا بروند.
 
+## لیست توسعه
+کارهای باز و ایده‌ها در [ROADMAP.md](ROADMAP.md) است.
+
 ## مجوز
 GPL-2.0-or-later

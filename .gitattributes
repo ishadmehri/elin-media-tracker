@@ -6,3 +6,4 @@
 /scripts export-ignore
 /.gitignore export-ignore
 /.wordpress-org export-ignore
+/ROADMAP.md export-ignore

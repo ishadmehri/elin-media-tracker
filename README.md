@@ -42,5 +42,8 @@ The others: `live`, `cleanup`, `sizes`, `orphans`, `names`, `integrations` (test
 ## Releasing
 `scripts/release.ps1` reads the version from the plugin header, builds `dist/elin-media-tracker-<version>.zip` from `HEAD`, and with `-Publish` tags it and creates the GitHub release. The WordPress.org `readme.txt` and header version must be bumped together.
 
+## Roadmap
+Open work and ideas are in [ROADMAP.md](ROADMAP.md).
+
 ## License
 GPL-2.0-or-later
