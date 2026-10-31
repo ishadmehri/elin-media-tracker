@@ -77,6 +77,7 @@ Open "Where it is used". Tables of plugins you removed long ago and caches (for 
 
 = 0.9.1 =
 * Passes the Plugin Check plugin without errors: added missing translator comments, sanitized the request headers read by the quarantine, and documented why the plugin's own SQL is built the way it is.
+* Fixed: on PHP older than 8.2 with a single-byte locale (common on Windows), non-Latin file names such as Persian ones were corrupted while indexing, so the scan refused to start.
 * The bundled Persian translation now loads through WordPress itself (6.5 and later); the manual load call is gone.
 
 = 0.9.0 =

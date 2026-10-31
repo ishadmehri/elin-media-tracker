@@ -31,6 +31,12 @@ foreach ([
     $is(Scanner::key($in) === $want, "key($in)");
 }
 
+// A single-byte process locale (Windows-1252, ISO-8859-x) must not corrupt UTF-8 names (strtolower did before PHP 8.2).
+$locale = setlocale(LC_CTYPE, 0);
+setlocale(LC_CTYPE, 'English_United States.1252', 'de_DE.ISO-8859-1', 'fr_FR.ISO-8859-1', 'C');
+$is(mb_check_encoding(Scanner::key('2026/10/گل🌹-1.jpg'), 'UTF-8'), 'key: UTF-8 name survives a single-byte locale');
+setlocale(LC_CTYPE, $locale);
+
 $posts = [];
 $media = function (string $file) use (&$posts): int {
     $id = wp_insert_post(['post_type' => 'attachment', 'post_status' => 'inherit', 'post_title' => "mtrk $file", 'post_mime_type' => 'image/jpeg']);
@@ -132,7 +138,9 @@ try {
     // The usage dialog must survive a source with no edit link (a term of a taxonomy without an edit screen).
     $lc = wp_insert_term('mtrk lc ' . time(), 'link_category');
     try {
-        (new ReflectionMethod(Admin::class, 'item'))->invoke(null, [['attachment_id' => $a, 'source_type' => 'term', 'source_id' => (int) $lc['term_id'], 'source_key' => 'thumbnail_id', 'how' => 'id']]);
+        $item = new ReflectionMethod(Admin::class, 'item');
+        $item->setAccessible(true); // needed before PHP 8.1
+        $item->invoke(null, [['attachment_id' => $a, 'source_type' => 'term', 'source_id' => (int) $lc['term_id'], 'source_key' => 'thumbnail_id', 'how' => 'id']]);
         $ok = true;
     } catch (Throwable $e) {
         $ok = false;

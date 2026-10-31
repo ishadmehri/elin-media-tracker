@@ -214,7 +214,8 @@ final class Scanner
     /** Normalized uploads path without its extension(s): lowercase, NFC, no leading slash. */
     public static function stem(string $path): string
     {
-        $path = strtolower(ltrim(wp_normalize_path($path), '/'));
+        // ASCII-only on purpose: before PHP 8.2 strtolower() follows the process locale and can corrupt UTF-8 bytes.
+        $path = strtr(ltrim(wp_normalize_path($path), '/'), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
         if (class_exists('Normalizer') && preg_match('/[^\x00-\x7f]/', $path)) {
             // WordPress stores names NFC-normalized; a decomposed reference (macOS, some editors) must still match.
             $path = \Normalizer::normalize($path, \Normalizer::FORM_C) ?: $path;
