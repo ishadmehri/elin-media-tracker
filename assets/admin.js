@@ -117,6 +117,29 @@
     if (e.target.matches('.mtrk-pick, .mtrk-all')) syncBulk();
   });
 
+  // Duplicates tab: sizes first, then content hashes where sizes collide; the page reloads with the groups.
+  const dups = document.getElementById('mtrk-dups');
+  if (dups) {
+    const btn = dups.querySelector('.mtrk-dups-check');
+    const status = dups.querySelector('.mtrk-dups-status');
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try {
+        let r;
+        do {
+          r = await post('mtrk_dups');
+          if (!r.done) status.textContent = fmt(r.phase === 'size' ? t.dupsSizes : t.dupsHashes, r.left);
+        } while (!r.done);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('paged');
+        window.location.href = url.toString();
+      } catch (e) {
+        status.textContent = e.message;
+        btn.disabled = false;
+      }
+    });
+  }
+
   // Quarantine tab: do requests for missing upload files reach WordPress here? (nginx rules or a CDN can stop them)
   const probe = document.querySelector('.mtrk-probe[data-url]');
   if (probe) {

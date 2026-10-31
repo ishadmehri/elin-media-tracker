@@ -133,7 +133,13 @@ button.mtrk-badge:focus-visible { outline: 2px solid #2271b1; outline-offset: 1p
 .mtrk-details dd { margin: 0; overflow-wrap: anywhere; }
 .mtrk-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-.mtrk-qtable { margin-top: 8px; }
+.mtrk-qtable, .mtrk-mtable { margin-top: 8px; }
+.mtrk-dup { margin: 16px 0 24px; }
+.mtrk-dup h3 { margin: 0 0 4px; font-size: 14px; }
+.mtrk-mtable .mtrk-col-thumb { width: 56px; }
+.mtrk-mtable .mtrk-thumb img { width: 48px; height: 48px; object-fit: cover; display: block; }
+.mtrk-mtable td, .mtrk-mtable th { vertical-align: middle; }
+.mtrk-mtable tr:has(.mtrk-pick:checked) td { background: #f0f6fc; }
 .mtrk-qmedia { display: flex; gap: 10px; align-items: center; }
 .mtrk-qmedia img { width: 40px; height: 40px; object-fit: cover; border-radius: 3px; flex: none; }
 .mtrk-qmedia .mtrk-thumb img { width: 60px; height: 60px; }

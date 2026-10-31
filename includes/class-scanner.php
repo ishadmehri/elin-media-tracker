@@ -12,7 +12,7 @@ defined('ABSPATH') || exit;
 final class Scanner
 {
     public const CAP = 'manage_options';
-    private const DB = 3; // schema version; bump when install() changes
+    private const DB = 4; // schema version; bump when install() changes
 
     private const JOB = 'mtrk_job';
     private const LAST = 'mtrk_last_scan';
@@ -178,7 +178,26 @@ final class Scanner
             KEY path_key (path_key(191)),
             KEY file_hash (file_hash)
         ) $charset;");
+        // Duplicate check: size and content hash per attachment file (see Duplicates); survives full scans.
+        dbDelta('CREATE TABLE ' . Duplicates::table() . " (
+            attachment_id bigint(20) unsigned NOT NULL,
+            file_hash char(32) NOT NULL DEFAULT '',
+            file_size bigint(20) unsigned NOT NULL DEFAULT 0,
+            content_hash varchar(32) NOT NULL DEFAULT '',
+            PRIMARY KEY  (attachment_id),
+            KEY file_size (file_size),
+            KEY content_hash (content_hash),
+            KEY file_hash (file_hash)
+        ) $charset;");
         update_option('mtrk_db', self::DB);
+    }
+
+    /** Builds the attachments index if this install hasn't yet (after an upgrade). */
+    public static function ensure_index(): void
+    {
+        if ((int) get_option('mtrk_files_ready') !== self::DB) {
+            self::rebuild_index(); // once after an upgrade; every full scan rebuilds it anyway
+        }
     }
 
     public static function upgrade(): void
@@ -223,9 +242,7 @@ final class Scanner
 
     public function __construct()
     {
-        if ((int) get_option('mtrk_files_ready') !== self::DB) {
-            self::rebuild_index(); // once after an upgrade; every full scan rebuilds it anyway
-        }
+        self::ensure_index();
 
         $chars = '[^\s"\'<>()\[\]{}|?#,;*]';
         $ext = '\.[a-z0-9]{2,5}(?![a-z0-9])';
@@ -511,6 +528,7 @@ final class Scanner
         global $wpdb;
         $wpdb->query($wpdb->prepare('DELETE FROM ' . self::table() . " WHERE attachment_id = %d OR (source_type IN ('post', 'shared') AND source_id = %d)", $post_id, $post_id));
         $wpdb->delete(self::files_table(), ['attachment_id' => $post_id]);
+        $wpdb->delete(Duplicates::table(), ['attachment_id' => $post_id]);
     }
 
     /**

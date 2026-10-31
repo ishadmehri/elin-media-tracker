@@ -8,6 +8,7 @@ defined('ABSPATH') || exit;
 final class Page
 {
     private const PER_PAGE = 40;
+    private const PER_PAGE_CHOICES = [20, 40, 100, 200, 500];
 
     public static function init(): void
     {
@@ -16,6 +17,7 @@ final class Page
         add_action('wp_ajax_mtrk_orphans', [self::class, 'ajax_orphans']);
         add_action('wp_ajax_mtrk_act', [self::class, 'ajax_act']);
         add_action('wp_ajax_mtrk_preview', [self::class, 'ajax_preview']);
+        add_action('wp_ajax_mtrk_dups', [self::class, 'ajax_dups']);
     }
 
     public static function url(string $tab, array $args = []): string
@@ -46,6 +48,7 @@ final class Page
         $quarantined = count(Cleanup::quarantined());
         $tabs = [
             'unused' => __('بدون ارجاع', 'elin-media-tracker'),
+            'duplicates' => __('تکراری‌ها', 'elin-media-tracker'),
             'quarantine' => $quarantined ? sprintf('%s (%s)', __('قرنطینه', 'elin-media-tracker'), number_format_i18n($quarantined)) : __('قرنطینه', 'elin-media-tracker'),
             'orphans' => __('فایل‌های اضافه', 'elin-media-tracker'),
             'sizes' => __('سایزهای ثبت‌نشده', 'elin-media-tracker'),
@@ -119,7 +122,8 @@ final class Page
         $type = sanitize_key(wp_unslash($_GET['type'] ?? ''));
         $order = sanitize_key(wp_unslash($_GET['order'] ?? 'largest'));
         $paged = max(1, absint($_GET['paged'] ?? 1));
-        $list = Cleanup::unused($paged, self::PER_PAGE, $type, $order);
+        [$per, $view] = self::screen();
+        $list = Cleanup::unused($paged, $per, $type, $order);
         ?>
         <p class="mtrk-lead">
             <?php
@@ -149,6 +153,7 @@ final class Page
                     <option value="<?php echo esc_attr($value); ?>" <?php selected($order, $value); ?>><?php echo esc_html($label); ?></option>
                 <?php endforeach; ?>
             </select>
+            <?php self::screen_fields($per, $view); ?>
             <button class="button"><?php esc_html_e('نمایش', 'elin-media-tracker'); ?></button>
         </form>
 
@@ -164,21 +169,74 @@ final class Page
             <button type="button" class="button" data-act="keep" disabled><?php esc_html_e('نگه‌داشتن', 'elin-media-tracker'); ?></button>
             <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('حذف دائمی', 'elin-media-tracker'); ?></button>
         </div>
-        <ul class="mtrk-grid">
-            <?php foreach ($list['items'] as $id => $bytes) : ?>
-                <?php $file = wp_basename((string) get_attached_file($id)); ?>
-                <li class="mtrk-item">
-                    <input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('انتخاب %s', 'elin-media-tracker'), $file)); ?>">
-                    <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('پیش‌نمایش %s', 'elin-media-tracker'), $file)); ?>" aria-haspopup="dialog">
-                        <?php echo wp_get_attachment_image($id, 'medium', true, ['alt' => '', 'loading' => 'lazy']); ?>
-                    </button>
-                    <span class="mtrk-item-name" dir="auto"><?php echo esc_html($file); ?></span>
-                    <span class="mtrk-item-meta"><?php echo esc_html(size_format($bytes) ?: '—'); ?> · <?php echo esc_html(get_the_date('', $id)); ?></span>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+        <?php if ($view === 'list') : ?>
+            <?php self::media_table($list['items']); ?>
+        <?php else : ?>
+            <ul class="mtrk-grid">
+                <?php foreach ($list['items'] as $id => $bytes) : ?>
+                    <?php $file = wp_basename((string) get_attached_file($id)); ?>
+                    <li class="mtrk-item">
+                        <input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('انتخاب %s', 'elin-media-tracker'), $file)); ?>">
+                        <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('پیش‌نمایش %s', 'elin-media-tracker'), $file)); ?>" aria-haspopup="dialog">
+                            <?php echo wp_get_attachment_image($id, 'medium', true, ['alt' => '', 'loading' => 'lazy']); ?>
+                        </button>
+                        <span class="mtrk-item-name" dir="auto"><?php echo esc_html($file); ?></span>
+                        <span class="mtrk-item-meta"><?php echo esc_html(size_format($bytes) ?: '—'); ?> · <?php echo esc_html(get_the_date('', $id)); ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
         <?php
-        $pages = (int) ceil($list['total'] / self::PER_PAGE);
+        self::pagination($list['total'], $per, $paged);
+    }
+
+    /**
+     * Items per page and grid/list view: from the request when given (and then remembered for this user, like
+     * WordPress screen options), otherwise the user's last choice.
+     * @return array{0:int,1:string}
+     */
+    private static function screen(): array
+    {
+        $user = get_current_user_id();
+        $per = absint($_GET['per_page'] ?? 0);
+        if (in_array($per, self::PER_PAGE_CHOICES, true)) {
+            update_user_meta($user, 'mtrk_per_page', $per);
+        } else {
+            $per = (int) get_user_meta($user, 'mtrk_per_page', true);
+            $per = in_array($per, self::PER_PAGE_CHOICES, true) ? $per : self::PER_PAGE;
+        }
+        $view = sanitize_key(wp_unslash($_GET['view'] ?? ''));
+        if (in_array($view, ['grid', 'list'], true)) {
+            update_user_meta($user, 'mtrk_view', $view);
+        } else {
+            $view = get_user_meta($user, 'mtrk_view', true) === 'list' ? 'list' : 'grid';
+        }
+        return [$per, $view];
+    }
+
+    /** $view '' leaves the view choice out (lists that have only one layout). */
+    private static function screen_fields(int $per, string $view): void
+    {
+        ?>
+        <?php if ($view !== '') : ?>
+            <label for="mtrk-view" class="screen-reader-text"><?php esc_html_e('نحوه‌ی نمایش', 'elin-media-tracker'); ?></label>
+            <select name="view" id="mtrk-view">
+                <option value="grid" <?php selected($view, 'grid'); ?>><?php esc_html_e('نمایش کارتی', 'elin-media-tracker'); ?></option>
+                <option value="list" <?php selected($view, 'list'); ?>><?php esc_html_e('نمایش لیستی', 'elin-media-tracker'); ?></option>
+            </select>
+        <?php endif; ?>
+        <label for="mtrk-per-page" class="screen-reader-text"><?php esc_html_e('تعداد در صفحه', 'elin-media-tracker'); ?></label>
+        <select name="per_page" id="mtrk-per-page">
+            <?php foreach (self::PER_PAGE_CHOICES as $n) : ?>
+                <option value="<?php echo (int) $n; ?>" <?php selected($per, $n); ?>><?php echo esc_html(sprintf(/* translators: %s: number */ __('%s در صفحه', 'elin-media-tracker'), number_format_i18n($n))); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <?php
+    }
+
+    private static function pagination(int $total, int $per, int $paged): void
+    {
+        $pages = (int) ceil($total / max(1, $per));
         if ($pages > 1) {
             echo '<div class="tablenav"><div class="tablenav-pages">' . paginate_links([ // phpcs:ignore WordPress.Security.EscapeOutput
                 'base' => add_query_arg('paged', '%#%', remove_query_arg(['done', 'n', 'b'])),
@@ -187,6 +245,120 @@ final class Page
                 'total' => $pages,
             ]) . '</div></div>';
         }
+    }
+
+    /** List view: one row per attachment, with its status when $status is set (duplicates). @param array<int,int> $items id => bytes */
+    private static function media_table(array $items, bool $status = false, ?array $pickable = null): void
+    {
+        $counts = $status ? Scanner::counts(array_keys($items)) : [];
+        ?>
+        <table class="widefat striped mtrk-mtable">
+            <thead><tr>
+                <td class="check-column"></td>
+                <th scope="col" class="mtrk-col-thumb"><span class="screen-reader-text"><?php esc_html_e('پیش‌نمایش', 'elin-media-tracker'); ?></span></th>
+                <th scope="col"><?php esc_html_e('فایل', 'elin-media-tracker'); ?></th>
+                <?php if ($status) : ?><th scope="col"><?php esc_html_e('وضعیت', 'elin-media-tracker'); ?></th><?php endif; ?>
+                <th scope="col"><?php esc_html_e('نوع', 'elin-media-tracker'); ?></th>
+                <th scope="col"><?php esc_html_e('حجم', 'elin-media-tracker'); ?></th>
+                <th scope="col"><?php esc_html_e('آپلود', 'elin-media-tracker'); ?></th>
+                <th scope="col"><?php esc_html_e('آپلودشده در', 'elin-media-tracker'); ?></th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($items as $id => $bytes) : ?>
+                <?php
+                $path = (string) get_post_meta($id, '_wp_attached_file', true);
+                $file = wp_basename($path);
+                $parent = (int) wp_get_post_parent_id($id);
+                $can_pick = $pickable === null || in_array($id, $pickable, true);
+                ?>
+                <tr>
+                    <th scope="row" class="check-column">
+                        <?php if ($can_pick) : ?>
+                            <input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('انتخاب %s', 'elin-media-tracker'), $file)); ?>">
+                        <?php endif; ?>
+                    </th>
+                    <td class="mtrk-col-thumb">
+                        <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-haspopup="dialog" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('پیش‌نمایش %s', 'elin-media-tracker'), $file)); ?>"><?php echo wp_get_attachment_image($id, [48, 48], true, ['alt' => '', 'loading' => 'lazy']); ?></button>
+                    </td>
+                    <td><strong dir="auto"><?php echo esc_html($file); ?></strong><br><bdi class="mtrk-from" dir="ltr"><?php echo esc_html(dirname($path) === '.' ? '/' : dirname($path)); ?></bdi></td>
+                    <?php if ($status) : ?><td><?php echo Admin::badge($id, $counts[$id] ?? 0); // phpcs:ignore WordPress.Security.EscapeOutput ?></td><?php endif; ?>
+                    <td><?php echo esc_html((string) get_post_mime_type($id)); ?></td>
+                    <td><?php echo esc_html(size_format($bytes) ?: '—'); ?></td>
+                    <td><?php echo esc_html(get_the_date('', $id)); ?></td>
+                    <td><?php echo $parent ? '<a href="' . esc_url((string) get_edit_post_link($parent, 'raw')) . '">' . esc_html(get_the_title($parent) ?: "#$parent") . '</a>' : '—'; ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php
+    }
+
+    // ---- duplicates ------------------------------------------------------------------------------------------
+
+    private static function tab_duplicates(array $last): void
+    {
+        $checked = (int) get_option('mtrk_dups_at');
+        ?>
+        <p class="description"><?php esc_html_e('فایل‌هایی با محتوای کاملاً یکسان که چند بار آپلود شده‌اند. اول حجم‌ها مقایسه می‌شوند و فقط فایل‌های هم‌حجم با هش محتوا (MD5) بررسی می‌شوند. پیوست‌هایی که از اول یک فایل مشترک دارند (مثل ترجمه‌های رسانه) تکراری حساب نمی‌شوند. فقط نسخه‌هایی را می‌شود انتخاب کرد که بدون ارجاع‌اند؛ اگر همه‌ی نسخه‌ها استفاده شده‌اند، اول ارجاع‌ها را به یک نسخه تغییر دهید.', 'elin-media-tracker'); ?></p>
+        <div id="mtrk-dups">
+            <p>
+                <button type="button" class="button<?php echo $checked ? '' : ' button-primary'; ?> mtrk-dups-check"><?php echo $checked ? esc_html__('بررسی دوباره', 'elin-media-tracker') : esc_html__('بررسی تکراری‌ها', 'elin-media-tracker'); ?></button>
+                <?php if ($checked) : ?>
+                    <span class="mtrk-note"><?php echo esc_html(sprintf(/* translators: %s: date */ __('آخرین بررسی: %s', 'elin-media-tracker'), wp_date(get_option('date_format') . ' H:i', $checked))); ?></span>
+                <?php endif; ?>
+            </p>
+            <p class="mtrk-dups-status" aria-live="polite"></p>
+        </div>
+        <?php
+        if (!$checked) {
+            return;
+        }
+        $paged = max(1, absint($_GET['paged'] ?? 1));
+        [$per] = self::screen();
+        $list = Duplicates::groups($paged, $per);
+        ?>
+        <p class="mtrk-lead">
+            <?php
+            printf(
+                /* translators: 1: number of groups, 2: size */
+                esc_html__('%1$s گروه فایل تکراری؛ نسخه‌های اضافه روی هم %2$s.', 'elin-media-tracker'),
+                '<strong>' . esc_html(number_format_i18n($list['total'])) . '</strong>',
+                '<strong>' . esc_html(size_format($list['bytes']) ?: '0 B') . '</strong>'
+            );
+            ?>
+        </p>
+        <?php if (!$list['groups']) : ?>
+            <p><?php esc_html_e('فایل تکراری‌ای پیدا نشد.', 'elin-media-tracker'); ?></p>
+            <?php return; ?>
+        <?php endif; ?>
+        <form method="get" class="mtrk-filters">
+            <input type="hidden" name="page" value="elin-media-tracker">
+            <input type="hidden" name="tab" value="duplicates">
+            <?php self::screen_fields($per, ''); ?>
+            <button class="button"><?php esc_html_e('نمایش', 'elin-media-tracker'); ?></button>
+        </form>
+        <div class="mtrk-bulk" data-scope="duplicates">
+            <span class="mtrk-count" aria-live="polite"></span>
+            <button type="button" class="button button-primary" data-act="quarantine" disabled><?php esc_html_e('قرنطینه', 'elin-media-tracker'); ?></button>
+            <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('حذف دائمی', 'elin-media-tracker'); ?></button>
+        </div>
+        <?php
+        $ids = array_merge(...array_column($list['groups'], 'ids'));
+        $counts = Scanner::counts($ids);
+        foreach ($list['groups'] as $group) {
+            // Only copies nothing references (and not kept or already quarantined) can be picked.
+            $pickable = array_values(array_filter($group['ids'], fn($id) => empty($counts[$id]) && !get_post_meta($id, Cleanup::META, true)));
+            ?>
+            <section class="mtrk-dup">
+                <h3><?php echo esc_html(sprintf(/* translators: 1: number of copies, 2: size of one copy */ __('%1$s نسخه، هر کدام %2$s', 'elin-media-tracker'), number_format_i18n($group['copies']), size_format($group['size']) ?: '—')); ?></h3>
+                <?php if (!$pickable) : ?>
+                    <p class="mtrk-note"><?php esc_html_e('همه‌ی نسخه‌ها استفاده شده‌اند؛ چیزی برای حذف امن نیست.', 'elin-media-tracker'); ?></p>
+                <?php endif; ?>
+                <?php self::media_table(array_fill_keys($group['ids'], $group['size']), true, $pickable); ?>
+            </section>
+            <?php
+        }
+        self::pagination($list['total'], $per, $paged);
     }
 
     // ---- quarantine ------------------------------------------------------------------------------------------
@@ -523,6 +695,12 @@ final class Page
             wp_send_json_success(Orphans::delete($paths));
         }
         wp_send_json_success(Orphans::step(absint($_POST['cursor'] ?? 0)));
+    }
+
+    public static function ajax_dups(): void
+    {
+        Admin::guard();
+        wp_send_json_success(Duplicates::step());
     }
 
     public static function ajax_act(): void

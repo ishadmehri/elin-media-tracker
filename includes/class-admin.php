@@ -69,6 +69,10 @@ final class Admin
                 /* translators: 1: number of files, 2: size with unit */
                 'sizesDeleted' => __('%1$s فایل حذف شد (%2$s).', 'elin-media-tracker'),
                 'preview' => __('پیش‌نمایش', 'elin-media-tracker'),
+                /* translators: %s: number of attachments left */
+                'dupsSizes' => __('مقایسه‌ی حجم‌ها… %s رسانه مانده', 'elin-media-tracker'),
+                /* translators: %s: number of files left */
+                'dupsHashes' => __('مقایسه‌ی محتوای فایل‌های هم‌حجم… %s فایل مانده', 'elin-media-tracker'),
                 'usageLabel' => __('وضعیت استفاده', 'elin-media-tracker'),
                 'usageAll' => __('وضعیت استفاده: همه', 'elin-media-tracker'),
                 'usageUsed' => __('استفاده‌شده', 'elin-media-tracker'),
