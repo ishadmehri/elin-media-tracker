@@ -119,7 +119,11 @@ final class Admin
         if (get_post_type($id) !== 'attachment') {
             wp_send_json_error(__('Media not found.', 'elin-media-tracker'), 404);
         }
-        wp_send_json_success(['html' => self::usage_html($id)]);
+        try {
+            wp_send_json_success(['html' => self::usage_html($id)]);
+        } catch (\Throwable $e) { // say what broke, instead of a bare "could not reach the server"
+            wp_send_json_error($e->getMessage(), 500);
+        }
     }
 
     public static function guard(): void
@@ -292,7 +296,7 @@ final class Admin
     }
 
     /** $meta parts are already escaped HTML. */
-    private static function line(string $title, string $url, array $meta): string
+    private static function line(string $title, ?string $url, array $meta): string
     {
         $title = $url ? sprintf('<a href="%s">%s</a>', esc_url($url), esc_html($title)) : esc_html($title);
         return '<strong>' . $title . '</strong><br><span class="mtrk-meta">' . implode(' · ', array_filter($meta)) . '</span>';

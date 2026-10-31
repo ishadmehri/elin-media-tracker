@@ -6,6 +6,7 @@
  * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/check.php
  */
 
+use MediaTracker\Admin;
 use MediaTracker\Cleanup;
 use MediaTracker\Scanner;
 
@@ -127,6 +128,17 @@ try {
     mtrk_fixture_assert($expect, $fail);
     $sources = array_column(Scanner::refs($a), 'source_id');
     $is($sources === [(string) $p1], 'refs point at the right post');
+
+    // The usage dialog must survive a source with no edit link (a term of a taxonomy without an edit screen).
+    $lc = wp_insert_term('mtrk lc ' . time(), 'link_category');
+    try {
+        (new ReflectionMethod(Admin::class, 'item'))->invoke(null, [['attachment_id' => $a, 'source_type' => 'term', 'source_id' => (int) $lc['term_id'], 'source_key' => 'thumbnail_id', 'how' => 'id']]);
+        $ok = true;
+    } catch (Throwable $e) {
+        $ok = false;
+    }
+    wp_delete_term((int) $lc['term_id'], 'link_category');
+    $is($ok, 'usage dialog: a source without an edit link does not break it');
 
     // Safety guard: a scan that loses featured images must not be trusted with deletions.
     $is(Scanner::trusted() && Scanner::missed_featured() === [], 'guard: a clean scan is trusted, no featured image missed');

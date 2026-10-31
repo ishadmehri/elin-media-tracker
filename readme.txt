@@ -4,7 +4,7 @@ Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.8.0
+Stable tag: 0.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,9 @@ It has only been tested on single sites. Uninstall cleanup does not handle every
 Open "Where it is used". Tables of plugins you removed long ago and caches (for example Yoast's indexable tables) can mention a file without using it. Logs and well-known caches are skipped; if you find another one, please report it.
 
 == Changelog ==
+
+= 0.8.1 =
+* Fixed: the "Where it is used" dialog failed with "Could not reach the server" when a media item was referenced by a term, user or comment without an edit screen. If something else breaks there, the dialog now shows the real error.
 
 = 0.8.0 =
 * Duplicates: an option to also compare extra files, so stray copies of library files (FTP uploads, imports) show up in their group. Extra files can be previewed and deleted there.

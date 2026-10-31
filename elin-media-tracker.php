@@ -3,7 +3,7 @@
  * Plugin Name: Elin Media Tracker
  * Plugin URI: https://github.com/ishadmehri/elin-media-tracker
  * Description: Find unreferenced media, see where each file is used, find duplicate files, and clean up safely with a reversible quarantine.
- * Version: 0.8.0
+ * Version: 0.8.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: ishadmehri
@@ -16,7 +16,7 @@
 
 defined('ABSPATH') || exit;
 
-define('MTRK_VERSION', '0.8.0');
+define('MTRK_VERSION', '0.8.1');
 define('MTRK_FILE', __FILE__);
 
 require __DIR__ . '/includes/class-scanner.php';
