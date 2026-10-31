@@ -102,17 +102,33 @@
   };
 
   // Actions on media (plugin page): quarantine, restore, keep, unkeep, delete. The page reloads with a notice.
-  const act = async (name, ids, btn) => {
-    if (!ids.length) return;
-    if (name === 'delete' && !window.confirm(fmt(t.confirmDelete, ids.length))) return;
+  // files: extra files (paths) picked in a duplicate group; they can only be deleted, never quarantined.
+  const act = async (name, ids, btn, files = []) => {
+    if (!ids.length && !files.length) return;
+    if (name === 'delete') {
+      const msg = !files.length ? fmt(t.confirmDelete, ids.length)
+        : (ids.length ? fmt(t.confirmMixed, ids.length, files.length) : fmt(t.confirmFiles, files.length));
+      if (!window.confirm(msg)) return;
+    }
     if (btn) btn.disabled = true;
     try {
-      const r = await post('mtrk_act', { act: name, ids });
+      let n = 0;
+      let bytes = 0;
+      for (let i = 0; i < files.length; i += 200) {
+        const r = await post('mtrk_orphans', { do: 'delete', paths: files.slice(i, i + 200) });
+        n += r.files;
+        bytes += r.bytes;
+      }
+      if (ids.length) {
+        const r = await post('mtrk_act', { act: name, ids });
+        n += r.done.length;
+        bytes += r.bytes;
+      }
       const url = new URL(window.location.href);
       url.searchParams.delete('paged'); // the current page may be gone now
       url.searchParams.set('done', name);
-      url.searchParams.set('n', r.done.length);
-      url.searchParams.set('b', r.bytes);
+      url.searchParams.set('n', n);
+      url.searchParams.set('b', bytes);
       window.location.href = url.toString();
     } catch (e) {
       window.alert(e.message);
@@ -121,11 +137,16 @@
   };
 
   const picked = () => [...document.querySelectorAll('.mtrk-pick:checked')].map((b) => b.value);
+  const pickedFiles = () => [...document.querySelectorAll('.mtrk-xpick:checked')].map((b) => b.value);
   const syncBulk = () => {
     const ids = picked();
+    const files = pickedFiles();
     document.querySelectorAll('.mtrk-bulk[data-scope]').forEach((bar) => {
-      bar.querySelectorAll('[data-act]').forEach((b) => { b.disabled = !ids.length; });
-      bar.querySelector('.mtrk-count').textContent = ids.length ? fmt(t.selected, ids.length) : '';
+      bar.querySelectorAll('[data-act]').forEach((b) => {
+        // extra files can only be deleted: nothing to quarantine or restore for them
+        b.disabled = b.dataset.act === 'delete' ? !(ids.length + files.length) : !ids.length;
+      });
+      bar.querySelector('.mtrk-count').textContent = ids.length + files.length ? fmt(t.selected, ids.length + files.length) : '';
     });
   };
 
@@ -139,7 +160,11 @@
       openDialog(usage ? 'mtrk_usage' : 'mtrk_preview', (usage || preview).dataset.id);
     } else if (action && (action.dataset.id || action.closest('.mtrk-bulk[data-scope]'))) {
       e.preventDefault();
-      act(action.dataset.act, action.dataset.id ? [action.dataset.id] : picked(), action);
+      act(action.dataset.act, action.dataset.id ? [action.dataset.id] : picked(), action, action.dataset.id ? [] : pickedFiles());
+    } else if (e.target.closest('.mtrk-xpreview')) { // an extra file in a duplicate group
+      const b = e.target.closest('.mtrk-xpreview');
+      const path = b.dataset.path;
+      openFile({ path, bytes: Number(b.dataset.bytes) }, `${cfg.uploads.url}/${path.split('/').map(encodeURIComponent).join('/')}`, cfg.uploads.root);
     }
   }, true);
 
@@ -147,7 +172,7 @@
     if (e.target.matches('.mtrk-bulk[data-scope] .mtrk-all')) {
       document.querySelectorAll('.mtrk-pick').forEach((b) => { b.checked = e.target.checked; });
     }
-    if (e.target.matches('.mtrk-pick, .mtrk-all')) syncBulk();
+    if (e.target.matches('.mtrk-pick, .mtrk-xpick, .mtrk-all')) syncBulk();
   });
 
   // Duplicates tab: sizes first, then content hashes where sizes collide; the page reloads with the groups.
@@ -158,11 +183,12 @@
     btn.addEventListener('click', async () => {
       btn.disabled = true;
       try {
-        let r;
-        do {
+        const phases = { size: t.dupsSizes, list: t.dupsList, hash: t.dupsHashes };
+        let r = await post('mtrk_dups', { start: 1, extras: dups.querySelector('.mtrk-dups-extras').checked ? 1 : 0 });
+        while (!r.done) {
+          status.textContent = fmt(phases[r.phase], r.left);
           r = await post('mtrk_dups');
-          if (!r.done) status.textContent = fmt(r.phase === 'size' ? t.dupsSizes : t.dupsHashes, r.left);
-        } while (!r.done);
+        }
         const url = new URL(window.location.href);
         url.searchParams.delete('paged');
         window.location.href = url.toString();

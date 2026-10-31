@@ -50,7 +50,12 @@ final class Admin
         wp_add_inline_script('mtrk', 'window.mtrk = ' . wp_json_encode([
             'ajax' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('mtrk'),
+            'uploads' => ['url' => wp_upload_dir(null, false)['baseurl'], 'root' => wp_normalize_path(wp_upload_dir(null, false)['basedir'])],
             'i18n' => [
+                /* translators: %s: number of folders left */
+                'dupsList' => __('Listing extra files… %s folder(s) left', 'elin-media-tracker'),
+                /* translators: 1: number of media, 2: number of extra files */
+                'confirmMixed' => __('%1$s media and %2$s extra file(s) will be deleted permanently. This cannot be undone. Continue?', 'elin-media-tracker'),
                 'title' => __('Where it is used', 'elin-media-tracker'),
                 'close' => __('Close', 'elin-media-tracker'),
                 'loading' => __('Loading…', 'elin-media-tracker'),
@@ -91,7 +96,7 @@ final class Admin
                 'orphansFound' => __('%1$s file(s), %2$s deletable.', 'elin-media-tracker'),
                 /* translators: %s: attachment id */
                 'orphanSize' => __('Extra size of attachment #%s', 'elin-media-tracker'),
-                'orphanFile' => __('Outside the library', 'elin-media-tracker'),
+                'orphanFile' => __('No media item owns this file', 'elin-media-tracker'),
                 'checkedAt' => __('Last checked: %s', 'elin-media-tracker'),
                 'noPreview' =>__('No preview for this file type.', 'elin-media-tracker'),
                 'fileLabel' => __('File', 'elin-media-tracker'),

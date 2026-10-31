@@ -103,8 +103,8 @@ msgstr "فایل اضافه‌ای پیدا نشد."
 msgid "Extra size of attachment #%s"
 msgstr "سایز اضافه‌ی پیوست #%s"
 
-msgid "Outside the library"
-msgstr "خارج از کتابخانه"
+msgid "No media item owns this file"
+msgstr "هیچ رسانه‌ای مالک این فایل نیست"
 
 msgid "No preview for this file type."
 msgstr "برای این نوع فایل پیش‌نمایشی وجود ندارد."
@@ -633,3 +633,17 @@ msgstr "جدول %s"
 #. Description of the plugin
 msgid "Find unreferenced media, see where each file is used, find duplicate files, and clean up safely with a reversible quarantine."
 msgstr "پیدا کردن رسانه‌های بدون ارجاع، دیدن جاهایی که هر فایل استفاده شده، پیدا کردن فایل‌های تکراری و پاک‌سازی امن با قرنطینه‌ی برگشت‌پذیر."
+
+#, php-format
+msgid "Listing extra files… %s folder(s) left"
+msgstr "در حال فهرست‌کردن فایل‌های اضافه… %s پوشه مانده"
+
+#, php-format
+msgid "%1$s media and %2$s extra file(s) will be deleted permanently. This cannot be undone. Continue?"
+msgstr "%1$s رسانه و %2$s فایل اضافه برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست. ادامه می‌دهید؟"
+
+msgid "Also compare extra files (files on disk that no media item owns)"
+msgstr "فایل‌های اضافه (فایل‌های روی دیسک که هیچ رسانه‌ای مالکشان نیست) هم مقایسه شوند"
+
+msgid "Finds stray copies of library files (FTP uploads, imports). Needs a recent full scan; extra files whose URL is used somewhere cannot be selected."
+msgstr "نسخه‌های سرگردان فایل‌های کتابخانه را پیدا می‌کند (آپلود با FTP، ایمپورت). به یک اسکن کامل تازه نیاز دارد؛ فایل اضافه‌ای که آدرسش جایی استفاده شده قابل انتخاب نیست."

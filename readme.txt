@@ -4,7 +4,7 @@ Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.7.3
+Stable tag: 0.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,7 +23,7 @@ Deleting media is the one thing in WordPress you cannot take back, so the plugin
 * **Live updates.** After one full scan, saves in the admin are recorded without scanning again.
 * **Media Library integration.** A "Usage" column and filter in list and grid mode, and a dialog showing every place a file is used.
 * **Unreferenced list.** Card or list view, 20 to 500 items per page, preview, filter by type, sort by size or date.
-* **Duplicates.** Files with identical content that were uploaded more than once. Sizes are compared first and only same-size files are hashed (MD5), so large libraries stay light. Attachments that share one file (media translations) are not duplicates, and only unreferenced copies can be selected.
+* **Duplicates.** Files with identical content that were uploaded more than once. Sizes are compared first and only same-size files are hashed (MD5), so large libraries stay light. Attachments that share one file (media translations) are not duplicates, and only unreferenced copies can be selected. An option adds the extra files on disk, to catch stray copies of library files.
 * **Quarantine.** Moves a file (all sizes and WebP copies) out of its public path into a closed folder, but still answers requests for the old URL and logs them. If nothing asks for it for a few weeks, delete it; if something does, restore it with one click.
 * **Extra files.** Leftover sizes and files on disk that no media item owns.
 * **Unregistered sizes.** Files generated for image sizes that no theme or plugin registers any more.
@@ -74,6 +74,10 @@ It has only been tested on single sites. Uninstall cleanup does not handle every
 Open "Where it is used". Tables of plugins you removed long ago and caches (for example Yoast's indexable tables) can mention a file without using it. Logs and well-known caches are skipped; if you find another one, please report it.
 
 == Changelog ==
+
+= 0.8.0 =
+* Duplicates: an option to also compare extra files, so stray copies of library files (FTP uploads, imports) show up in their group. Extra files can be previewed and deleted there.
+* The "Outside the library" label now reads "No media item owns this file".
 
 = 0.7.3 =
 * Extra files and Unregistered sizes keep their last result while you move between tabs of the plugin page (per browser tab, until the next scan), with the time it was checked.

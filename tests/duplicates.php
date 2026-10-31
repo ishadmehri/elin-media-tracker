@@ -8,6 +8,7 @@
 
 use MediaTracker\Cleanup;
 use MediaTracker\Duplicates;
+use MediaTracker\Orphans;
 
 defined('ABSPATH') || exit;
 
@@ -74,6 +75,34 @@ try {
     $run();
     $is($group_of($used) !== null, 'changed back: grouped again');
     $is(Cleanup::delete([$copy])['ids'] === [$copy] && $group_of($used) === null, 'deleting the unreferenced copy dissolves the group');
+
+    // Extra files (on disk, owned by no attachment) take part only when asked to.
+    $rel = '2026/10/';
+    file_put_contents("$dir/mtrk-dup-x1.jpg", $same);                    // stray copy of the used file
+    file_put_contents("$dir/mtrk-dup-x2.jpg", $same);                    // a second one
+    file_put_contents("$dir/mtrk-dup-x3.jpg", str_repeat('B', 3000));    // copy of the lookalike, but a post names it
+    file_put_contents("$dir/mtrk-dup-x4.jpg", str_repeat('Z', 3100));    // nobody else's content
+    $made[] = wp_insert_post(['post_title' => 'mtrk dup x', 'post_status' => 'publish', 'post_content' => '<img src="' . wp_upload_dir()['baseurl'] . '/' . $rel . 'mtrk-dup-x3.jpg">']);
+    mtrk_fixture_scan(false, false);
+    $go = function (bool $extras) {
+        $r = Duplicates::step(true, $extras);
+        while (!$r['done']) {
+            $r = Duplicates::step();
+        }
+    };
+    $go(false);
+    $is($group_of($used) === null, 'extras off: a stray copy is not looked at');
+    $go(true);
+    $g = $group_of($used);
+    $is($g !== null && $g['copies'] === 3 && array_keys($g['paths']) === [$rel . 'mtrk-dup-x1.jpg', $rel . 'mtrk-dup-x2.jpg'] || ($g && count($g['paths']) === 2 && $g['copies'] === 3), 'extras on: stray copies join the library file\'s group');
+    $is($g !== null && !in_array(true, array_column($g['paths'], 'kept'), true), 'extras on: unreferenced stray copies are deletable');
+    $g3 = $group_of($lookalike);
+    $is($g3 !== null && ($g3['paths'][$rel . 'mtrk-dup-x3.jpg']['kept'] ?? null) === true, 'extras on: a stray copy whose URL a post names is kept');
+    $in_group = array_merge(...array_map(fn($x) => array_keys($x['paths']), Duplicates::groups(1, 1000)['groups']));
+    $is(!in_array($rel . 'mtrk-dup-x4.jpg', $in_group, true), 'extras on: an extra file with unique content is in no group');
+    $is(Orphans::delete([$rel . 'mtrk-dup-x1.jpg'])['files'] === 1 && !file_exists("$dir/mtrk-dup-x1.jpg"), 'a stray copy can be deleted (the extra files delete path)');
+    $go(false);
+    $is(array_filter(array_column(Duplicates::groups(1, 1000)['groups'], 'paths')) === [] && !$wpdb->get_var("SHOW TABLES LIKE '" . Duplicates::xtable() . "'"), 'extras off again: the extra files table is gone');
 } finally {
     foreach (array_reverse($made) as $id) {
         wp_delete_post($id, true);

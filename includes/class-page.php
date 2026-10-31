@@ -307,6 +307,10 @@ final class Page
                     <span class="mtrk-note"><?php echo esc_html(sprintf(/* translators: %s: date */ __('Last checked: %s', 'elin-media-tracker'), wp_date(get_option('date_format') . ' H:i', $checked))); ?></span>
                 <?php endif; ?>
             </p>
+            <p>
+                <label><input type="checkbox" class="mtrk-dups-extras" <?php checked((bool) get_option(Duplicates::WITH_EXTRAS)); ?>> <?php esc_html_e('Also compare extra files (files on disk that no media item owns)', 'elin-media-tracker'); ?></label><br>
+                <span class="description"><?php esc_html_e('Finds stray copies of library files (FTP uploads, imports). Needs a recent full scan; extra files whose URL is used somewhere cannot be selected.', 'elin-media-tracker'); ?></span>
+            </p>
             <p class="mtrk-dups-status" aria-live="polite"></p>
         </div>
         <?php
@@ -343,22 +347,55 @@ final class Page
             <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('Delete permanently', 'elin-media-tracker'); ?></button>
         </div>
         <?php
-        $ids = array_merge(...array_column($list['groups'], 'ids'));
+        $ids = array_merge([], ...array_column($list['groups'], 'ids'));
         $counts = Scanner::counts($ids);
         foreach ($list['groups'] as $group) {
             // Only copies nothing references (and not kept or already quarantined) can be picked.
             $pickable = array_values(array_filter($group['ids'], fn($id) => empty($counts[$id]) && !get_post_meta($id, Cleanup::META, true)));
+            $free_files = array_filter($group['paths'], fn($f) => !$f['kept']);
             ?>
             <section class="mtrk-dup">
                 <h3><?php echo esc_html(sprintf(/* translators: 1: number of copies, 2: size of one copy */ __('%1$s copies, %2$s each', 'elin-media-tracker'), number_format_i18n($group['copies']), size_format($group['size']) ?: '—')); ?></h3>
-                <?php if (!$pickable) : ?>
+                <?php if (!$pickable && !$free_files) : ?>
                     <p class="mtrk-note"><?php esc_html_e('Every copy is in use; there is nothing safe to delete.', 'elin-media-tracker'); ?></p>
                 <?php endif; ?>
-                <?php self::media_table(array_fill_keys($group['ids'], $group['size']), true, $pickable); ?>
+                <?php if ($group['ids']) : ?>
+                    <?php self::media_table(array_fill_keys($group['ids'], $group['size']), true, $pickable); ?>
+                <?php endif; ?>
+                <?php if ($group['paths']) : ?>
+                    <?php self::extra_files_table($group['paths']); ?>
+                <?php endif; ?>
             </section>
             <?php
         }
         self::pagination($list['total'], $per, $paged);
+    }
+
+    /** Extra files inside a duplicate group: can be deleted (never quarantined, no attachment to restore), not previewed by id. */
+    private static function extra_files_table(array $paths): void
+    {
+        $root = wp_normalize_path(wp_upload_dir(null, false)['basedir']);
+        ?>
+        <table class="widefat striped mtrk-mtable mtrk-xtable">
+            <tbody>
+            <?php foreach ($paths as $path => $f) : ?>
+                <tr>
+                    <th scope="row" class="check-column">
+                        <?php if (!$f['kept']) : ?>
+                            <input type="checkbox" class="mtrk-xpick" value="<?php echo esc_attr($path); ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elin-media-tracker'), wp_basename($path))); ?>">
+                        <?php endif; ?>
+                    </th>
+                    <td>
+                        <code dir="ltr"><?php echo esc_html("$root/$path"); ?></code><br>
+                        <button type="button" class="button-link mtrk-xpreview" data-path="<?php echo esc_attr($path); ?>" data-bytes="<?php echo (int) $f['bytes']; ?>" aria-haspopup="dialog"><?php esc_html_e('Preview', 'elin-media-tracker'); ?></button>
+                    </td>
+                    <td><?php echo $f['kept'] ? esc_html__('Its URL appears somewhere; it is kept', 'elin-media-tracker') : esc_html__('No media item owns this file', 'elin-media-tracker'); ?></td>
+                    <td><?php echo esc_html(size_format($f['bytes']) ?: '—'); ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php
     }
 
     // ---- quarantine ------------------------------------------------------------------------------------------
@@ -700,7 +737,10 @@ final class Page
     public static function ajax_dups(): void
     {
         Admin::guard();
-        wp_send_json_success(Duplicates::step());
+        if (!empty($_POST['start']) && (int) (Scanner::last()['paths'] ?? 0) < 2 && !empty($_POST['extras'])) {
+            wp_send_json_error(__('Run the scan again with this version.', 'elin-media-tracker'), 409); // extra files need the exact-paths index
+        }
+        wp_send_json_success(Duplicates::step(!empty($_POST['start']), !empty($_POST['extras'])));
     }
 
     public static function ajax_act(): void
