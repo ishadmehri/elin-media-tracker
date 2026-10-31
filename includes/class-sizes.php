@@ -4,6 +4,8 @@ namespace MediaTracker;
 
 defined('ABSPATH') || exit;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery -- Bulk reads of postmeta for a scan: the result must be current, so a cache would be wrong.
+
 /**
  * Files of image sizes no theme or plugin registers any more (e.g. the previous theme's sizes). WordPress never
  * serves them again, but they stay on disk for as long as the image is used.

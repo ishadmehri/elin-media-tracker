@@ -1,10 +1,10 @@
 === Elin Media Tracker ===
-Contributors: ishadmehri
+Contributors: imansh
 Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.9.0
+Stable tag: 0.9.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,10 @@ It has only been tested on single sites. Uninstall cleanup does not handle every
 Open "Where it is used". Tables of plugins you removed long ago and caches (for example Yoast's indexable tables) can mention a file without using it. Logs and well-known caches are skipped; if you find another one, please report it.
 
 == Changelog ==
+
+= 0.9.1 =
+* Passes the Plugin Check plugin without errors: added missing translator comments, sanitized the request headers read by the quarantine, and documented why the plugin's own SQL is built the way it is.
+* The bundled Persian translation now loads through WordPress itself (6.5 and later); the manual load call is gone.
 
 = 0.9.0 =
 * Extra files: "Download selected as ZIP" (up to 200 MB per ZIP; only files the plugin lists as extra can be included).

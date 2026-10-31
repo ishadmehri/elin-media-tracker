@@ -4,6 +4,8 @@ namespace MediaTracker;
 
 defined('ABSPATH') || exit;
 
+// phpcs:disable WordPress.Security.NonceVerification -- Every AJAX handler starts with Admin::guard() (check_ajax_referer plus a capability check); the $_GET values read on screens only pick a tab, page or filter and change nothing.
+
 /** The plugin's own screen (Media → Media Tracker), in tabs. Unreferenced media comes first. */
 final class Page
 {
@@ -730,7 +732,7 @@ final class Page
                 wp_send_json_error(self::suspect_text(), 409);
             }
             // Paths are only looked up: Orphans::delete() deletes nothing its own fresh listing doesn't show.
-            $paths = array_map(fn($p) => (string) $p, (array) wp_unslash($_POST['paths'] ?? []));
+            $paths = array_map(fn($p) => (string) $p, (array) wp_unslash($_POST['paths'] ?? [])); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- a path is only compared with a fresh listing of the folder, never used as given
             wp_send_json_success(Orphans::delete($paths));
         }
         wp_send_json_success(Orphans::step(absint($_POST['cursor'] ?? 0)));
@@ -740,7 +742,7 @@ final class Page
     public static function ajax_zip(): void
     {
         Admin::guard();
-        $paths = json_decode((string) wp_unslash($_POST['paths'] ?? '[]'), true);
+        $paths = json_decode((string) wp_unslash($_POST['paths'] ?? '[]'), true); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON list; each path is checked against a fresh listing of its folder
         $zip = Orphans::zip(is_array($paths) ? array_map('strval', $paths) : []);
         if (isset($zip['error'])) {
             wp_send_json_error($zip['error'], 400);
@@ -749,7 +751,7 @@ final class Page
         header('Content-Type: application/zip');
         header('Content-Disposition: attachment; filename="extra-files-' . gmdate('Ymd-His') . '.zip"');
         header('Content-Length: ' . filesize($zip['file']));
-        readfile($zip['file']);
+        readfile($zip['file']); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- streams the temporary ZIP to the browser
         wp_delete_file($zip['file']);
         exit;
     }

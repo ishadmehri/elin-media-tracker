@@ -4,6 +4,10 @@ namespace MediaTracker;
 
 defined('ABSPATH') || exit;
 
+// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.DirectDatabaseQuery -- This class works on the plugin's own index tables, which only exist here (no core API, so no cache to use).
+// Every dynamic part of a query is a table name built from $wpdb->prefix, an int cast with (int)/intval/absint, an md5 hash,
+// or a fragment already built with $wpdb->prepare(). Identifiers cannot be placeholders before WordPress 6.2 (minimum is 6.0).
+
 /**
  * Acting on unreferenced media: the list itself, quarantine (files moved out of their public path; requests for
  * them are still answered and logged), restore, permanent delete, and "keep" for media used outside the site.
@@ -102,7 +106,7 @@ final class Cleanup
             $moved = [];
             foreach (self::group_files($group) as $rel) {
                 wp_mkdir_p(dirname("$dir/$rel"));
-                if (@rename("$base/$rel", "$dir/$rel")) {
+                if (@rename("$base/$rel", "$dir/$rel")) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- a same-disk move of one file; WP_Filesystem has no cheaper equivalent and may need credentials
                     $moved[] = $rel;
                     $map[$rel] = $group[0];
                 }
@@ -131,7 +135,7 @@ final class Cleanup
             foreach ((array) $q['files'] as $rel) {
                 if (!file_exists("$base/$rel")) { // never overwrite a file uploaded since under the same name
                     wp_mkdir_p(dirname("$base/$rel"));
-                    @rename("$dir/$rel", "$base/$rel");
+                    @rename("$dir/$rel", "$base/$rel"); // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- see above
                 }
                 unset($map[$rel]);
             }
@@ -223,7 +227,8 @@ final class Cleanup
      */
     public static function serve(): void
     {
-        $match = self::match((string) ($_SERVER['REQUEST_URI'] ?? ''));
+        // Read-only: matched against our own quarantine folder, never output or stored.
+        $match = self::match(wp_unslash((string) ($_SERVER['REQUEST_URI'] ?? ''))); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if ($match === 'probe') {
             status_header(204);
             header('X-Mtrk: ok');
@@ -233,12 +238,12 @@ final class Cleanup
             return;
         }
         [$lead, $file] = $match;
-        self::hit($lead, (string) ($_SERVER['HTTP_REFERER'] ?? ''), (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
+        self::hit($lead, esc_url_raw(wp_unslash((string) ($_SERVER['HTTP_REFERER'] ?? ''))), sanitize_text_field(wp_unslash((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''))));
         status_header(200);
         header('Content-Type: ' . (wp_check_filetype($file)['type'] ?: 'application/octet-stream'));
         header('Content-Length: ' . filesize($file));
         header('Cache-Control: private, max-age=300'); // a CDN must not keep serving it after you decide
-        readfile($file);
+        readfile($file); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- streams a file to the browser; WP_Filesystem cannot stream
         exit;
     }
 

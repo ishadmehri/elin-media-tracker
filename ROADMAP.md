@@ -12,8 +12,6 @@ Ideas and open work, not promises. Move an item to the changelog in `readme.txt`
 
 ## For the WordPress.org directory / برای مخزن وردپرس
 
-- Run the Plugin Check plugin and fix what it reports. / اجرای افزونه‌ی Plugin Check و رفع ایرادها.
-- Put the real wordpress.org username in `Contributors:` in `readme.txt`. / نام کاربری واقعی wordpress.org در `Contributors`.
 - Remake the banner without the WordPress logo (the guidelines forbid implying official affiliation). / ساخت دوباره‌ی بنر بدون لوگوی وردپرس.
 - Submit the ZIP at https://wordpress.org/plugins/developers/add/ and, once approved, upload `.wordpress-org/` to the SVN `assets` folder. / ثبت zip در مخزن و بعد از تأیید، بارگذاری `.wordpress-org/` در پوشه‌ی assets.
 - Translations: the bundled Persian file is a fallback until translate.wordpress.org has one. / ترجمه‌ی فارسی در translate.wordpress.org.

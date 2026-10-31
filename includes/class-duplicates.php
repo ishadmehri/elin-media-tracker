@@ -4,6 +4,10 @@ namespace MediaTracker;
 
 defined('ABSPATH') || exit;
 
+// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.DirectDatabaseQuery -- This class works on the plugin's own index tables, which only exist here (no core API, so no cache to use).
+// Every dynamic part of a query is a table name built from $wpdb->prefix, an int cast with (int)/intval/absint, an md5 hash,
+// or a fragment already built with $wpdb->prepare(). Identifiers cannot be placeholders before WordPress 6.2 (minimum is 6.0).
+
 /**
  * Attachments whose files have identical content (the same image uploaded more than once). Sizes are compared
  * first (from metadata, no disk reads); only files sharing a size get an MD5 of their content. Results live in

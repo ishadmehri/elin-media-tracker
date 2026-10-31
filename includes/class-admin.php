@@ -4,6 +4,8 @@ namespace MediaTracker;
 
 defined('ABSPATH') || exit;
 
+// phpcs:disable WordPress.Security.NonceVerification -- Every AJAX handler starts with Admin::guard() (check_ajax_referer plus a capability check); the $_GET values read on screens only pick a tab, page or filter and change nothing.
+
 /** Media library integration (usage column, filter, modal) and the assets shared with the plugin page. */
 final class Admin
 {
@@ -52,11 +54,11 @@ final class Admin
             'nonce' => wp_create_nonce('mtrk'),
             'uploads' => ['url' => wp_upload_dir(null, false)['baseurl'], 'root' => wp_normalize_path(wp_upload_dir(null, false)['basedir'])],
             'i18n' => [
-                /* translators: %s: number of folders left */
                 'zipBuilding' => __('Building the ZIP…', 'elin-media-tracker'),
                 /* translators: %s: number of files */
                 'zipDone' => __('%s file(s) added to the ZIP.', 'elin-media-tracker'),
-                'dupsList' =>__('Listing extra files… %s folder(s) left', 'elin-media-tracker'),
+                /* translators: %s: number of folders left */
+                'dupsList' => __('Listing extra files… %s folder(s) left', 'elin-media-tracker'),
                 /* translators: 1: number of media, 2: number of extra files */
                 'confirmMixed' => __('%1$s media and %2$s extra file(s) will be deleted permanently. This cannot be undone. Continue?', 'elin-media-tracker'),
                 'title' => __('Where it is used', 'elin-media-tracker'),
@@ -100,6 +102,7 @@ final class Admin
                 /* translators: %s: attachment id */
                 'orphanSize' => __('Extra size of attachment #%s', 'elin-media-tracker'),
                 'orphanFile' => __('No media item owns this file', 'elin-media-tracker'),
+                /* translators: %s: date */
                 'checkedAt' => __('Last checked: %s', 'elin-media-tracker'),
                 'noPreview' =>__('No preview for this file type.', 'elin-media-tracker'),
                 'fileLabel' => __('File', 'elin-media-tracker'),
@@ -289,7 +292,7 @@ final class Admin
         $name = strpos($table, $wpdb->prefix) === 0 ? substr($table, strlen($wpdb->prefix)) : '';
         if ($sid && isset($known[$name])) {
             [$plugin, $titles, $url] = $known[$name];
-            $title = $wpdb->get_var($wpdb->prepare("SELECT title FROM `{$wpdb->prefix}$titles` WHERE id = %d", $sid));
+            $title = $wpdb->get_var($wpdb->prepare("SELECT title FROM `{$wpdb->prefix}$titles` WHERE id = %d", $sid)); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.DirectDatabaseQuery -- $titles is a table name from the fixed list above
             /* translators: %d: form id */
             return self::line($title ?: sprintf(__('Form #%d', 'elin-media-tracker'), $sid), admin_url(sprintf($url, $sid)), [esc_html($plugin)]);
         }

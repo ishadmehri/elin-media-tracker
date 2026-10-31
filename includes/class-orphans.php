@@ -4,6 +4,8 @@ namespace MediaTracker;
 
 defined('ABSPATH') || exit;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery -- Bulk reads of postmeta for a scan: the result must be current, so a cache would be wrong.
+
 /**
  * Files on disk that no attachment owns: leftover sizes of a known image that its metadata no longer lists
  * (e.g. after regenerating thumbnails), and files that never were in the library (FTP uploads, imports).
