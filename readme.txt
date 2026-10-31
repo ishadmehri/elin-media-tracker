@@ -1,0 +1,103 @@
+=== Elin Media Tracker ===
+Contributors: ishadmehri
+Tags: media library, unused media, duplicate images, cleanup, storage
+Requires at least: 6.0
+Tested up to: 7.1
+Requires PHP: 7.4
+Stable tag: 0.7.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Find unreferenced media, see where each file is used, find duplicate files, and clean up safely with a reversible quarantine.
+
+== Description ==
+
+Elin Media Tracker scans your site and tells you which files in the Media Library are not used anywhere, where the others are used, and which files are exact duplicates. Then it helps you remove them without breaking pages.
+
+Deleting media is the one thing in WordPress you cannot take back, so the plugin is built around caution: quarantine first, delete later, and refuse anything that looks wrong.
+
+**What it does**
+
+* **Scan.** The database (posts, meta, options, terms, users, comments, plugin tables) and, if you choose, the code of the active theme and plugins plus CSS/JS inside uploads.
+* **Recognises how media is referenced.** URLs (with size suffixes, `-scaled`, WebP, URL-encoded, `\u`-escaped, HTML entities, Unicode-normalised), ids (featured image, galleries, blocks, shortcodes), Elementor (loops, dynamic tags, V4), ACF / Secure Custom Fields, Meta Box, Pods, JetEngine, WooCommerce, Gravity Forms, Fluent Forms, WPForms, Contact Form 7 and Smart Slider.
+* **Live updates.** After one full scan, saves in the admin are recorded without scanning again.
+* **Media Library integration.** A "Usage" column and filter in list and grid mode, and a dialog showing every place a file is used.
+* **Unreferenced list.** Card or list view, 20 to 500 items per page, preview, filter by type, sort by size or date.
+* **Duplicates.** Files with identical content that were uploaded more than once. Sizes are compared first and only same-size files are hashed (MD5), so large libraries stay light. Attachments that share one file (media translations) are not duplicates, and only unreferenced copies can be selected.
+* **Quarantine.** Moves a file (all sizes and WebP copies) out of its public path into a closed folder, but still answers requests for the old URL and logs them. If nothing asks for it for a few weeks, delete it; if something does, restore it with one click.
+* **Extra files.** Leftover sizes and files on disk that no media item owns.
+* **Unregistered sizes.** Files generated for image sizes that no theme or plugin registers any more.
+* **Safety.** A scan that reports a featured image as unreferenced is marked untrustworthy and quarantine and delete are refused. Attachments sharing one file move together.
+* **WP-CLI.** `wp elin-media-tracker scan|status|unused|usage|quarantine|restore|delete|keep`
+
+**What it cannot see**
+
+Use outside your site (newsletters, social networks, other sites hotlinking a file) cannot be detected. That is why quarantine exists. Always take a backup before deleting.
+
+**Languages**
+
+English and Persian (fa_IR).
+
+== Installation ==
+
+1. Upload the plugin folder to `/wp-content/plugins/`, or install it from the Plugins screen.
+2. Activate it.
+3. Go to **Media → Media Tracker → Scan** and run a "Database + source code" scan.
+4. Review the **Unreferenced** tab. Quarantine, wait, then delete.
+
+If you have an older copy in a `media-tracker` folder, deactivate and delete it first. The data is kept because the internal `mtrk_` prefix did not change.
+
+== Frequently Asked Questions ==
+
+= Will it delete anything on its own? =
+
+No. Nothing is quarantined or deleted unless you select items and press the button.
+
+= Is quarantine really safe? =
+
+A quarantined file is still served for its old URL, so pages that still use it keep working, and the request is logged so you can see it. One caveat: if your server answers requests for missing image files itself (an nginx or LiteSpeed rule, or a CDN), WordPress never sees them, the file returns a 404 and nothing is logged. The plugin tests this and warns you on the Quarantine tab.
+
+= What data does it store? =
+
+It has no settings page. It creates four tables (`mtrk_refs`, `mtrk_paths`, `mtrk_files`, `mtrk_hashes`), a few options prefixed `mtrk_`, the post meta `_mtrk_quarantine` and `_mtrk_keep`, and the user meta `mtrk_per_page` and `mtrk_view`. For quarantined files it logs the time, referring URL and user agent of each request, locally in the database. Nothing is sent to any other server.
+
+= What happens when I uninstall it? =
+
+Quarantined files are restored to their original place first, then the tables, options and meta above are removed. Deactivating keeps everything.
+
+= Does it work on multisite? =
+
+It has only been tested on single sites. Uninstall cleanup does not handle every site of a network yet.
+
+= A file is listed as used but I know it is not. =
+
+Open "Where it is used". Tables of plugins you removed long ago and caches (for example Yoast's indexable tables) can mention a file without using it. Logs and well-known caches are skipped; if you find another one, please report it.
+
+== Changelog ==
+
+= 0.7.0 =
+* The interface source language is now English, with a bundled Persian (fa_IR) translation.
+* Prepared for the WordPress.org directory: readme.txt, plugin header, translation template.
+
+= 0.6.1 =
+* Yoast indexable tables and the Titan scanner option no longer count as usage.
+
+= 0.6.0 =
+* New Duplicates tab.
+* List view and a per-page choice (20, 40, 100, 200, 500) for the unreferenced list.
+* Release script.
+
+= 0.5.1 =
+* Aparat poster ids are recognised.
+* A scan that loses featured images is marked untrustworthy and deletion is refused.
+
+= 0.5.0 =
+* An attachments index instead of an in-memory map, so scans use little memory on large libraries.
+
+== Upgrade Notice ==
+
+= 0.7.0 =
+The interface is now English unless your site language is Persian.
+
+= 0.6.1 =
+Run a new full scan after updating; earlier results still count Yoast cache tables as usage.

@@ -21,6 +21,7 @@ $main = Get-Content "$slug.php" -Raw
 if ($main -notmatch '(?m)^\s*\*\s*Version:\s*(\S+)') { Fail 'No Version header in the main file.' }
 $version = $Matches[1]
 if ($main -notmatch "MTRK_VERSION',\s*'$([regex]::Escape($version))'") { Fail "MTRK_VERSION does not match header version $version." }
+if ((Get-Content readme.txt -Raw) -notmatch "(?m)^Stable tag:\s*$([regex]::Escape($version))\s*$") { Fail "readme.txt Stable tag does not match $version." }
 if (git status --porcelain) { Fail 'Uncommitted changes: commit first, the zip is built from HEAD.' }
 if (git tag -l "v$version") { Fail "Tag v$version already exists." }
 

@@ -1,0 +1,629 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Elin Media Tracker\n"
+"Language: fa_IR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Domain: elin-media-tracker\n"
+
+msgid "Media Tracker"
+msgstr "ردیاب رسانه"
+
+msgid "Where it is used"
+msgstr "محل‌های استفاده"
+
+msgid "Close"
+msgstr "بستن"
+
+msgid "Loading…"
+msgstr "در حال بارگذاری…"
+
+msgid "Could not reach the server."
+msgstr "خطا در ارتباط با سرور."
+
+msgid "Scan finished."
+msgstr "اسکن تمام شد."
+
+msgid "Stopping…"
+msgstr "در حال توقف…"
+
+#, php-format
+msgid "Checking… %s image(s)"
+msgstr "در حال بررسی… %s تصویر"
+
+msgid "No unregistered sizes found."
+msgstr "سایز ثبت‌نشده‌ای پیدا نشد."
+
+msgid "MB"
+msgstr "مگابایت"
+
+msgid "KB"
+msgstr "کیلوبایت"
+
+#, php-format
+msgid "Files: %1$s; deletable: %2$s."
+msgstr "%1$s فایل، %2$s قابل حذف."
+
+#, php-format
+msgid "%1$s file(s) (%2$s) will be deleted permanently. Continue?"
+msgstr "%1$s فایل (%2$s) برای همیشه حذف می‌شود. ادامه می‌دهید؟"
+
+#, php-format
+msgid "%1$s file(s) deleted (%2$s)."
+msgstr "%1$s فایل حذف شد (%2$s)."
+
+msgid "Preview"
+msgstr "پیش‌نمایش"
+
+#, php-format
+msgid "Comparing sizes… %s media left"
+msgstr "مقایسه‌ی حجم‌ها… %s رسانه مانده"
+
+#, php-format
+msgid "Comparing the content of same-size files… %s file(s) left"
+msgstr "مقایسه‌ی محتوای فایل‌های هم‌حجم… %s فایل مانده"
+
+msgid "Usage status"
+msgstr "وضعیت استفاده"
+
+msgid "Usage status: all"
+msgstr "وضعیت استفاده: همه"
+
+msgid "Used"
+msgstr "استفاده‌شده"
+
+msgid "Unreferenced"
+msgstr "بدون ارجاع"
+
+msgid "New, unreferenced"
+msgstr "جدید، بدون ارجاع"
+
+#, php-format
+msgid "%s selected"
+msgstr "%s مورد انتخاب شده"
+
+#, php-format
+msgid "%s media and all their files will be deleted permanently. This cannot be undone. Continue?"
+msgstr "%s رسانه و همه‌ی فایل‌هایش برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست. ادامه می‌دهید؟"
+
+#, php-format
+msgid "%s file(s) will be deleted permanently. This cannot be undone. Continue?"
+msgstr "%s فایل برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست. ادامه می‌دهید؟"
+
+#, php-format
+msgid "Checking… %s folder(s)"
+msgstr "در حال بررسی… %s پوشه"
+
+msgid "No extra files found."
+msgstr "فایل اضافه‌ای پیدا نشد."
+
+#, php-format
+msgid "Extra size of attachment #%s"
+msgstr "سایز اضافه‌ی پیوست #%s"
+
+msgid "Outside the library"
+msgstr "خارج از کتابخانه"
+
+msgid "Its URL appears somewhere; it is kept"
+msgstr "آدرسش جایی آمده؛ نگه داشته می‌شود"
+
+msgid "Show more"
+msgstr "نمایش بیشتر"
+
+msgid "Requests for quarantined files reach WordPress: visitors are served the file and the request is logged."
+msgstr "درخواست فایل‌های قرنطینه به وردپرس می‌رسد: به بازدیدکننده تحویل داده می‌شوند و ثبت می‌شوند."
+
+msgid "Requests for missing files do not reach WordPress (probably an nginx/LiteSpeed rule for image files, or a CDN). A quarantined file returns a 404 to visitors and no hit is logged. In this setup, quarantine is only a reversible delete."
+msgstr "درخواست فایل‌های ناموجود به وردپرس نمی‌رسد (احتمالاً یک قانون nginx/LiteSpeed برای فایل‌های تصویری، یا CDN). فایل قرنطینه‌شده برای بازدیدکننده خطای ۴۰۴ می‌دهد و بازدیدی ثبت نمی‌شود. با این وضعیت، قرنطینه فقط یک «حذف برگشت‌پذیر» است."
+
+msgid "Media not found."
+msgstr "رسانه پیدا نشد."
+
+msgid "Your session has expired; reload the page."
+msgstr "نشست منقضی شده است؛ صفحه را دوباره بارگذاری کنید."
+
+msgid "You are not allowed to do this."
+msgstr "شما اجازه‌ی انجام این عملیات را ندارید."
+
+msgid "This media is quarantined: its files were moved out of their original path and requests for them are logged."
+msgstr "این رسانه در قرنطینه است: فایل‌هایش از مسیر اصلی برداشته شده‌اند و درخواست‌ها برایشان ثبت می‌شود."
+
+msgid "Quarantine"
+msgstr "قرنطینه"
+
+msgid "No scan has been run yet."
+msgstr "هنوز اسکنی انجام نشده است."
+
+msgid "Scan"
+msgstr "اسکن"
+
+msgid "This media was uploaded after the last full scan and has not been used in posts, meta or settings since. Plugin tables and code files are only checked by a full scan."
+msgstr "این رسانه بعد از آخرین اسکن کامل آپلود شده و تا الان در نوشته‌ها، متاها و تنظیمات استفاده نشده است. جدول‌های افزونه‌ها و فایل‌های کد فقط با اسکن کامل بررسی می‌شوند."
+
+msgid "No reference to this media was found within the scope of the last scan."
+msgstr "در محدوده‌ی آخرین اسکن هیچ ارجاعی به این رسانه پیدا نشد."
+
+msgid "Only the first 500 items are shown."
+msgstr "فقط ۵۰۰ مورد اول نمایش داده شده است."
+
+#, php-format
+msgid "Last full scan: %1$s — %2$s. Changes since then to posts, meta, terms, users and settings are recorded live; plugin tables and code only by a full scan. Use outside the site (email, social media, other sites) cannot be detected."
+msgstr "آخرین اسکن کامل: %1$s — %2$s. تغییرات بعد از آن در نوشته‌ها، متاها، دسته‌ها، کاربران و تنظیمات زنده ثبت می‌شود؛ جدول‌های افزونه‌ها و کد فقط با اسکن کامل. استفاده از بیرون سایت (ایمیل، شبکه‌های اجتماعی، سایت‌های دیگر) قابل تشخیص نیست."
+
+#, php-format
+msgid "Deleted post #%d"
+msgstr "نوشته‌ی حذف‌شده #%d"
+
+msgid "View"
+msgstr "مشاهده"
+
+msgid "(no title)"
+msgstr "(بدون عنوان)"
+
+#, php-format
+msgid "Deleted term #%d"
+msgstr "دسته‌ی حذف‌شده #%d"
+
+#, php-format
+msgid "Deleted user #%d"
+msgstr "کاربر حذف‌شده #%d"
+
+msgid "User"
+msgstr "کاربر"
+
+#, php-format
+msgid "Comment #%d"
+msgstr "دیدگاه #%d"
+
+msgid "Theme customizer"
+msgstr "سفارشی‌سازی قالب"
+
+msgid "Widgets"
+msgstr "ابزارک‌ها"
+
+msgid "Site icon"
+msgstr "نماد سایت"
+
+msgid "Site logo"
+msgstr "لوگوی سایت"
+
+msgid "Settings"
+msgstr "تنظیمات"
+
+msgid "Code file"
+msgstr "فایل کد"
+
+msgid "Kept by you"
+msgstr "نگه‌داشته‌شده به دست شما"
+
+msgid "Marked as used outside the site."
+msgstr "برای استفاده‌ی بیرون از سایت علامت خورده است."
+
+msgid "Remove the mark"
+msgstr "برداشتن علامت"
+
+#, php-format
+msgid "Attachment #%d"
+msgstr "پیوست #%d"
+
+msgid "It has the same file and is in use; deleting this attachment deletes the shared file and breaks the other one's image too."
+msgstr "همین فایل را دارد و استفاده شده است؛ حذف این پیوست فایل مشترک را پاک می‌کند و تصویر آن یکی هم می‌شکند."
+
+#, php-format
+msgid "Form #%d"
+msgstr "فرم #%d"
+
+#, php-format
+msgid "Row #%d"
+msgstr "ردیف #%d"
+
+msgid "Plugin table"
+msgstr "جدول افزونه"
+
+msgid "Content"
+msgstr "محتوا"
+
+msgid "Featured image"
+msgstr "تصویر شاخص"
+
+msgid "Product gallery"
+msgstr "گالری محصول"
+
+msgid "Elementor"
+msgstr "المنتور"
+
+msgid "Description"
+msgstr "توضیحات"
+
+msgid "By ID"
+msgstr "با شناسه"
+
+msgid "By URL"
+msgstr "با آدرس"
+
+msgid "Quarantined"
+msgstr "در قرنطینه"
+
+msgid "Not scanned"
+msgstr "اسکن نشده"
+
+#, php-format
+msgid "Used in %s place(s)"
+msgstr "%s محل استفاده"
+
+msgid "Usage"
+msgstr "استفاده"
+
+#, php-format
+msgid "This scan cannot be trusted: %1$s featured image(s) (such as %2$s) that are certainly in use came back unreferenced. Quarantine and delete are disabled. Run the scan again; if it repeats, report it."
+msgstr "این اسکن قابل اعتماد نیست: %1$s تصویر شاخص (مثل %2$s) که حتماً استفاده می‌شوند، بدون ارجاع آمدند. پس قرنطینه و حذف غیرفعال است. اسکن را دوباره اجرا کنید؛ اگر باز تکرار شد، گزارش دهید."
+
+msgid "Database + source code"
+msgstr "دیتابیس + سورس کد"
+
+msgid "Database only"
+msgstr "فقط دیتابیس"
+
+msgid ", with plugin tables"
+msgstr "، با جدول‌های افزونه‌ها"
+
+msgid "Duplicates"
+msgstr "تکراری‌ها"
+
+msgid "Extra files"
+msgstr "فایل‌های اضافه"
+
+msgid "Unregistered sizes"
+msgstr "سایزهای ثبت‌نشده"
+
+msgid "Media Tracker sections"
+msgstr "بخش‌های ردیاب رسانه"
+
+msgid "This section needs the result of a full scan."
+msgstr "این بخش به نتیجه‌ی یک اسکن کامل نیاز دارد."
+
+msgid "Run a scan"
+msgstr "اجرای اسکن"
+
+#, php-format
+msgid "%s media moved to quarantine."
+msgstr "%s رسانه به قرنطینه رفت."
+
+#, php-format
+msgid "%s media restored to their original place."
+msgstr "%s رسانه به جای اصلی برگشت."
+
+#, php-format
+msgid "%s media deleted permanently."
+msgstr "%s رسانه برای همیشه حذف شد."
+
+#, php-format
+msgid "%s media will be kept and left this list."
+msgstr "%s رسانه نگه داشته می‌شود و از این لیست بیرون رفت."
+
+#, php-format
+msgid "The \"keep\" mark was removed from %s media."
+msgstr "علامت «نگه‌داشتن» از %s رسانه برداشته شد."
+
+#, php-format
+msgid "Space freed: %s"
+msgstr "فضای آزادشده: %s"
+
+#, php-format
+msgid "%1$s unreferenced media, %2$s in total."
+msgstr "%1$s رسانه بدون ارجاع، روی هم %2$s."
+
+msgid "Use outside the site (newsletters, social media, other sites) cannot be detected. The safe way: quarantine first, wait a few weeks, and only delete what received no requests in that time."
+msgstr "استفاده از بیرون سایت (خبرنامه، شبکه‌های اجتماعی، سایت‌های دیگر) قابل تشخیص نیست. راه امن: اول قرنطینه کنید، چند هفته صبر کنید و فقط چیزی را حذف کنید که در این مدت درخواستی نداشته."
+
+msgid "Type"
+msgstr "نوع"
+
+msgid "All types"
+msgstr "همه‌ی انواع"
+
+msgid "Image"
+msgstr "تصویر"
+
+msgid "Video"
+msgstr "ویدیو"
+
+msgid "Audio"
+msgstr "صوت"
+
+msgid "Document"
+msgstr "سند"
+
+msgid "Order"
+msgstr "ترتیب"
+
+msgid "Largest first"
+msgstr "بزرگ‌ترین اول"
+
+msgid "Newest first"
+msgstr "جدیدترین اول"
+
+msgid "Oldest first"
+msgstr "قدیمی‌ترین اول"
+
+msgid "Apply"
+msgstr "نمایش"
+
+msgid "No unreferenced media found."
+msgstr "رسانه‌ی بدون ارجاعی پیدا نشد."
+
+msgid "Select all on this page"
+msgstr "انتخاب همه‌ی این صفحه"
+
+msgid "Keep"
+msgstr "نگه‌داشتن"
+
+msgid "Delete permanently"
+msgstr "حذف دائمی"
+
+#, php-format
+msgid "Select %s"
+msgstr "انتخاب %s"
+
+#, php-format
+msgid "Preview %s"
+msgstr "پیش‌نمایش %s"
+
+msgid "View mode"
+msgstr "نحوه‌ی نمایش"
+
+msgid "Card view"
+msgstr "نمایش کارتی"
+
+msgid "List view"
+msgstr "نمایش لیستی"
+
+msgid "Per page"
+msgstr "تعداد در صفحه"
+
+#, php-format
+msgid "%s per page"
+msgstr "%s در صفحه"
+
+msgid "File"
+msgstr "فایل"
+
+msgid "Status"
+msgstr "وضعیت"
+
+msgid "Size"
+msgstr "حجم"
+
+msgid "Uploaded"
+msgstr "آپلود"
+
+msgid "Uploaded to"
+msgstr "آپلودشده در"
+
+msgid "Files with exactly identical content that were uploaded more than once. Sizes are compared first, and only same-size files are checked by content hash (MD5). Attachments that share one file from the start (such as media translations) are not counted as duplicates. Only unreferenced copies can be selected; if every copy is in use, point the references at one copy first."
+msgstr "فایل‌هایی با محتوای کاملاً یکسان که چند بار آپلود شده‌اند. اول حجم‌ها مقایسه می‌شوند و فقط فایل‌های هم‌حجم با هش محتوا (MD5) بررسی می‌شوند. پیوست‌هایی که از اول یک فایل مشترک دارند (مثل ترجمه‌های رسانه) تکراری حساب نمی‌شوند. فقط نسخه‌هایی را می‌شود انتخاب کرد که بدون ارجاع‌اند؛ اگر همه‌ی نسخه‌ها استفاده شده‌اند، اول ارجاع‌ها را به یک نسخه تغییر دهید."
+
+msgid "Check again"
+msgstr "بررسی دوباره"
+
+msgid "Check for duplicates"
+msgstr "بررسی تکراری‌ها"
+
+#, php-format
+msgid "Last checked: %s"
+msgstr "آخرین بررسی: %s"
+
+#, php-format
+msgid "%1$s duplicate group(s); the extra copies take %2$s in total."
+msgstr "%1$s گروه فایل تکراری؛ نسخه‌های اضافه روی هم %2$s."
+
+msgid "No duplicate files found."
+msgstr "فایل تکراری‌ای پیدا نشد."
+
+#, php-format
+msgid "%1$s copies, %2$s each"
+msgstr "%1$s نسخه، هر کدام %2$s"
+
+msgid "Every copy is in use; there is nothing safe to delete."
+msgstr "همه‌ی نسخه‌ها استفاده شده‌اند؛ چیزی برای حذف امن نیست."
+
+msgid "Pages of this site"
+msgstr "صفحه‌های همین سایت"
+
+msgid "Google"
+msgstr "گوگل"
+
+msgid "Other sites"
+msgstr "سایت‌های دیگر"
+
+msgid "Bots"
+msgstr "ربات‌ها"
+
+msgid "Direct"
+msgstr "مستقیم"
+
+msgid "Quarantined files were moved out of their original path. If anyone asks for them, the plugin serves the file and logs the request. Anything that received no requests for a few weeks is safe to delete. A request from \"Pages of this site\" means something still links to the file that the scan did not find: restore it."
+msgstr "فایل‌های قرنطینه از مسیر اصلی برداشته شده‌اند. اگر کسی آن‌ها را بخواهد، افزونه فایل را تحویل می‌دهد و درخواست را ثبت می‌کند. چیزی که چند هفته درخواستی نداشته، حذفش امن است. درخواست از «صفحه‌های همین سایت» یعنی جایی هنوز به فایل لینک می‌دهد که اسکن پیدا نکرده: آن را برگردانید."
+
+msgid "Checking that requests for quarantined files reach WordPress…"
+msgstr "در حال بررسی اینکه درخواست فایل‌های قرنطینه به وردپرس می‌رسد…"
+
+msgid "Nothing is quarantined."
+msgstr "چیزی در قرنطینه نیست."
+
+msgid "Select all"
+msgstr "انتخاب همه"
+
+msgid "Restore"
+msgstr "برگرداندن"
+
+msgid "Media"
+msgstr "رسانه"
+
+msgid "Quarantined since"
+msgstr "در قرنطینه از"
+
+msgid "Requests"
+msgstr "درخواست‌ها"
+
+msgid "Last request"
+msgstr "آخرین درخواست"
+
+#, php-format
+msgid "%s ago"
+msgstr "%s پیش"
+
+msgid "None"
+msgstr "هیچ"
+
+msgid "Files on disk that no media owns: old sizes of an image that are no longer in its metadata (for example after regenerating thumbnails) and files that were never added to the library (FTP uploads, imports). Only folders that contain media are read; plugin folders (such as form uploads) are not touched."
+msgstr "فایل‌هایی روی دیسک که هیچ رسانه‌ای مالکشان نیست: سایزهای قدیمی یک تصویر که دیگر در اطلاعاتش ثبت نیستند (مثلاً بعد از ساخت دوباره‌ی بندانگشتی‌ها) و فایل‌هایی که هیچ‌وقت وارد کتابخانه نشده‌اند (آپلود با FTP، ایمپورت). فقط پوشه‌هایی خوانده می‌شوند که رسانه دارند؛ پوشه‌های افزونه‌ها (مثل فایل‌های فرم‌ها) دست نمی‌خورند."
+
+msgid "Run the scan again with this version for this section."
+msgstr "برای این بخش، اسکن را با این نسخه دوباره اجرا کنید."
+
+msgid "Check for extra files"
+msgstr "بررسی فایل‌های اضافه"
+
+msgid "Select everything deletable"
+msgstr "انتخاب همه‌ی موارد قابل حذف"
+
+msgid "Files made for sizes that no theme or plugin registers any more (for example a previous theme's sizes). WordPress no longer serves them, but they stay on disk as long as the image exists. A file whose exact URL appears somewhere, or that is the same as an active size, is kept."
+msgstr "فایل‌هایی که برای سایزهایی ساخته شده‌اند که دیگر هیچ قالب یا افزونه‌ای ثبتشان نکرده (مثلاً سایزهای قالب قبلی). وردپرس دیگر آن‌ها را تحویل نمی‌دهد، ولی تا وقتی تصویر استفاده می‌شود روی دیسک می‌مانند. فایلی که آدرس دقیقش جایی آمده، یا با یک سایز فعال یکی است، نگه داشته می‌شود."
+
+msgid "Check sizes"
+msgstr "بررسی سایزها"
+
+msgid "Image size"
+msgstr "سایز"
+
+msgid "Dimensions"
+msgstr "ابعاد"
+
+msgid "Deletable file"
+msgstr "فایل قابل حذف"
+
+msgid "Kept"
+msgstr "نگه‌داشته‌شده"
+
+msgid "Deleting cannot be undone; take a backup first. The WebP/AVIF versions of the same files are deleted too."
+msgstr "حذف برگشت‌پذیر نیست؛ قبل از آن بکاپ بگیرید. نسخه‌های WebP/AVIF همان فایل‌ها هم حذف می‌شوند."
+
+msgid "Delete the files of the selected sizes"
+msgstr "حذف فایل‌های سایزهای انتخاب‌شده"
+
+#, php-format
+msgid "Last scan: %1$s — %2$s — took %3$s"
+msgstr "آخرین اسکن: %1$s — %2$s — مدت: %3$s"
+
+msgid "After a scan, changes to posts, meta, terms, users and settings are recorded live; plugin tables and code files are only updated by a full scan."
+msgstr "بعد از اسکن، تغییرات نوشته‌ها، متاها، دسته‌ها، کاربران و تنظیمات زنده ثبت می‌شود؛ جدول‌های افزونه‌ها و فایل‌های کد فقط با اسکن کامل به‌روز می‌شوند."
+
+msgid "New scan"
+msgstr "اسکن جدید"
+
+msgid "Scan scope"
+msgstr "محدوده‌ی اسکن"
+
+msgid "Fast. Posts and pages, meta (Elementor, WooCommerce, ACF), settings and widgets, terms, users and comments."
+msgstr "سریع. نوشته‌ها و برگه‌ها، متاها (المنتور، ووکامرس، ACF)، تنظیمات و ابزارک‌ها، دسته‌ها، کاربران و دیدگاه‌ها."
+
+msgid "Plus the files of the active theme, active plugins, mu-plugins and the CSS/JS files inside the uploads folder (such as Elementor's generated CSS). Run this before any deletion."
+msgstr "به‌علاوه‌ی فایل‌های قالب فعال، افزونه‌های فعال، mu-plugins و فایل‌های CSS/JS داخل پوشه‌ی uploads (مثل CSS ساخته‌شده‌ی المنتور). قبل از هر حذفی این گزینه را اجرا کنید."
+
+msgid "Also check plugins' own tables"
+msgstr "جدول‌های اختصاصی افزونه‌ها هم بررسی شوند"
+
+msgid "Such as sliders and form builders. Log, session and cache tables are skipped."
+msgstr "مثل اسلایدرها و فرم‌سازها. جدول‌های لاگ، سشن و کش کنار گذاشته می‌شوند."
+
+msgid "The previous scan's result is cleared. If you close the page mid-scan, it continues from where it stopped next time."
+msgstr "نتیجه‌ی اسکن قبلی پاک می‌شود. اگر وسط اسکن صفحه را ببندید، دفعه‌ی بعد از همان‌جا ادامه پیدا می‌کند."
+
+msgid "Start scan"
+msgstr "شروع اسکن"
+
+msgid "Stop scan"
+msgstr "توقف اسکن"
+
+msgid "Continue"
+msgstr "ادامه"
+
+msgid "The last scan was \"database only\"; URLs written directly in theme or plugin code were not checked. Run a \"database + source code\" scan before deleting."
+msgstr "آخرین اسکن «فقط دیتابیس» بود؛ آدرس‌هایی که مستقیم در کد قالب یا افزونه نوشته شده‌اند بررسی نشده‌اند. قبل از حذف، اسکن «دیتابیس + سورس کد» را اجرا کنید."
+
+msgid "Size on disk"
+msgstr "حجم روی دیسک"
+
+#, php-format
+msgid " (with %s sizes)"
+msgstr " (با %s سایز)"
+
+msgid "(this is only where it was uploaded, not a use)"
+msgstr "(فقط محل آپلود است، نه استفاده)"
+
+msgid "Shared file"
+msgstr "فایل مشترک"
+
+#, php-format
+msgid "With attachment %s; they are moved or deleted together."
+msgstr "با پیوست %s؛ با هم جابه‌جا یا حذف می‌شوند."
+
+msgid "Remove the keep mark"
+msgstr "برداشتن علامت نگه‌داشتن"
+
+msgid "Edit media"
+msgstr "ویرایش رسانه"
+
+msgid "Invalid request."
+msgstr "درخواست نامعتبر است."
+
+msgid "Run a full scan first."
+msgstr "اول یک اسکن کامل اجرا کنید."
+
+msgid "No size selected."
+msgstr "هیچ سایزی انتخاب نشده است."
+
+msgid "Run the scan again with this version."
+msgstr "اسکن را با این نسخه دوباره اجرا کنید."
+
+msgid "Nothing selected."
+msgstr "چیزی انتخاب نشده است."
+
+#, php-format
+msgid "Building the media index failed on this site, so the scan did not start and the previous result was left untouched. Database error: %s"
+msgstr "ساخت فهرست رسانه‌ها روی این سایت ناموفق بود، پس اسکن شروع نشد و نتیجه‌ی قبلی دست نخورد. خطای دیتابیس: %s"
+
+msgid "Post content"
+msgstr "محتوای نوشته‌ها"
+
+msgid "Post meta"
+msgstr "متای نوشته‌ها"
+
+msgid "Term meta"
+msgstr "متای دسته‌ها"
+
+msgid "User meta"
+msgstr "متای کاربران"
+
+msgid "Comment meta"
+msgstr "متای دیدگاه‌ها"
+
+msgid "Term descriptions"
+msgstr "توضیحات دسته‌ها"
+
+msgid "Comments"
+msgstr "دیدگاه‌ها"
+
+msgid "Code files"
+msgstr "فایل‌های کد"
+
+#, php-format
+msgid "Table %s"
+msgstr "جدول %s"
+
+#. Description of the plugin
+msgid "Find unreferenced media, see where each file is used, find duplicate files, and clean up safely with a reversible quarantine."
+msgstr "پیدا کردن رسانه‌های بدون ارجاع، دیدن جاهایی که هر فایل استفاده شده، پیدا کردن فایل‌های تکراری و پاک‌سازی امن با قرنطینه‌ی برگشت‌پذیر."
