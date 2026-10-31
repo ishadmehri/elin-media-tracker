@@ -15,6 +15,7 @@ final class Page
         add_action('wp_ajax_mtrk_scan', [self::class, 'ajax_scan']);
         add_action('wp_ajax_mtrk_sizes', [self::class, 'ajax_sizes']);
         add_action('wp_ajax_mtrk_orphans', [self::class, 'ajax_orphans']);
+        add_action('wp_ajax_mtrk_zip', [self::class, 'ajax_zip']);
         add_action('wp_ajax_mtrk_act', [self::class, 'ajax_act']);
         add_action('wp_ajax_mtrk_preview', [self::class, 'ajax_preview']);
         add_action('wp_ajax_mtrk_dups', [self::class, 'ajax_dups']);
@@ -486,6 +487,7 @@ final class Page
                 <div class="mtrk-bulk">
                     <label><input type="checkbox" class="mtrk-orphans-all"> <?php esc_html_e('Select everything deletable', 'elin-media-tracker'); ?></label>
                     <span class="mtrk-count" aria-live="polite"></span>
+                    <button type="button" class="button mtrk-orphans-zip" disabled><?php esc_html_e('Download selected as ZIP', 'elin-media-tracker'); ?></button>
                     <button type="button" class="button mtrk-danger mtrk-orphans-delete" disabled><?php esc_html_e('Delete permanently', 'elin-media-tracker'); ?></button>
                 </div>
                 <table class="widefat striped">
@@ -732,6 +734,24 @@ final class Page
             wp_send_json_success(Orphans::delete($paths));
         }
         wp_send_json_success(Orphans::step(absint($_POST['cursor'] ?? 0)));
+    }
+
+    /** Sends the ZIP of the selected extra files as a download (or a JSON error the page shows). */
+    public static function ajax_zip(): void
+    {
+        Admin::guard();
+        $paths = json_decode((string) wp_unslash($_POST['paths'] ?? '[]'), true);
+        $zip = Orphans::zip(is_array($paths) ? array_map('strval', $paths) : []);
+        if (isset($zip['error'])) {
+            wp_send_json_error($zip['error'], 400);
+        }
+        nocache_headers();
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="extra-files-' . gmdate('Ymd-His') . '.zip"');
+        header('Content-Length: ' . filesize($zip['file']));
+        readfile($zip['file']);
+        wp_delete_file($zip['file']);
+        exit;
     }
 
     public static function ajax_dups(): void

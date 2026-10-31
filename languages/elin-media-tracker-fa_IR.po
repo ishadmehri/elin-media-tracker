@@ -647,3 +647,23 @@ msgstr "فایل‌های اضافه (فایل‌های روی دیسک که ه�
 
 msgid "Finds stray copies of library files (FTP uploads, imports). Needs a recent full scan; extra files whose URL is used somewhere cannot be selected."
 msgstr "نسخه‌های سرگردان فایل‌های کتابخانه را پیدا می‌کند (آپلود با FTP، ایمپورت). به یک اسکن کامل تازه نیاز دارد؛ فایل اضافه‌ای که آدرسش جایی استفاده شده قابل انتخاب نیست."
+
+msgid "Building the ZIP…"
+msgstr "در حال ساخت zip…"
+
+#, php-format
+msgid "%s file(s) added to the ZIP."
+msgstr "%s فایل به zip اضافه شد."
+
+msgid "Download selected as ZIP"
+msgstr "دانلود انتخاب‌شده‌ها به‌صورت zip"
+
+#, php-format
+msgid "The selection is %1$s; one ZIP is limited to %2$s. Select fewer files."
+msgstr "انتخاب شما %1$s است؛ هر zip حداکثر %2$s می‌تواند باشد. فایل‌های کمتری انتخاب کنید."
+
+msgid "ZIP support (ZipArchive) is not available on this server."
+msgstr "پشتیبانی zip (ZipArchive) روی این سرور فعال نیست."
+
+msgid "Could not create the ZIP file."
+msgstr "فایل zip ساخته نشد."

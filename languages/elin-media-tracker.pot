@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Elin Media Tracker 0.8.0\n"
+"Project-Id-Version: Elin Media Tracker 0.9.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/elin-media-tracker\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-31T12:35:57+00:00\n"
+"POT-Creation-Date: 2026-10-31T12:49:06+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: elin-media-tracker\n"
@@ -40,899 +40,929 @@ msgid "https://github.com/ishadmehri"
 msgstr ""
 
 #: includes/class-admin.php:30
-#: includes/class-page.php:63
+#: includes/class-page.php:64
 msgid "Media Tracker"
 msgstr ""
 
 #. translators: %s: number of folders left
 #: includes/class-admin.php:56
+msgid "Building the ZIP…"
+msgstr ""
+
+#. translators: %s: number of files
+#: includes/class-admin.php:58
+#, php-format
+msgid "%s file(s) added to the ZIP."
+msgstr ""
+
+#: includes/class-admin.php:59
 #, php-format
 msgid "Listing extra files… %s folder(s) left"
 msgstr ""
 
 #. translators: 1: number of media, 2: number of extra files
-#: includes/class-admin.php:58
+#: includes/class-admin.php:61
 #, php-format
 msgid "%1$s media and %2$s extra file(s) will be deleted permanently. This cannot be undone. Continue?"
 msgstr ""
 
-#: includes/class-admin.php:59
-#: includes/class-page.php:673
+#: includes/class-admin.php:62
+#: includes/class-page.php:675
 msgid "Where it is used"
 msgstr ""
 
-#: includes/class-admin.php:60
+#: includes/class-admin.php:63
 msgid "Close"
 msgstr ""
 
-#: includes/class-admin.php:61
+#: includes/class-admin.php:64
 msgid "Loading…"
 msgstr ""
 
-#: includes/class-admin.php:62
+#: includes/class-admin.php:65
 msgid "Could not reach the server."
 msgstr ""
 
-#: includes/class-admin.php:63
+#: includes/class-admin.php:66
 msgid "Scan finished."
 msgstr ""
 
-#: includes/class-admin.php:64
+#: includes/class-admin.php:67
 msgid "Stopping…"
 msgstr ""
 
 #. translators: %s: number of images checked
-#: includes/class-admin.php:66
+#: includes/class-admin.php:69
 #, php-format
 msgid "Checking… %s image(s)"
 msgstr ""
 
-#: includes/class-admin.php:67
+#: includes/class-admin.php:70
 msgid "No unregistered sizes found."
 msgstr ""
 
-#: includes/class-admin.php:68
+#: includes/class-admin.php:71
 msgid "MB"
 msgstr ""
 
-#: includes/class-admin.php:69
+#: includes/class-admin.php:72
 msgid "KB"
 msgstr ""
 
 #. translators: 1: number of files, 2: size with unit
-#: includes/class-admin.php:71
-#: includes/class-admin.php:96
+#: includes/class-admin.php:74
+#: includes/class-admin.php:99
 #, php-format
 msgid "%1$s file(s), %2$s deletable."
 msgstr ""
 
 #. translators: 1: number of files, 2: size with unit
-#: includes/class-admin.php:73
+#: includes/class-admin.php:76
 #, php-format
 msgid "%1$s file(s) (%2$s) will be deleted permanently. Continue?"
 msgstr ""
 
 #. translators: 1: number of files, 2: size with unit
-#: includes/class-admin.php:75
+#: includes/class-admin.php:78
 #, php-format
 msgid "%1$s file(s) deleted (%2$s)."
 msgstr ""
 
-#: includes/class-admin.php:76
-#: includes/class-page.php:258
-#: includes/class-page.php:390
+#: includes/class-admin.php:79
+#: includes/class-page.php:259
+#: includes/class-page.php:391
 msgid "Preview"
 msgstr ""
 
 #. translators: %s: number of attachments left
-#: includes/class-admin.php:78
+#: includes/class-admin.php:81
 #, php-format
 msgid "Comparing sizes… %s media left"
 msgstr ""
 
 #. translators: %s: number of files left
-#: includes/class-admin.php:80
+#: includes/class-admin.php:83
 #, php-format
 msgid "Comparing the content of same-size files… %s file(s) left"
 msgstr ""
 
-#: includes/class-admin.php:81
-#: includes/class-admin.php:367
+#: includes/class-admin.php:84
+#: includes/class-admin.php:374
 msgid "Usage status"
 msgstr ""
 
-#: includes/class-admin.php:82
-#: includes/class-admin.php:362
+#: includes/class-admin.php:85
+#: includes/class-admin.php:369
 msgid "Usage status: all"
 msgstr ""
 
-#: includes/class-admin.php:83
-#: includes/class-admin.php:363
-#: includes/class-page.php:561
+#: includes/class-admin.php:86
+#: includes/class-admin.php:370
+#: includes/class-page.php:563
 msgid "Used"
 msgstr ""
 
-#: includes/class-admin.php:84
-#: includes/class-admin.php:324
-#: includes/class-admin.php:364
-#: includes/class-page.php:50
-#: includes/class-page.php:560
+#: includes/class-admin.php:87
+#: includes/class-admin.php:331
+#: includes/class-admin.php:371
+#: includes/class-page.php:51
+#: includes/class-page.php:562
 msgid "Unreferenced"
 msgstr ""
 
-#: includes/class-admin.php:85
-#: includes/class-admin.php:325
-#: includes/class-admin.php:365
-#: includes/class-page.php:562
+#: includes/class-admin.php:88
+#: includes/class-admin.php:332
+#: includes/class-admin.php:372
+#: includes/class-page.php:564
 msgid "New, unreferenced"
 msgstr ""
 
 #. translators: %s: number of items
-#: includes/class-admin.php:87
+#: includes/class-admin.php:90
 #, php-format
 msgid "%s selected"
 msgstr ""
 
 #. translators: %s: number of media items
-#: includes/class-admin.php:89
+#: includes/class-admin.php:92
 #, php-format
 msgid "%s media and all their files will be deleted permanently. This cannot be undone. Continue?"
 msgstr ""
 
 #. translators: %s: number of files
-#: includes/class-admin.php:91
+#: includes/class-admin.php:94
 #, php-format
 msgid "%s file(s) will be deleted permanently. This cannot be undone. Continue?"
 msgstr ""
 
 #. translators: %s: number of folders
-#: includes/class-admin.php:93
+#: includes/class-admin.php:96
 #, php-format
 msgid "Checking… %s folder(s)"
 msgstr ""
 
-#: includes/class-admin.php:94
+#: includes/class-admin.php:97
 msgid "No extra files found."
 msgstr ""
 
 #. translators: %s: attachment id
-#: includes/class-admin.php:98
+#: includes/class-admin.php:101
 #, php-format
 msgid "Extra size of attachment #%s"
 msgstr ""
 
-#: includes/class-admin.php:99
-#: includes/class-page.php:392
+#: includes/class-admin.php:102
+#: includes/class-page.php:393
 msgid "No media item owns this file"
 msgstr ""
 
 #. translators: %s: date
-#: includes/class-admin.php:100
-#: includes/class-page.php:307
+#: includes/class-admin.php:103
+#: includes/class-page.php:308
 #, php-format
 msgid "Last checked: %s"
 msgstr ""
 
-#: includes/class-admin.php:101
+#: includes/class-admin.php:104
 msgid "No preview for this file type."
 msgstr ""
 
-#: includes/class-admin.php:102
-#: includes/class-page.php:259
-#: includes/class-page.php:494
-#: includes/class-page.php:643
+#: includes/class-admin.php:105
+#: includes/class-page.php:260
+#: includes/class-page.php:496
+#: includes/class-page.php:645
 msgid "File"
 msgstr ""
 
-#: includes/class-admin.php:103
-#: includes/class-page.php:262
-#: includes/class-page.php:496
-#: includes/class-page.php:527
+#: includes/class-admin.php:106
+#: includes/class-page.php:263
+#: includes/class-page.php:498
+#: includes/class-page.php:529
 msgid "Size"
 msgstr ""
 
-#: includes/class-admin.php:104
+#: includes/class-admin.php:107
 msgid "Open in a new tab"
 msgstr ""
 
-#: includes/class-admin.php:105
-#: includes/class-page.php:392
+#: includes/class-admin.php:108
+#: includes/class-page.php:393
 msgid "Its URL appears somewhere; it is kept"
 msgstr ""
 
-#: includes/class-admin.php:106
+#: includes/class-admin.php:109
 msgid "Show more"
 msgstr ""
 
-#: includes/class-admin.php:107
+#: includes/class-admin.php:110
 msgid "Requests for quarantined files reach WordPress: visitors are served the file and the request is logged."
 msgstr ""
 
-#: includes/class-admin.php:108
+#: includes/class-admin.php:111
 msgid "Requests for missing files do not reach WordPress (probably an nginx/LiteSpeed rule for image files, or a CDN). A quarantined file returns a 404 to visitors and no hit is logged. In this setup, quarantine is only a reversible delete."
 msgstr ""
 
-#: includes/class-admin.php:120
-#: includes/class-page.php:785
+#: includes/class-admin.php:123
+#: includes/class-page.php:805
 msgid "Media not found."
 msgstr ""
 
-#: includes/class-admin.php:128
+#: includes/class-admin.php:135
 msgid "Your session has expired; reload the page."
 msgstr ""
 
-#: includes/class-admin.php:131
+#: includes/class-admin.php:138
 msgid "You are not allowed to do this."
 msgstr ""
 
-#: includes/class-admin.php:159
+#: includes/class-admin.php:166
 msgid "This media is quarantined: its files were moved out of their original path and requests for them are logged."
 msgstr ""
 
-#: includes/class-admin.php:160
-#: includes/class-page.php:52
-#: includes/class-page.php:168
-#: includes/class-page.php:346
-#: includes/class-page.php:669
+#: includes/class-admin.php:167
+#: includes/class-page.php:53
+#: includes/class-page.php:169
+#: includes/class-page.php:347
+#: includes/class-page.php:671
 msgid "Quarantine"
 msgstr ""
 
-#: includes/class-admin.php:165
-#: includes/class-page.php:567
+#: includes/class-admin.php:172
+#: includes/class-page.php:569
 msgid "No scan has been run yet."
 msgstr ""
 
-#: includes/class-admin.php:166
-#: includes/class-page.php:55
-#: includes/class-page.php:478
-#: includes/class-page.php:513
-#: includes/class-page.php:606
+#: includes/class-admin.php:173
+#: includes/class-page.php:56
+#: includes/class-page.php:479
+#: includes/class-page.php:515
+#: includes/class-page.php:608
 msgid "Scan"
 msgstr ""
 
-#: includes/class-admin.php:169
+#: includes/class-admin.php:176
 msgid "This media was uploaded after the last full scan and has not been used in posts, meta or settings since. Plugin tables and code files are only checked by a full scan."
 msgstr ""
 
-#: includes/class-admin.php:171
+#: includes/class-admin.php:178
 msgid "No reference to this media was found within the scope of the last scan."
 msgstr ""
 
-#: includes/class-admin.php:179
+#: includes/class-admin.php:186
 msgid "Only the first 500 items are shown."
 msgstr ""
 
 #. translators: 1: date, 2: scope
-#: includes/class-admin.php:187
+#: includes/class-admin.php:194
 #, php-format
 msgid "Last full scan: %1$s — %2$s. Changes since then to posts, meta, terms, users and settings are recorded live; plugin tables and code only by a full scan. Use outside the site (email, social media, other sites) cannot be detected."
 msgstr ""
 
 #. translators: %d: post id
-#: includes/class-admin.php:211
+#: includes/class-admin.php:218
 #, php-format
 msgid "Deleted post #%d"
 msgstr ""
 
-#: includes/class-admin.php:217
+#: includes/class-admin.php:224
 msgid "View"
 msgstr ""
 
-#: includes/class-admin.php:219
+#: includes/class-admin.php:226
 msgid "(no title)"
 msgstr ""
 
 #. translators: %d: term id
-#: includes/class-admin.php:225
+#: includes/class-admin.php:232
 #, php-format
 msgid "Deleted term #%d"
 msgstr ""
 
 #. translators: %d: user id
-#: includes/class-admin.php:234
+#: includes/class-admin.php:241
 #, php-format
 msgid "Deleted user #%d"
 msgstr ""
 
-#: includes/class-admin.php:236
+#: includes/class-admin.php:243
 msgid "User"
 msgstr ""
 
 #. translators: %d: comment id
-#: includes/class-admin.php:241
+#: includes/class-admin.php:248
 #, php-format
 msgid "Comment #%d"
 msgstr ""
 
-#: includes/class-admin.php:248
+#: includes/class-admin.php:255
 msgid "Theme customizer"
 msgstr ""
 
-#: includes/class-admin.php:251
+#: includes/class-admin.php:258
 msgid "Widgets"
 msgstr ""
 
-#: includes/class-admin.php:253
+#: includes/class-admin.php:260
 msgid "Site icon"
 msgstr ""
 
-#: includes/class-admin.php:253
+#: includes/class-admin.php:260
 msgid "Site logo"
 msgstr ""
 
-#: includes/class-admin.php:254
+#: includes/class-admin.php:261
 #: includes/class-scanner.php:397
 msgid "Settings"
 msgstr ""
 
-#: includes/class-admin.php:257
+#: includes/class-admin.php:264
 msgid "Code file"
 msgstr ""
 
-#: includes/class-admin.php:260
+#: includes/class-admin.php:267
 msgid "Kept by you"
 msgstr ""
 
-#: includes/class-admin.php:260
+#: includes/class-admin.php:267
 msgid "Marked as used outside the site."
 msgstr ""
 
-#: includes/class-admin.php:261
+#: includes/class-admin.php:268
 msgid "Remove the mark"
 msgstr ""
 
 #. translators: %d: attachment id
-#: includes/class-admin.php:265
+#: includes/class-admin.php:272
 #, php-format
 msgid "Attachment #%d"
 msgstr ""
 
-#: includes/class-admin.php:266
+#: includes/class-admin.php:273
 msgid "It has the same file and is in use; deleting this attachment deletes the shared file and breaks the other one's image too."
 msgstr ""
 
 #. translators: %d: form id
-#: includes/class-admin.php:287
+#: includes/class-admin.php:294
 #, php-format
 msgid "Form #%d"
 msgstr ""
 
 #. translators: %d: row id
-#: includes/class-admin.php:290
+#: includes/class-admin.php:297
 #, php-format
 msgid "Row #%d"
 msgstr ""
 
-#: includes/class-admin.php:291
+#: includes/class-admin.php:298
 msgid "Plugin table"
 msgstr ""
 
-#: includes/class-admin.php:304
+#: includes/class-admin.php:311
 msgid "Content"
 msgstr ""
 
-#: includes/class-admin.php:305
-#: includes/class-admin.php:306
+#: includes/class-admin.php:312
+#: includes/class-admin.php:313
 msgid "Featured image"
 msgstr ""
 
-#: includes/class-admin.php:307
+#: includes/class-admin.php:314
 msgid "Product gallery"
 msgstr ""
 
-#: includes/class-admin.php:308
+#: includes/class-admin.php:315
 msgid "Elementor"
 msgstr ""
 
-#: includes/class-admin.php:309
+#: includes/class-admin.php:316
 msgid "Description"
 msgstr ""
 
-#: includes/class-admin.php:312
+#: includes/class-admin.php:319
 msgid "By ID"
 msgstr ""
 
-#: includes/class-admin.php:312
+#: includes/class-admin.php:319
 msgid "By URL"
 msgstr ""
 
-#: includes/class-admin.php:320
+#: includes/class-admin.php:327
 msgid "Quarantined"
 msgstr ""
 
-#: includes/class-admin.php:321
+#: includes/class-admin.php:328
 msgid "Not scanned"
 msgstr ""
 
 #. translators: %s: number of places
-#: includes/class-admin.php:323
+#: includes/class-admin.php:330
 #, php-format
 msgid "Used in %s place(s)"
 msgstr ""
 
-#: includes/class-admin.php:337
-#: includes/class-admin.php:416
+#: includes/class-admin.php:344
+#: includes/class-admin.php:423
 msgid "Usage"
 msgstr ""
 
+#: includes/class-orphans.php:88
+#: includes/class-page.php:772
+msgid "Nothing selected."
+msgstr ""
+
+#. translators: 1: size of the selection, 2: size limit of one ZIP
+#: includes/class-orphans.php:93
+#, php-format
+msgid "The selection is %1$s; one ZIP is limited to %2$s. Select fewer files."
+msgstr ""
+
+#: includes/class-orphans.php:96
+msgid "ZIP support (ZipArchive) is not available on this server."
+msgstr ""
+
+#: includes/class-orphans.php:102
+#: includes/class-orphans.php:110
+msgid "Could not create the ZIP file."
+msgstr ""
+
 #. translators: 1: number of images, 2: attachment ids
-#: includes/class-page.php:33
+#: includes/class-page.php:34
 #, php-format
 msgid "This scan cannot be trusted: %1$s featured image(s) (such as %2$s) that are certainly in use came back unreferenced. Quarantine and delete are disabled. Run the scan again; if it repeats, report it."
 msgstr ""
 
-#: includes/class-page.php:41
-#: includes/class-page.php:579
+#: includes/class-page.php:42
+#: includes/class-page.php:581
 msgid "Database + source code"
 msgstr ""
 
-#: includes/class-page.php:41
-#: includes/class-page.php:575
+#: includes/class-page.php:42
+#: includes/class-page.php:577
 msgid "Database only"
 msgstr ""
 
-#: includes/class-page.php:42
+#: includes/class-page.php:43
 msgid ", with plugin tables"
 msgstr ""
 
-#: includes/class-page.php:51
+#: includes/class-page.php:52
 msgid "Duplicates"
 msgstr ""
 
-#: includes/class-page.php:53
+#: includes/class-page.php:54
 msgid "Extra files"
 msgstr ""
 
-#: includes/class-page.php:54
+#: includes/class-page.php:55
 msgid "Unregistered sizes"
 msgstr ""
 
-#: includes/class-page.php:64
+#: includes/class-page.php:65
 msgid "Media Tracker sections"
 msgstr ""
 
-#: includes/class-page.php:77
+#: includes/class-page.php:78
 msgid "This section needs the result of a full scan."
 msgstr ""
 
-#: includes/class-page.php:79
+#: includes/class-page.php:80
 msgid "Run a scan"
 msgstr ""
 
 #. translators: %s: number of media items
-#: includes/class-page.php:97
+#: includes/class-page.php:98
 #, php-format
 msgid "%s media moved to quarantine."
 msgstr ""
 
 #. translators: %s: number of media items
-#: includes/class-page.php:99
+#: includes/class-page.php:100
 #, php-format
 msgid "%s media restored to their original place."
 msgstr ""
 
 #. translators: %s: number of media items
-#: includes/class-page.php:101
+#: includes/class-page.php:102
 #, php-format
 msgid "%s media deleted permanently."
 msgstr ""
 
 #. translators: %s: number of media items
-#: includes/class-page.php:103
+#: includes/class-page.php:104
 #, php-format
 msgid "%s media will be kept and left this list."
 msgstr ""
 
 #. translators: %s: number of media items
-#: includes/class-page.php:105
+#: includes/class-page.php:106
 #, php-format
 msgid "The \"keep\" mark was removed from %s media."
 msgstr ""
 
 #. translators: %s: size, e.g. 12 MB
-#: includes/class-page.php:113
+#: includes/class-page.php:114
 #, php-format
 msgid "Space freed: %s"
 msgstr ""
 
 #. translators: 1: number of media items, 2: size
-#: includes/class-page.php:132
+#: includes/class-page.php:133
 #, php-format
 msgid "%1$s unreferenced media, %2$s in total."
 msgstr ""
 
-#: includes/class-page.php:139
+#: includes/class-page.php:140
 msgid "Use outside the site (newsletters, social media, other sites) cannot be detected. The safe way: quarantine first, wait a few weeks, and only delete what received no requests in that time."
 msgstr ""
 
-#: includes/class-page.php:144
-#: includes/class-page.php:261
-#: includes/class-page.php:495
+#: includes/class-page.php:145
+#: includes/class-page.php:262
+#: includes/class-page.php:497
 msgid "Type"
 msgstr ""
 
-#: includes/class-page.php:146
+#: includes/class-page.php:147
 msgid "All types"
 msgstr ""
 
-#: includes/class-page.php:146
+#: includes/class-page.php:147
 msgid "Image"
 msgstr ""
 
-#: includes/class-page.php:146
+#: includes/class-page.php:147
 msgid "Video"
 msgstr ""
 
-#: includes/class-page.php:146
+#: includes/class-page.php:147
 msgid "Audio"
 msgstr ""
 
-#: includes/class-page.php:146
+#: includes/class-page.php:147
 msgid "Document"
 msgstr ""
 
-#: includes/class-page.php:150
+#: includes/class-page.php:151
 msgid "Order"
 msgstr ""
 
-#: includes/class-page.php:152
+#: includes/class-page.php:153
 msgid "Largest first"
 msgstr ""
 
-#: includes/class-page.php:152
+#: includes/class-page.php:153
 msgid "Newest first"
 msgstr ""
 
-#: includes/class-page.php:152
+#: includes/class-page.php:153
 msgid "Oldest first"
 msgstr ""
 
-#: includes/class-page.php:157
-#: includes/class-page.php:342
+#: includes/class-page.php:158
+#: includes/class-page.php:343
 msgid "Apply"
 msgstr ""
 
-#: includes/class-page.php:161
+#: includes/class-page.php:162
 msgid "No unreferenced media found."
 msgstr ""
 
-#: includes/class-page.php:166
+#: includes/class-page.php:167
 msgid "Select all on this page"
 msgstr ""
 
-#: includes/class-page.php:169
-#: includes/class-page.php:670
+#: includes/class-page.php:170
+#: includes/class-page.php:672
 msgid "Keep"
 msgstr ""
 
-#: includes/class-page.php:170
-#: includes/class-page.php:347
-#: includes/class-page.php:424
-#: includes/class-page.php:489
-#: includes/class-page.php:665
-#: includes/class-page.php:671
+#: includes/class-page.php:171
+#: includes/class-page.php:348
+#: includes/class-page.php:425
+#: includes/class-page.php:491
+#: includes/class-page.php:667
+#: includes/class-page.php:673
 msgid "Delete permanently"
 msgstr ""
 
 #. translators: %s: file name
-#: includes/class-page.php:179
-#: includes/class-page.php:277
-#: includes/class-page.php:385
-#: includes/class-page.php:441
+#: includes/class-page.php:180
+#: includes/class-page.php:278
+#: includes/class-page.php:386
+#: includes/class-page.php:442
 #, php-format
 msgid "Select %s"
 msgstr ""
 
 #. translators: %s: file name
-#: includes/class-page.php:180
-#: includes/class-page.php:281
-#: includes/class-page.php:443
+#: includes/class-page.php:181
+#: includes/class-page.php:282
+#: includes/class-page.php:444
 #, php-format
 msgid "Preview %s"
 msgstr ""
 
-#: includes/class-page.php:222
+#: includes/class-page.php:223
 msgid "View mode"
 msgstr ""
 
-#: includes/class-page.php:224
+#: includes/class-page.php:225
 msgid "Card view"
 msgstr ""
 
-#: includes/class-page.php:225
+#: includes/class-page.php:226
 msgid "List view"
 msgstr ""
 
-#: includes/class-page.php:228
+#: includes/class-page.php:229
 msgid "Per page"
 msgstr ""
 
 #. translators: %s: number
-#: includes/class-page.php:231
+#: includes/class-page.php:232
 #, php-format
 msgid "%s per page"
 msgstr ""
 
-#: includes/class-page.php:260
-#: includes/class-page.php:641
+#: includes/class-page.php:261
+#: includes/class-page.php:643
 msgid "Status"
 msgstr ""
 
-#: includes/class-page.php:263
-#: includes/class-page.php:651
+#: includes/class-page.php:264
+#: includes/class-page.php:653
 msgid "Uploaded"
 msgstr ""
 
-#: includes/class-page.php:264
-#: includes/class-page.php:654
+#: includes/class-page.php:265
+#: includes/class-page.php:656
 msgid "Uploaded to"
 msgstr ""
 
-#: includes/class-page.php:302
+#: includes/class-page.php:303
 msgid "Files with exactly identical content that were uploaded more than once. Sizes are compared first, and only same-size files are checked by content hash (MD5). Attachments that share one file from the start (such as media translations) are not counted as duplicates. Only unreferenced copies can be selected; if every copy is in use, point the references at one copy first."
 msgstr ""
 
-#: includes/class-page.php:305
+#: includes/class-page.php:306
 msgid "Check again"
 msgstr ""
 
-#: includes/class-page.php:305
+#: includes/class-page.php:306
 msgid "Check for duplicates"
 msgstr ""
 
-#: includes/class-page.php:311
+#: includes/class-page.php:312
 msgid "Also compare extra files (files on disk that no media item owns)"
 msgstr ""
 
-#: includes/class-page.php:312
+#: includes/class-page.php:313
 msgid "Finds stray copies of library files (FTP uploads, imports). Needs a recent full scan; extra files whose URL is used somewhere cannot be selected."
 msgstr ""
 
 #. translators: 1: number of groups, 2: size
-#: includes/class-page.php:328
+#: includes/class-page.php:329
 #, php-format
 msgid "%1$s duplicate group(s); the extra copies take %2$s in total."
 msgstr ""
 
-#: includes/class-page.php:335
+#: includes/class-page.php:336
 msgid "No duplicate files found."
 msgstr ""
 
 #. translators: 1: number of copies, 2: size of one copy
-#: includes/class-page.php:358
+#: includes/class-page.php:359
 #, php-format
 msgid "%1$s copies, %2$s each"
 msgstr ""
 
-#: includes/class-page.php:360
+#: includes/class-page.php:361
 msgid "Every copy is in use; there is nothing safe to delete."
 msgstr ""
 
-#: includes/class-page.php:407
+#: includes/class-page.php:408
 msgid "Pages of this site"
 msgstr ""
 
-#: includes/class-page.php:408
+#: includes/class-page.php:409
 msgid "Google"
 msgstr ""
 
-#: includes/class-page.php:409
+#: includes/class-page.php:410
 msgid "Other sites"
 msgstr ""
 
-#: includes/class-page.php:410
+#: includes/class-page.php:411
 msgid "Bots"
 msgstr ""
 
-#: includes/class-page.php:411
+#: includes/class-page.php:412
 msgid "Direct"
 msgstr ""
 
-#: includes/class-page.php:414
+#: includes/class-page.php:415
 msgid "Quarantined files were moved out of their original path. If anyone asks for them, the plugin serves the file and logs the request. Anything that received no requests for a few weeks is safe to delete. A request from \"Pages of this site\" means something still links to the file that the scan did not find: restore it."
 msgstr ""
 
-#: includes/class-page.php:415
+#: includes/class-page.php:416
 msgid "Checking that requests for quarantined files reach WordPress…"
 msgstr ""
 
-#: includes/class-page.php:417
+#: includes/class-page.php:418
 msgid "Nothing is quarantined."
 msgstr ""
 
-#: includes/class-page.php:421
-#: includes/class-page.php:523
+#: includes/class-page.php:422
+#: includes/class-page.php:525
 msgid "Select all"
 msgstr ""
 
-#: includes/class-page.php:423
-#: includes/class-page.php:664
+#: includes/class-page.php:424
+#: includes/class-page.php:666
 msgid "Restore"
 msgstr ""
 
-#: includes/class-page.php:429
+#: includes/class-page.php:430
 msgid "Media"
 msgstr ""
 
-#: includes/class-page.php:430
+#: includes/class-page.php:431
 msgid "Quarantined since"
 msgstr ""
 
-#: includes/class-page.php:431
+#: includes/class-page.php:432
 msgid "Requests"
 msgstr ""
 
-#: includes/class-page.php:432
+#: includes/class-page.php:433
 msgid "Last request"
 msgstr ""
 
 #. translators: %s: time span
-#: includes/class-page.php:446
-#: includes/class-page.php:460
+#: includes/class-page.php:447
+#: includes/class-page.php:461
 #, php-format
 msgid "%s ago"
 msgstr ""
 
-#: includes/class-page.php:449
+#: includes/class-page.php:450
 msgid "None"
 msgstr ""
 
-#: includes/class-page.php:476
+#: includes/class-page.php:477
 msgid "Files on disk that no media owns: old sizes of an image that are no longer in its metadata (for example after regenerating thumbnails) and files that were never added to the library (FTP uploads, imports). Only folders that contain media are read; plugin folders (such as form uploads) are not touched."
 msgstr ""
 
-#: includes/class-page.php:478
-#: includes/class-page.php:513
+#: includes/class-page.php:479
+#: includes/class-page.php:515
 msgid "Run the scan again with this version for this section."
 msgstr ""
 
-#: includes/class-page.php:483
+#: includes/class-page.php:484
 msgid "Check for extra files"
 msgstr ""
 
-#: includes/class-page.php:487
+#: includes/class-page.php:488
 msgid "Select everything deletable"
 msgstr ""
 
-#: includes/class-page.php:511
+#: includes/class-page.php:490
+msgid "Download selected as ZIP"
+msgstr ""
+
+#: includes/class-page.php:513
 msgid "Files made for sizes that no theme or plugin registers any more (for example a previous theme's sizes). WordPress no longer serves them, but they stay on disk as long as the image exists. A file whose exact URL appears somewhere, or that is the same as an active size, is kept."
 msgstr ""
 
-#: includes/class-page.php:518
+#: includes/class-page.php:520
 msgid "Check sizes"
 msgstr ""
 
-#: includes/class-page.php:524
+#: includes/class-page.php:526
 msgid "Image size"
 msgstr ""
 
-#: includes/class-page.php:525
-#: includes/class-page.php:648
+#: includes/class-page.php:527
+#: includes/class-page.php:650
 msgid "Dimensions"
 msgstr ""
 
-#: includes/class-page.php:526
+#: includes/class-page.php:528
 msgid "Deletable file"
 msgstr ""
 
-#: includes/class-page.php:528
+#: includes/class-page.php:530
 msgid "Kept"
 msgstr ""
 
-#: includes/class-page.php:532
+#: includes/class-page.php:534
 msgid "Deleting cannot be undone; take a backup first. The WebP/AVIF versions of the same files are deleted too."
 msgstr ""
 
-#: includes/class-page.php:533
+#: includes/class-page.php:535
 msgid "Delete the files of the selected sizes"
 msgstr ""
 
 #. translators: 1: date, 2: scope, 3: duration
-#: includes/class-page.php:552
+#: includes/class-page.php:554
 #, php-format
 msgid "Last scan: %1$s — %2$s — took %3$s"
 msgstr ""
 
-#: includes/class-page.php:564
+#: includes/class-page.php:566
 msgid "After a scan, changes to posts, meta, terms, users and settings are recorded live; plugin tables and code files are only updated by a full scan."
 msgstr ""
 
-#: includes/class-page.php:570
+#: includes/class-page.php:572
 msgid "New scan"
 msgstr ""
 
-#: includes/class-page.php:573
+#: includes/class-page.php:575
 msgid "Scan scope"
 msgstr ""
 
-#: includes/class-page.php:576
+#: includes/class-page.php:578
 msgid "Fast. Posts and pages, meta (Elementor, WooCommerce, ACF), settings and widgets, terms, users and comments."
 msgstr ""
 
-#: includes/class-page.php:580
+#: includes/class-page.php:582
 msgid "Plus the files of the active theme, active plugins, mu-plugins and the CSS/JS files inside the uploads folder (such as Elementor's generated CSS). Run this before any deletion."
 msgstr ""
 
-#: includes/class-page.php:583
+#: includes/class-page.php:585
 msgid "Also check plugins' own tables"
 msgstr ""
 
-#: includes/class-page.php:584
+#: includes/class-page.php:586
 msgid "Such as sliders and form builders. Log, session and cache tables are skipped."
 msgstr ""
 
-#: includes/class-page.php:587
+#: includes/class-page.php:589
 msgid "The previous scan's result is cleared. If you close the page mid-scan, it continues from where it stopped next time."
 msgstr ""
 
-#: includes/class-page.php:588
+#: includes/class-page.php:590
 msgid "Start scan"
 msgstr ""
 
-#: includes/class-page.php:593
+#: includes/class-page.php:595
 msgid "Stop scan"
 msgstr ""
 
-#: includes/class-page.php:594
+#: includes/class-page.php:596
 msgid "Continue"
 msgstr ""
 
-#: includes/class-page.php:604
+#: includes/class-page.php:606
 msgid "The last scan was \"database only\"; URLs written directly in theme or plugin code were not checked. Run a \"database + source code\" scan before deleting."
 msgstr ""
 
-#: includes/class-page.php:645
+#: includes/class-page.php:647
 msgid "Size on disk"
 msgstr ""
 
 #. translators: %s: number of sizes
-#: includes/class-page.php:646
+#: includes/class-page.php:648
 #, php-format
 msgid " (with %s sizes)"
 msgstr ""
 
-#: includes/class-page.php:655
+#: includes/class-page.php:657
 msgid "(this is only where it was uploaded, not a use)"
 msgstr ""
 
-#: includes/class-page.php:658
+#: includes/class-page.php:660
 msgid "Shared file"
 msgstr ""
 
 #. translators: %s: attachment ids
-#: includes/class-page.php:659
+#: includes/class-page.php:661
 #, php-format
 msgid "With attachment %s; they are moved or deleted together."
 msgstr ""
 
-#: includes/class-page.php:667
+#: includes/class-page.php:669
 msgid "Remove the keep mark"
 msgstr ""
 
-#: includes/class-page.php:675
+#: includes/class-page.php:677
 msgid "Edit media"
 msgstr ""
 
-#: includes/class-page.php:700
-#: includes/class-page.php:775
+#: includes/class-page.php:702
+#: includes/class-page.php:795
 msgid "Invalid request."
 msgstr ""
 
-#: includes/class-page.php:707
+#: includes/class-page.php:709
 msgid "Run a full scan first."
 msgstr ""
 
-#: includes/class-page.php:712
+#: includes/class-page.php:714
 msgid "No size selected."
 msgstr ""
 
-#: includes/class-page.php:724
-#: includes/class-page.php:741
+#: includes/class-page.php:726
+#: includes/class-page.php:761
 msgid "Run the scan again with this version."
-msgstr ""
-
-#: includes/class-page.php:752
-msgid "Nothing selected."
 msgstr ""
 
 #. translators: %s: database error

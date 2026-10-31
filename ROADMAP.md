@@ -5,8 +5,6 @@ Ideas and open work, not promises. Move an item to the changelog in `readme.txt`
 
 ## Planned / برنامه‌ریزی‌شده
 
-- **Download extra files as a ZIP.** A "Download selected as ZIP" button on the Extra files tab. The server re-checks each path against a fresh listing, only administrators can download, the ZIP is temporary and removed after the download, and there is a size cap per download (about 200 MB) because PHP time and memory limits make big ZIPs fail on shared hosting.
-  دانلود فایل‌های اضافه به‌صورت zip: دکمه‌ی «دانلود انتخاب‌شده‌ها»؛ سرور مسیرها را دوباره چک می‌کند، فقط ادمین، zip موقت است و بعد از دانلود پاک می‌شود، با سقف حجم برای هر دانلود (حدود ۲۰۰ مگابایت).
 - **Ignore list for leftovers of removed plugins.** A box on the Scan tab where you list tables and options to skip (for example `wp_revslider_slides`), so they stop counting as usage. Today only known caches and logs (Yoast indexables, Titan scanner, Rank Math analysis, Simple History, …) are skipped.
   فهرست نادیده‌گرفتن برای مانده‌ی افزونه‌های حذف‌شده: کادری در تب اسکن برای جدول‌ها و گزینه‌هایی که شمرده نشوند (مثل RevSlider).
 - **Multisite.** Uninstall cleanup only handles a single site; make it loop over the network, and test the scan per site.

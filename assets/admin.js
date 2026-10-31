@@ -239,6 +239,7 @@
     const tbody = orphans.querySelector('tbody');
     const checkBtn = orphans.querySelector('.mtrk-orphans-check');
     const delBtn = orphans.querySelector('.mtrk-orphans-delete');
+    const zipBtn = orphans.querySelector('.mtrk-orphans-zip');
     const all = orphans.querySelector('.mtrk-orphans-all');
     const more = orphans.querySelector('.mtrk-orphans-more');
     const count = orphans.querySelector('.mtrk-count');
@@ -317,6 +318,7 @@
     const sync = () => {
       const n = selected().length;
       delBtn.disabled = !n;
+      zipBtn.disabled = !n;
       count.textContent = n ? fmt(t.selected, n) : '';
     };
 
@@ -363,6 +365,34 @@
       if (e.target === all) {
         while (all.checked && shown < files.length) renderMore(); // "all" means all, not only the rows drawn
         tbody.querySelectorAll('.mtrk-orphan:not(:disabled)').forEach((b) => { b.checked = all.checked; });
+      }
+      sync();
+    });
+    // The ZIP is built on the server and arrives as a file; an error comes back as JSON and is shown here.
+    zipBtn.addEventListener('click', async () => {
+      const paths = selected();
+      zipBtn.disabled = true;
+      status.textContent = t.zipBuilding;
+      try {
+        const body = new FormData();
+        body.append('action', 'mtrk_zip');
+        body.append('_ajax_nonce', cfg.nonce);
+        body.append('paths', JSON.stringify(paths));
+        const res = await fetch(cfg.ajax, { method: 'POST', body, credentials: 'same-origin' });
+        if (!(res.headers.get('Content-Type') || '').includes('zip')) {
+          const json = await res.json().catch(() => null);
+          throw new Error((json && json.data) || t.error);
+        }
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(await res.blob());
+        link.download = ((res.headers.get('Content-Disposition') || '').match(/filename="?([^";]+)/) || [])[1] || 'extra-files.zip';
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+        status.textContent = fmt(t.zipDone, paths.length);
+      } catch (e) {
+        status.textContent = e.message;
       }
       sync();
     });

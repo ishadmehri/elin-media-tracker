@@ -4,7 +4,7 @@ Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.8.1
+Stable tag: 0.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,7 +25,7 @@ Deleting media is the one thing in WordPress you cannot take back, so the plugin
 * **Unreferenced list.** Card or list view, 20 to 500 items per page, preview, filter by type, sort by size or date.
 * **Duplicates.** Files with identical content that were uploaded more than once. Sizes are compared first and only same-size files are hashed (MD5), so large libraries stay light. Attachments that share one file (media translations) are not duplicates, and only unreferenced copies can be selected. An option adds the extra files on disk, to catch stray copies of library files.
 * **Quarantine.** Moves a file (all sizes and WebP copies) out of its public path into a closed folder, but still answers requests for the old URL and logs them. If nothing asks for it for a few weeks, delete it; if something does, restore it with one click.
-* **Extra files.** Leftover sizes and files on disk that no media item owns.
+* **Extra files.** Leftover sizes and files on disk that no media item owns, with a preview, the full server path, and a ZIP download of the selection.
 * **Unregistered sizes.** Files generated for image sizes that no theme or plugin registers any more.
 * **Safety.** A scan that reports a featured image as unreferenced is marked untrustworthy and quarantine and delete are refused. Attachments sharing one file move together.
 * **WP-CLI.** `wp elin-media-tracker scan|status|unused|usage|quarantine|restore|delete|keep`
@@ -74,6 +74,9 @@ It has only been tested on single sites. Uninstall cleanup does not handle every
 Open "Where it is used". Tables of plugins you removed long ago and caches (for example Yoast's indexable tables) can mention a file without using it. Logs and well-known caches are skipped; if you find another one, please report it.
 
 == Changelog ==
+
+= 0.9.0 =
+* Extra files: "Download selected as ZIP" (up to 200 MB per ZIP; only files the plugin lists as extra can be included).
 
 = 0.8.1 =
 * Fixed: the "Where it is used" dialog failed with "Could not reach the server" when a media item was referenced by a term, user or comment without an edit screen. If something else breaks there, the dialog now shows the real error.

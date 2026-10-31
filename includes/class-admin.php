@@ -53,7 +53,10 @@ final class Admin
             'uploads' => ['url' => wp_upload_dir(null, false)['baseurl'], 'root' => wp_normalize_path(wp_upload_dir(null, false)['basedir'])],
             'i18n' => [
                 /* translators: %s: number of folders left */
-                'dupsList' => __('Listing extra files… %s folder(s) left', 'elin-media-tracker'),
+                'zipBuilding' => __('Building the ZIP…', 'elin-media-tracker'),
+                /* translators: %s: number of files */
+                'zipDone' => __('%s file(s) added to the ZIP.', 'elin-media-tracker'),
+                'dupsList' =>__('Listing extra files… %s folder(s) left', 'elin-media-tracker'),
                 /* translators: 1: number of media, 2: number of extra files */
                 'confirmMixed' => __('%1$s media and %2$s extra file(s) will be deleted permanently. This cannot be undone. Continue?', 'elin-media-tracker'),
                 'title' => __('Where it is used', 'elin-media-tracker'),

@@ -64,6 +64,22 @@ try {
         $is(!isset($listed[$name]), "not listed: $what");
     }
 
+    $zip = Orphans::zip(['2026/10/mtrk-ftp.jpg', '2026/10/mtrk-orph-640x480.jpg', '2026/10/mtrk-orph-scaled.jpg', '../wp-config.php']);
+    $names = [];
+    if (isset($zip['file'])) {
+        $za = new ZipArchive();
+        $za->open($zip['file']);
+        for ($i = 0; $i < $za->numFiles; $i++) {
+            $names[] = $za->getNameIndex($i);
+        }
+        $za->close();
+        unlink($zip['file']);
+    }
+    sort($names);
+    $is(!isset($zip['error']) && $zip['count'] === 2 && $zip['bytes'] === 1000 && $names === ['2026/10/mtrk-ftp.jpg', '2026/10/mtrk-orph-640x480.jpg'], 'zip: only the two listed extra files go in; a library file and a path outside uploads are left out');
+    $is(isset(Orphans::zip(['2026/10/mtrk-ftp.jpg', '2026/10/mtrk-orph-640x480.jpg'], 900)['error']), 'zip: a selection over the cap is refused');
+    $is(isset(Orphans::zip(['2026/10/mtrk-orph-scaled.jpg'])['error']), 'zip: nothing listed, nothing zipped');
+
     $out = Orphans::delete(['2026/10/mtrk-orph-640x480.jpg', '2026/10/mtrk-ftp.jpg', '2026/10/mtrk-ftp-linked.png', '2026/10/mtrk-orph-scaled.jpg', '../wp-config.php', 'mtrk-plugin-uploads/mtrk-form-upload.jpg']);
     $is($out['files'] === 2 && $out['bytes'] === 1000 && $out['skipped'] === 4, 'delete: only the 2 deletable paths, the other 4 refused');
     $is(!file_exists("$dir/mtrk-orph-640x480.jpg") && !file_exists("$dir/mtrk-ftp.jpg"), 'delete: files gone');

@@ -15,6 +15,7 @@ defined('ABSPATH') || exit;
 final class Orphans
 {
     private const DIRS = 20; // folders per request
+    private const ZIP_CAP = 209715200; // 200 MB per downloaded ZIP
 
     /** @return array{next: ?int, total: int, files: array<int,array{path:string,bytes:int,type:string,owner:int,kept:bool}>} */
     public static function step(int $cursor): array
@@ -37,30 +38,78 @@ final class Orphans
     {
         $base = wp_upload_dir(null, false)['basedir'];
         $out = ['files' => 0, 'bytes' => 0, 'skipped' => 0];
+        $listed = self::listed($paths, true);
+        foreach ($paths as $path) {
+            if (!isset($listed[$path])) {
+                $out['skipped']++;
+                continue;
+            }
+            wp_delete_file("$base/$path");
+            $out['files']++;
+            $out['bytes'] += $listed[$path];
+        }
+        return $out;
+    }
+
+    /**
+     * The given upload-relative paths that a fresh look at their folder still lists (so they are real extra files),
+     * with their sizes. A path from the browser is never trusted on its own.
+     * @return array<string,int> path => bytes
+     */
+    private static function listed(array $paths, bool $deletable_only): array
+    {
         $byDir = [];
         foreach ($paths as $path) {
             $byDir[dirname($path) === '.' ? '' : dirname($path)][] = $path;
         }
-        foreach ($byDir as $dir => $wanted) {
-            $listed = [];
-            if (in_array($dir, self::dirs(), true)) {
-                foreach (self::scan_dir($dir) as $f) {
-                    if (!$f['kept']) {
-                        $listed[$f['path']] = $f['bytes'];
-                    }
-                }
+        $listed = [];
+        foreach (array_keys($byDir) as $dir) {
+            if (!in_array($dir, self::dirs(), true)) {
+                continue;
             }
-            foreach ($wanted as $path) {
-                if (!isset($listed[$path])) {
-                    $out['skipped']++;
-                    continue;
+            foreach (self::scan_dir($dir) as $f) {
+                if (!$deletable_only || !$f['kept']) {
+                    $listed[$f['path']] = $f['bytes'];
                 }
-                wp_delete_file("$base/$path");
-                $out['files']++;
-                $out['bytes'] += $listed[$path];
             }
         }
-        return $out;
+        return array_intersect_key($listed, array_flip($paths));
+    }
+
+    /**
+     * A temporary ZIP of the given extra files, for the caller to send and delete.
+     * Only files the fresh listing shows go in, and one ZIP is capped: PHP's time and memory make big ones fail.
+     * @return array{file:string,count:int,bytes:int}|array{error:string}
+     */
+    public static function zip(array $paths, int $cap = self::ZIP_CAP): array
+    {
+        $listed = self::listed($paths, false);
+        if (!$listed) {
+            return ['error' => __('Nothing selected.', 'elin-media-tracker')];
+        }
+        $bytes = array_sum($listed);
+        if ($bytes > $cap) {
+            /* translators: 1: size of the selection, 2: size limit of one ZIP */
+            return ['error' => sprintf(__('The selection is %1$s; one ZIP is limited to %2$s. Select fewer files.', 'elin-media-tracker'), size_format($bytes), size_format($cap))];
+        }
+        if (!class_exists('ZipArchive')) {
+            return ['error' => __('ZIP support (ZipArchive) is not available on this server.', 'elin-media-tracker')];
+        }
+        $base = wp_upload_dir(null, false)['basedir'];
+        $tmp = wp_tempnam('mtrk-extra.zip');
+        $zip = new \ZipArchive();
+        if (!$tmp || $zip->open($tmp, \ZipArchive::OVERWRITE) !== true) {
+            return ['error' => __('Could not create the ZIP file.', 'elin-media-tracker')];
+        }
+        foreach (array_keys($listed) as $path) {
+            $zip->addFile("$base/$path", $path);
+            $zip->setCompressionName($path, \ZipArchive::CM_STORE); // audio, video and images don't shrink; skip the CPU time
+        }
+        if (!$zip->close()) {
+            wp_delete_file($tmp);
+            return ['error' => __('Could not create the ZIP file.', 'elin-media-tracker')];
+        }
+        return ['file' => $tmp, 'count' => count($listed), 'bytes' => $bytes];
     }
 
     /** Folders (relative to uploads, '' = uploads itself) that hold at least one attachment. */
