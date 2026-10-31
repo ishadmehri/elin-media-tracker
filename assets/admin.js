@@ -26,7 +26,7 @@
   // trap, Esc and the backdrop come from the browser.
   let dialog;
   let seq = 0;
-  const openDialog = async (action, id) => {
+  const ensureDialog = () => {
     if (!dialog) {
       dialog = document.createElement('dialog');
       dialog.className = 'mtrk-dialog';
@@ -51,6 +51,10 @@
       window.addEventListener('keydown', (e) => { if (dialog.open) e.stopPropagation(); }, true);
       document.body.append(dialog);
     }
+    return dialog;
+  };
+  const openDialog = async (action, id) => {
+    ensureDialog();
     const content = dialog.querySelector('.mtrk-body');
     const title = dialog.querySelector('#mtrk-dialog-title');
     const mine = ++seq;
@@ -66,6 +70,35 @@
     } catch (e) {
       if (mine === seq) content.textContent = e.message;
     }
+  };
+
+  // Preview of a file that is not in the library (extra files): built here, there is no attachment to ask about.
+  const openFile = (f, url, root) => {
+    ensureDialog();
+    ++seq; // a slower request for another dialog must not overwrite this one
+    dialog.querySelector('#mtrk-dialog-title').textContent = t.preview;
+    dialog.classList.add('mtrk-dialog-wide');
+    const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
+    const media = make('div', { className: 'mtrk-preview-media' });
+    if (/\.(jpe?g|png|gif|webp|avif|svg)$/i.test(f.path)) media.append(make('img', { src: url, alt: '' }));
+    else if (/\.(mp3|m4a|ogg|oga|wav|flac|aac)$/i.test(f.path)) media.append(make('audio', { src: url, controls: true, preload: 'metadata' }));
+    else if (/\.(mp4|m4v|webm|ogv|mov)$/i.test(f.path)) media.append(make('video', { src: url, controls: true, preload: 'metadata' }));
+    else media.append(make('p', { textContent: t.noPreview }));
+    const dl = make('dl', { className: 'mtrk-details' });
+    const add = (label, node) => {
+      const dd = make('dd');
+      dd.append(node);
+      dl.append(make('dt', { textContent: label }), dd);
+    };
+    const path = make('bdi', { dir: 'ltr', textContent: `${root}/${f.path}` });
+    add(t.fileLabel, path);
+    add(t.sizeLabel, document.createTextNode(size(f.bytes)));
+    add(t.openTab, make('a', { href: url, target: '_blank', rel: 'noopener', textContent: url }));
+    const layout = make('div', { className: 'mtrk-preview-layout' });
+    layout.append(media, make('div', { className: 'mtrk-preview-info' }));
+    layout.lastChild.append(dl);
+    dialog.querySelector('.mtrk-body').replaceChildren(layout);
+    if (!dialog.open) dialog.showModal();
   };
 
   // Actions on media (plugin page): quarantine, restore, keep, unkeep, delete. The page reloads with a notice.
@@ -164,8 +197,6 @@
     const more = orphans.querySelector('.mtrk-orphans-more');
     const count = orphans.querySelector('.mtrk-count');
     const isImage = /\.(jpe?g|png|gif|webp|avif|svg)$/i;
-    const isAudio = /\.(mp3|m4a|ogg|oga|wav|flac|aac)$/i;
-    const isVideo = /\.(mp4|m4v|webm|ogv|mov)$/i;
     const PAGE = 300;
     let files = [];
     let shown = 0;
@@ -199,27 +230,32 @@
       open.target = '_blank';
       open.rel = 'noopener';
       open.textContent = t.openTab;
-      if (isImage.test(f.path)) {
+      const show = document.createElement('button');
+      show.type = 'button';
+      show.className = 'button-link mtrk-orphan-preview';
+      show.textContent = t.preview;
+      show.setAttribute('aria-haspopup', 'dialog');
+      if (isImage.test(f.path)) { // the thumbnail opens the same modal
         const img = document.createElement('img');
         img.src = url;
         img.alt = '';
         img.loading = 'lazy';
-        const link = open.cloneNode(false);
-        link.setAttribute('aria-label', t.openTab);
-        link.append(img);
-        name.append(link);
-      } else if (isAudio.test(f.path) || isVideo.test(f.path)) {
-        const player = document.createElement(isAudio.test(f.path) ? 'audio' : 'video');
-        player.src = url;
-        player.controls = true;
-        player.preload = 'none'; // nothing is downloaded until play is pressed
-        name.append(player);
+        const thumb = document.createElement('button');
+        thumb.type = 'button';
+        thumb.className = 'mtrk-thumb mtrk-orphan-preview';
+        thumb.setAttribute('aria-label', `${t.preview} ${f.path}`);
+        thumb.setAttribute('aria-haspopup', 'dialog');
+        thumb.append(img);
+        name.append(thumb);
       }
       const info = document.createElement('div');
       const path = text(`${orphans.dataset.root}/${f.path}`, 'code'); // the full path on the server
       path.dir = 'ltr';
-      info.append(path, document.createElement('br'), open);
+      info.append(path, document.createElement('br'), show, ' · ', open);
       name.append(info);
+      name.addEventListener('click', (e) => {
+        if (e.target.closest('.mtrk-orphan-preview')) openFile(f, url, orphans.dataset.root);
+      });
       const kind = f.kept ? t.orphanKept : (f.type === 'size' ? fmt(t.orphanSize, f.owner) : t.orphanFile);
       const tr = document.createElement('tr');
       tr.append(th, cell(name), cell(text(kind)), cell(text(size(f.bytes))));

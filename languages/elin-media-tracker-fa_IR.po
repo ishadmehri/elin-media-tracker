@@ -106,6 +106,9 @@ msgstr "سایز اضافه‌ی پیوست #%s"
 msgid "Outside the library"
 msgstr "خارج از کتابخانه"
 
+msgid "No preview for this file type."
+msgstr "برای این نوع فایل پیش‌نمایشی وجود ندارد."
+
 msgid "Open in a new tab"
 msgstr "باز کردن در تب جدید"
 

@@ -4,7 +4,7 @@ Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.7.1
+Stable tag: 0.7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -75,8 +75,11 @@ Open "Where it is used". Tables of plugins you removed long ago and caches (for 
 
 == Changelog ==
 
+= 0.7.2 =
+* Extra files: a modal preview (image, audio, video) for every file, with the full server path and an "Open in a new tab" link.
+
 = 0.7.1 =
-* Extra files: the full server path, an "Open in a new tab" link, and audio/video players (loaded only on play) for each file.
+* Extra files show the full server path and an "Open in a new tab" link.
 * Cover art listed in audio/video metadata is no longer reported as an extra file.
 
 = 0.7.0 =

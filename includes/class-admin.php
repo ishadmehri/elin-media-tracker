@@ -92,7 +92,10 @@ final class Admin
                 /* translators: %s: attachment id */
                 'orphanSize' => __('Extra size of attachment #%s', 'elin-media-tracker'),
                 'orphanFile' => __('Outside the library', 'elin-media-tracker'),
-                'openTab' => __('Open in a new tab', 'elin-media-tracker'),
+                'noPreview' => __('No preview for this file type.', 'elin-media-tracker'),
+                'fileLabel' => __('File', 'elin-media-tracker'),
+                'sizeLabel' => __('Size', 'elin-media-tracker'),
+                'openTab' =>__('Open in a new tab', 'elin-media-tracker'),
                 'orphanKept' =>__('Its URL appears somewhere; it is kept', 'elin-media-tracker'),
                 'more' => __('Show more', 'elin-media-tracker'),
                 'probeOk' => __('Requests for quarantined files reach WordPress: visitors are served the file and the request is logged.', 'elin-media-tracker'),
