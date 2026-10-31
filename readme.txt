@@ -4,7 +4,7 @@ Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.9.1
+Stable tag: 0.9.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,7 +73,18 @@ It has only been tested on single sites. Uninstall cleanup does not handle every
 
 Open "Where it is used". Tables of plugins you removed long ago and caches (for example Yoast's indexable tables) can mention a file without using it. Logs and well-known caches are skipped; if you find another one, please report it.
 
+== Screenshots ==
+
+1. Unreferenced media: preview, keep, quarantine or delete, in card or list view.
+2. Duplicates: files with identical content, with the option to include extra files.
+3. Extra files: files on disk that no media item owns, with full path, preview and ZIP download.
+4. Unregistered sizes: thumbnails of image sizes that nothing registers any more.
+5. Scan: a full scan of the database, plugin tables and source code, with progress.
+
 == Changelog ==
+
+= 0.9.2 =
+* Screenshots added to the plugin page.
 
 = 0.9.1 =
 * Passes the Plugin Check plugin without errors: added missing translator comments, sanitized the request headers read by the quarantine, and documented why the plugin's own SQL is built the way it is.
