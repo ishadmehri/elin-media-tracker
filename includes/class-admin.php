@@ -92,7 +92,8 @@ final class Admin
                 /* translators: %s: attachment id */
                 'orphanSize' => __('Extra size of attachment #%s', 'elin-media-tracker'),
                 'orphanFile' => __('Outside the library', 'elin-media-tracker'),
-                'noPreview' => __('No preview for this file type.', 'elin-media-tracker'),
+                'checkedAt' => __('Last checked: %s', 'elin-media-tracker'),
+                'noPreview' =>__('No preview for this file type.', 'elin-media-tracker'),
                 'fileLabel' => __('File', 'elin-media-tracker'),
                 'sizeLabel' => __('Size', 'elin-media-tracker'),
                 'openTab' =>__('Open in a new tab', 'elin-media-tracker'),

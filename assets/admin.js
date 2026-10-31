@@ -185,6 +185,26 @@
       });
   }
 
+  // The last result of a slow check (extra files, unregistered sizes) is kept for this browser tab, so moving
+  // between tabs doesn't mean checking again. It belongs to one scan: a new scan drops it. Deleting never relies
+  // on it: the server looks at the disk again before removing anything.
+  const stash = {
+    get(key, scan) {
+      try {
+        const v = JSON.parse(sessionStorage.getItem(key));
+        return v && v.scan === scan ? v : null;
+      } catch (e) {
+        return null;
+      }
+    },
+    set(key, scan, data) {
+      try {
+        sessionStorage.setItem(key, JSON.stringify({ scan, at: Date.now(), data }));
+      } catch (e) { /* storage full or blocked: it just checks again next time */ }
+    },
+  };
+  const checkedAt = (at) => fmt(t.checkedAt, new Date(at).toLocaleString());
+
   // Orphan files: walk the media folders in batches, list what no attachment owns, delete the checked ones.
   const orphans = document.getElementById('mtrk-orphans');
   if (orphans) {
@@ -287,22 +307,31 @@
           status.textContent = fmt(t.orphansChecking, folders);
           cursor = r.next;
         } while (cursor !== null);
-        files.sort((a, b) => (a.kept - b.kept) || (b.bytes - a.bytes)); // deletable and biggest first
-        tbody.replaceChildren();
-        shown = 0;
-        renderMore();
-        all.checked = false;
-        sync();
-        result.hidden = !files.length;
-        const free = files.filter((f) => !f.kept);
-        status.textContent = files.length ? fmt(t.orphansFound, free.length, size(free.reduce((n, f) => n + f.bytes, 0))) : t.orphansNone;
+        stash.set('mtrk-orphans', orphans.dataset.scan, files);
+        display(Date.now());
       } catch (e) {
         status.textContent = e.message;
       }
       checkBtn.disabled = false;
     };
+    const display = (at) => {
+      files.sort((a, b) => (a.kept - b.kept) || (b.bytes - a.bytes)); // deletable and biggest first
+      tbody.replaceChildren();
+      shown = 0;
+      renderMore();
+      all.checked = false;
+      sync();
+      result.hidden = !files.length;
+      const free = files.filter((f) => !f.kept);
+      status.textContent = `${files.length ? fmt(t.orphansFound, free.length, size(free.reduce((n, f) => n + f.bytes, 0))) : t.orphansNone} ${checkedAt(at)}`;
+    };
 
     checkBtn.addEventListener('click', check);
+    const cached = stash.get('mtrk-orphans', orphans.dataset.scan);
+    if (cached) {
+      files = cached.data;
+      display(cached.at);
+    }
     more.addEventListener('click', renderMore);
     orphans.addEventListener('change', (e) => {
       if (e.target === all) {
@@ -362,7 +391,7 @@
       return total;
     };
 
-    const render = () => {
+    const render = (at) => {
       tbody.replaceChildren();
       const names = Object.keys(report).sort((a, b) => report[b].bytes - report[a].bytes);
       names.forEach((name) => {
@@ -391,7 +420,7 @@
       cleanBtn.disabled = true;
       result.hidden = !names.length;
       const list = Object.values(report);
-      status.textContent = names.length ? fmt(t.sizesFound, sum(list, 'files'), size(sum(list, 'bytes'))) : t.sizesNone;
+      status.textContent = `${names.length ? fmt(t.sizesFound, sum(list, 'files'), size(sum(list, 'bytes'))) : t.sizesNone} ${checkedAt(at)}`;
     };
 
     const selected = () => [...tbody.querySelectorAll('.mtrk-size:checked')].map((b) => b.value);
@@ -405,13 +434,19 @@
       cleanBtn.disabled = true;
       try {
         report = await walk({ do: 'report' });
-        render();
+        stash.set('mtrk-sizes', sizes.dataset.scan, report);
+        render(Date.now());
       } catch (e) {
         status.textContent = e.message;
       }
       checkBtn.disabled = false;
     };
     checkBtn.addEventListener('click', check);
+    const cached = stash.get('mtrk-sizes', sizes.dataset.scan);
+    if (cached) {
+      report = cached.data;
+      render(cached.at);
+    }
 
     cleanBtn.addEventListener('click', async () => {
       const names = selected();

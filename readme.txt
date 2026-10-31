@@ -4,7 +4,7 @@ Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.7.2
+Stable tag: 0.7.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,9 @@ It has only been tested on single sites. Uninstall cleanup does not handle every
 Open "Where it is used". Tables of plugins you removed long ago and caches (for example Yoast's indexable tables) can mention a file without using it. Logs and well-known caches are skipped; if you find another one, please report it.
 
 == Changelog ==
+
+= 0.7.3 =
+* Extra files and Unregistered sizes keep their last result while you move between tabs of the plugin page (per browser tab, until the next scan), with the time it was checked.
 
 = 0.7.2 =
 * Extra files: a modal preview (image, audio, video) for every file, with the full server path and an "Open in a new tab" link.

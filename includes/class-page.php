@@ -442,7 +442,7 @@ final class Page
             <?php return; ?>
         <?php endif; ?>
         <?php self::scope_notice($last); ?>
-        <div id="mtrk-orphans" data-base="<?php echo esc_url(wp_upload_dir(null, false)['baseurl']); ?>" data-root="<?php echo esc_attr(wp_normalize_path(wp_upload_dir(null, false)['basedir'])); ?>">
+        <div id="mtrk-orphans" data-scan="<?php echo (int) ($last['time'] ?? 0); ?>" data-base="<?php echo esc_url(wp_upload_dir(null, false)['baseurl']); ?>" data-root="<?php echo esc_attr(wp_normalize_path(wp_upload_dir(null, false)['basedir'])); ?>">
             <p><button type="button" class="button mtrk-orphans-check"><?php esc_html_e('Check for extra files', 'elin-media-tracker'); ?></button></p>
             <p class="mtrk-orphans-status" aria-live="polite"></p>
             <div class="mtrk-orphans-result" hidden>
@@ -477,7 +477,7 @@ final class Page
             <?php return; ?>
         <?php endif; ?>
         <?php self::scope_notice($last); ?>
-        <div id="mtrk-sizes">
+        <div id="mtrk-sizes" data-scan="<?php echo (int) ($last['time'] ?? 0); ?>">
             <p><button type="button" class="button mtrk-sizes-check"><?php esc_html_e('Check sizes', 'elin-media-tracker'); ?></button></p>
             <p class="mtrk-sizes-status" aria-live="polite"></p>
             <div class="mtrk-sizes-result" hidden>
