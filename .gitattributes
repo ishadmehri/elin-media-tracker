@@ -5,3 +5,4 @@
 /.gitattributes export-ignore
 /scripts export-ignore
 /.gitignore export-ignore
+/.wordpress-org export-ignore
