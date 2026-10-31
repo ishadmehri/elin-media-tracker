@@ -40,7 +40,7 @@ final class Scanner
     private const ID_META = ['_thumbnail_id', 'thumbnail_id'];
     public const ID_OPTIONS = ['site_icon', 'site_logo', 'woocommerce_placeholder_image'];
     private const LOG_TYPES = '(^|_)logs?$'; // MySQL REGEXP: post types that are logs (taxopress_logs, wp_log)
-    private const LOG_OPTIONS = '/^(itsec_file_change|rank_math_seo_analysis_results$|simple_history)/'; // logs and caches
+    private const LOG_OPTIONS = '/^(itsec_file_change|rank_math_seo_analysis_results$|simple_history|titan_scanner$)/'; // logs and caches
     private const SKIP_META ="'_wp_attached_file','_wp_attachment_metadata','_wp_attachment_backup_sizes'";
 
     /** @var array<string,string> normalized upload path => attachment ids "12,34": lookups made so far */
@@ -1191,7 +1191,7 @@ final class Scanner
         global $wpdb;
         $core = array_merge(array_values($wpdb->tables('all')), [self::table()]);
         // Logs, sessions, caches and indexes derived from content: they mention files without using them.
-        $skip = apply_filters('mtrk_skip_tables', '/_(log|logs|sessions|cache)$|actionscheduler_|wc_admin_|_lookup$|_stats$|simple_history|rank_math_internal_links$/i');
+        $skip = apply_filters('mtrk_skip_tables', '/_(log|logs|sessions|cache)$|actionscheduler_|wc_admin_|_lookup$|_stats$|simple_history|rank_math_internal_links$|yoast_(indexable|seo_)/i');
         $out = [];
         foreach ($wpdb->get_col($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($wpdb->prefix) . '%')) as $t) {
             $other_site = is_multisite() && preg_match('/^' . preg_quote($wpdb->base_prefix, '/') . '\d+_/', $t) && $wpdb->prefix === $wpdb->base_prefix;

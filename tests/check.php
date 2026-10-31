@@ -64,7 +64,7 @@ $expect = [ // attachment id => [expected used?, what]
     ($num = $media('mtrk-num.jpg')) => [false, 'same number in an ACF number field'],
     ($self = $media('mtrk-self.jpg')) => [false, 'only in its own meta'],
     ($none = $media('mtrk-none.jpg')) => [false, 'nowhere'],
-    ($logged = $media('mtrk-logged.jpg')) => [false, 'only in a security log option and a log post type'],
+    ($logged = $media('mtrk-logged.jpg')) => [false, 'only in a security log option, a scanner option, Yoast indexables and a log post type'],
     ($twin_a = $media('mtrk-twin.jpg')) => [true, 'shared file: the one used (by id only)'],
     ($twin_b = $media('mtrk-twin.jpg')) => [true, 'shared file: its twin pointing at the same file'],
     ($idle_a = $media('mtrk-idle.jpg')) => [false, 'shared file, neither used (1)'],
@@ -104,6 +104,14 @@ update_option('mtrkfix_widget', [2 => ['attachment_id' => $i, 'url' => "$cdn/i.j
 $itsec = get_option('itsec_file_change_latest', null); // a real site may have it: restore afterwards
 update_option('itsec_file_change_latest', ['changed' => ["$base/2026/10/mtrk-logged.jpg" => ['h' => 'x']]], false);
 $post(['post_type' => 'mtrkfix_logs', 'post_content' => "file changed: $base/2026/10/mtrk-logged.jpg"]);
+$titan = get_option('titan_scanner', null);
+update_option('titan_scanner', ['files' => ["$base/2026/10/mtrk-logged.jpg"]], false);
+$yoast = $wpdb->prefix . 'yoast_indexable'; // Yoast's own cache of every post, the attachment's own url included
+$made_yoast = !$wpdb->get_var("SHOW TABLES LIKE '$yoast'");
+if ($made_yoast) {
+    $wpdb->query("CREATE TABLE `$yoast` (id int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY, permalink longtext, open_graph_image longtext)");
+    $wpdb->insert($yoast, ['permalink' => "$base/2026/10/mtrk-logged.jpg", 'open_graph_image' => "$base/2026/10/mtrk-logged.jpg"]);
+}
 $term = wp_insert_term('mtrk fixture ' . time(), 'category');
 update_term_meta($term['term_id'], 'thumbnail_id', $j);
 
@@ -140,6 +148,8 @@ try {
     }
     delete_option('mtrkfix_widget');
     $itsec === null ? delete_option('itsec_file_change_latest') : update_option('itsec_file_change_latest', $itsec, false);
+    $titan === null ? delete_option('titan_scanner') : update_option('titan_scanner', $titan, false);
+    $made_yoast && $wpdb->query("DROP TABLE IF EXISTS `$yoast`");
     wp_delete_term($term['term_id'], 'category');
     @unlink($css);
     $wpdb->query("DROP TABLE IF EXISTS `$table`");
