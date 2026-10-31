@@ -112,6 +112,7 @@ final class Orphans
             $meta = maybe_unserialize($r->meta);
             if (is_array($meta)) {
                 $own[] = $meta['original_image'] ?? '';
+                $own[] = is_string($meta['thumb'] ?? null) ? $meta['thumb'] : ''; // audio/video cover art
                 foreach ((array) ($meta['sizes'] ?? []) as $s) {
                     $own[] = $s['file'] ?? '';
                 }

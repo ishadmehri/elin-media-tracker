@@ -63,7 +63,7 @@ final class Admin
                 'mb' => __('MB', 'elin-media-tracker'),
                 'kb' => __('KB', 'elin-media-tracker'),
                 /* translators: 1: number of files, 2: size with unit */
-                'sizesFound' => __('Files: %1$s; deletable: %2$s.', 'elin-media-tracker'),
+                'sizesFound' => __('%1$s file(s), %2$s deletable.', 'elin-media-tracker'),
                 /* translators: 1: number of files, 2: size with unit */
                 'sizesConfirm' => __('%1$s file(s) (%2$s) will be deleted permanently. Continue?', 'elin-media-tracker'),
                 /* translators: 1: number of files, 2: size with unit */
@@ -88,11 +88,12 @@ final class Admin
                 'orphansChecking' => __('Checking… %s folder(s)', 'elin-media-tracker'),
                 'orphansNone' => __('No extra files found.', 'elin-media-tracker'),
                 /* translators: 1: number of files, 2: size with unit */
-                'orphansFound' => __('Files: %1$s; deletable: %2$s.', 'elin-media-tracker'),
+                'orphansFound' => __('%1$s file(s), %2$s deletable.', 'elin-media-tracker'),
                 /* translators: %s: attachment id */
                 'orphanSize' => __('Extra size of attachment #%s', 'elin-media-tracker'),
                 'orphanFile' => __('Outside the library', 'elin-media-tracker'),
-                'orphanKept' => __('Its URL appears somewhere; it is kept', 'elin-media-tracker'),
+                'openTab' => __('Open in a new tab', 'elin-media-tracker'),
+                'orphanKept' =>__('Its URL appears somewhere; it is kept', 'elin-media-tracker'),
                 'more' => __('Show more', 'elin-media-tracker'),
                 'probeOk' => __('Requests for quarantined files reach WordPress: visitors are served the file and the request is logged.', 'elin-media-tracker'),
                 'probeFail' => __('Requests for missing files do not reach WordPress (probably an nginx/LiteSpeed rule for image files, or a CDN). A quarantined file returns a 404 to visitors and no hit is logged. In this setup, quarantine is only a reversible delete.', 'elin-media-tracker'),

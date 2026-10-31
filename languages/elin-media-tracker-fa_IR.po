@@ -43,7 +43,7 @@ msgid "KB"
 msgstr "کیلوبایت"
 
 #, php-format
-msgid "Files: %1$s; deletable: %2$s."
+msgid "%1$s file(s), %2$s deletable."
 msgstr "%1$s فایل، %2$s قابل حذف."
 
 #, php-format
@@ -105,6 +105,9 @@ msgstr "سایز اضافه‌ی پیوست #%s"
 
 msgid "Outside the library"
 msgstr "خارج از کتابخانه"
+
+msgid "Open in a new tab"
+msgstr "باز کردن در تب جدید"
 
 msgid "Its URL appears somewhere; it is kept"
 msgstr "آدرسش جایی آمده؛ نگه داشته می‌شود"

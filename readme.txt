@@ -4,7 +4,7 @@ Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.7.0
+Stable tag: 0.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,10 @@ It has only been tested on single sites. Uninstall cleanup does not handle every
 Open "Where it is used". Tables of plugins you removed long ago and caches (for example Yoast's indexable tables) can mention a file without using it. Logs and well-known caches are skipped; if you find another one, please report it.
 
 == Changelog ==
+
+= 0.7.1 =
+* Extra files: the full server path, an "Open in a new tab" link, and audio/video players (loaded only on play) for each file.
+* Cover art listed in audio/video metadata is no longer reported as an extra file.
 
 = 0.7.0 =
 * The interface source language is now English, with a bundled Persian (fa_IR) translation.

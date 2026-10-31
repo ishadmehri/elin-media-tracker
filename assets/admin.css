@@ -143,6 +143,9 @@ button.mtrk-badge:focus-visible { outline: 2px solid #2271b1; outline-offset: 1p
 .mtrk-qmedia { display: flex; gap: 10px; align-items: center; }
 .mtrk-qmedia img { width: 40px; height: 40px; object-fit: cover; border-radius: 3px; flex: none; }
 .mtrk-qmedia .mtrk-thumb img { width: 60px; height: 60px; }
+.mtrk-qmedia audio { width: 240px; max-width: 100%; }
+.mtrk-qmedia video { width: 160px; max-height: 100px; }
+.mtrk-qmedia code { word-break: break-all; }
 .mtrk-chip { display: inline-block; margin: 0 0 4px 4px; padding: 1px 8px; border-radius: 999px; background: #f0f0f1; font-size: 12px; }
 .mtrk-chip-site { background: #fcebea; color: #8a1f17; }
 .mtrk-chip-google { background: #e7f0fb; color: #0a4b8c; }

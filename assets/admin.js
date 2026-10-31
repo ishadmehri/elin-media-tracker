@@ -164,6 +164,8 @@
     const more = orphans.querySelector('.mtrk-orphans-more');
     const count = orphans.querySelector('.mtrk-count');
     const isImage = /\.(jpe?g|png|gif|webp|avif|svg)$/i;
+    const isAudio = /\.(mp3|m4a|ogg|oga|wav|flac|aac)$/i;
+    const isVideo = /\.(mp4|m4v|webm|ogv|mov)$/i;
     const PAGE = 300;
     let files = [];
     let shown = 0;
@@ -191,16 +193,33 @@
       th.append(box);
       const name = document.createElement('div');
       name.className = 'mtrk-qmedia';
+      const url = `${orphans.dataset.base}/${f.path.split('/').map(encodeURIComponent).join('/')}`;
+      const open = document.createElement('a');
+      open.href = url;
+      open.target = '_blank';
+      open.rel = 'noopener';
+      open.textContent = t.openTab;
       if (isImage.test(f.path)) {
         const img = document.createElement('img');
-        img.src = `${orphans.dataset.base}/${f.path.split('/').map(encodeURIComponent).join('/')}`;
+        img.src = url;
         img.alt = '';
         img.loading = 'lazy';
-        name.append(img);
+        const link = open.cloneNode(false);
+        link.setAttribute('aria-label', t.openTab);
+        link.append(img);
+        name.append(link);
+      } else if (isAudio.test(f.path) || isVideo.test(f.path)) {
+        const player = document.createElement(isAudio.test(f.path) ? 'audio' : 'video');
+        player.src = url;
+        player.controls = true;
+        player.preload = 'none'; // nothing is downloaded until play is pressed
+        name.append(player);
       }
-      const path = text(f.path, 'bdi');
+      const info = document.createElement('div');
+      const path = text(`${orphans.dataset.root}/${f.path}`, 'code'); // the full path on the server
       path.dir = 'ltr';
-      name.append(path);
+      info.append(path, document.createElement('br'), open);
+      name.append(info);
       const kind = f.kept ? t.orphanKept : (f.type === 'size' ? fmt(t.orphanSize, f.owner) : t.orphanFile);
       const tr = document.createElement('tr');
       tr.append(th, cell(name), cell(text(kind)), cell(text(size(f.bytes))));
