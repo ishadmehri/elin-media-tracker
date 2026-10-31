@@ -15,7 +15,7 @@ Set-Location (Split-Path $PSScriptRoot -Parent)
 $slug = 'elin-media-tracker'
 
 function Fail($msg) { Write-Error $msg; exit 1 }
-function Git { & git @args; if ($LASTEXITCODE) { Fail "git $($args -join ' ') failed" } }
+function Invoke-Git { & git @args; if ($LASTEXITCODE) { Fail "git $($args -join ' ') failed" } }
 
 $main = Get-Content "$slug.php" -Raw
 if ($main -notmatch '(?m)^\s*\*\s*Version:\s*(\S+)') { Fail 'No Version header in the main file.' }
@@ -26,13 +26,13 @@ if (git tag -l "v$version") { Fail "Tag v$version already exists." }
 
 New-Item -ItemType Directory -Force dist | Out-Null
 $zip = Join-Path (Resolve-Path dist) "$slug-$version.zip"
-Git archive --format=zip --prefix="$slug/" -o $zip HEAD
+Invoke-Git archive --format=zip --prefix="$slug/" -o $zip HEAD
 "Built $zip ($([math]::Round((Get-Item $zip).Length / 1KB)) KB)"
 
 if (-not $Publish) { return }
 
 if (-not $Notes) { $Notes = "Elin Media Tracker $version" }
-Git tag -a "v$version" -m "v$version"
-Git push origin "v$version"
+Invoke-Git tag -a "v$version" -m "v$version"
+Invoke-Git push origin "v$version"
 & gh release create "v$version" $zip --title "v$version" --notes $Notes
 if ($LASTEXITCODE) { Fail 'gh release create failed (the tag is already pushed).' }
