@@ -10,7 +10,7 @@ require_once __DIR__ . '/includes/class-cleanup.php';
     global $wpdb;
 
     // Quarantined files go back first: uninstalling must not leave media broken.
-    Elinweb\UnusedMediaFinder\Cleanup::restore(array_keys(Elinweb\UnusedMediaFinder\Cleanup::quarantined()));
+    ElinwebUnusedMediaFinder\Cleanup::restore(array_keys(ElinwebUnusedMediaFinder\Cleanup::quarantined()));
     // The closed folder is removed only when nothing is left in it. A file that could not be moved back (its
     // original path is taken, or the folder is not writable) stays there: deleting it would destroy the only copy.
     $qdir = get_option('mtrk_quarantine_dir');

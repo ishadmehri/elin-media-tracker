@@ -6,9 +6,9 @@
  * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/duplicates.php
  */
 
-use Elinweb\UnusedMediaFinder\Cleanup;
-use Elinweb\UnusedMediaFinder\Duplicates;
-use Elinweb\UnusedMediaFinder\Orphans;
+use ElinwebUnusedMediaFinder\Cleanup;
+use ElinwebUnusedMediaFinder\Duplicates;
+use ElinwebUnusedMediaFinder\Orphans;
 
 defined('ABSPATH') || exit;
 

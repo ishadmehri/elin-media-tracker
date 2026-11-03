@@ -28,22 +28,22 @@ require __DIR__ . '/includes/class-duplicates.php';
 require __DIR__ . '/includes/class-admin.php';
 require __DIR__ . '/includes/class-page.php';
 
-register_activation_hook(__FILE__, ['Elinweb\UnusedMediaFinder\Scanner', 'install']);
-add_action('plugins_loaded', ['Elinweb\UnusedMediaFinder\Scanner', 'upgrade']);
-add_action('plugins_loaded', ['Elinweb\UnusedMediaFinder\Cleanup', 'serve'], 1); // requests for quarantined files
-add_action('delete_attachment', ['Elinweb\UnusedMediaFinder\Cleanup', 'forget']);
-add_action('added_post_meta', ['Elinweb\UnusedMediaFinder\Scanner', 'file_meta'], 10, 4); // keeps the attachments index current
-add_action('updated_post_meta', ['Elinweb\UnusedMediaFinder\Scanner', 'file_meta'], 10, 4);
+register_activation_hook(__FILE__, ['ElinwebUnusedMediaFinder\Scanner', 'install']);
+add_action('plugins_loaded', ['ElinwebUnusedMediaFinder\Scanner', 'upgrade']);
+add_action('plugins_loaded', ['ElinwebUnusedMediaFinder\Cleanup', 'serve'], 1); // requests for quarantined files
+add_action('delete_attachment', ['ElinwebUnusedMediaFinder\Cleanup', 'forget']);
+add_action('added_post_meta', ['ElinwebUnusedMediaFinder\Scanner', 'file_meta'], 10, 4); // keeps the attachments index current
+add_action('updated_post_meta', ['ElinwebUnusedMediaFinder\Scanner', 'file_meta'], 10, 4);
 
 // A deleted attachment or post takes its references with it; saves are re-indexed live.
-add_action('deleted_post', ['Elinweb\UnusedMediaFinder\Scanner', 'forget']);
-Elinweb\UnusedMediaFinder\Live::init();
+add_action('deleted_post', ['ElinwebUnusedMediaFinder\Scanner', 'forget']);
+ElinwebUnusedMediaFinder\Live::init();
 
 if (defined('WP_CLI') && WP_CLI) {
     require __DIR__ . '/includes/class-cli.php';
-    WP_CLI::add_command('elinweb-unused-media-finder', Elinweb\UnusedMediaFinder\CLI::class);
+    WP_CLI::add_command('elinweb-unused-media-finder', ElinwebUnusedMediaFinder\CLI::class);
 }
 
 if (is_admin()) {
-    Elinweb\UnusedMediaFinder\Admin::init();
+    ElinwebUnusedMediaFinder\Admin::init();
 }

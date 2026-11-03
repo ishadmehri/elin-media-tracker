@@ -1,6 +1,6 @@
 <?php
 
-namespace Elinweb\UnusedMediaFinder;
+namespace ElinwebUnusedMediaFinder;
 
 use WP_CLI;
 use WP_CLI\Utils;

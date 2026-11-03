@@ -1,7 +1,7 @@
 <?php
 /** Shared by the eval-file checks: fixture media, a synchronous scan, and PASS/FAIL output. */
 
-use Elinweb\UnusedMediaFinder\Scanner;
+use ElinwebUnusedMediaFinder\Scanner;
 
 defined('ABSPATH') || exit;
 

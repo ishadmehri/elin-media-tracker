@@ -6,7 +6,7 @@
  * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/orphans.php
  */
 
-use Elinweb\UnusedMediaFinder\Orphans;
+use ElinwebUnusedMediaFinder\Orphans;
 
 defined('ABSPATH') || exit;
 

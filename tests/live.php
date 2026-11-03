@@ -6,8 +6,8 @@
  * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/live.php
  */
 
-use Elinweb\UnusedMediaFinder\Live;
-use Elinweb\UnusedMediaFinder\Scanner;
+use ElinwebUnusedMediaFinder\Live;
+use ElinwebUnusedMediaFinder\Scanner;
 
 defined('ABSPATH') || exit;
 

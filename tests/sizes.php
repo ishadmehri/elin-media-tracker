@@ -6,7 +6,7 @@
  * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/sizes.php
  */
 
-use Elinweb\UnusedMediaFinder\Sizes;
+use ElinwebUnusedMediaFinder\Sizes;
 
 defined('ABSPATH') || exit;
 

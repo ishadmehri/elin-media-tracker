@@ -1,6 +1,6 @@
 <?php
 
-namespace Elinweb\UnusedMediaFinder;
+namespace ElinwebUnusedMediaFinder;
 
 defined('ABSPATH') || exit;
 

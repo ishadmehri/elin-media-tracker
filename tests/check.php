@@ -6,9 +6,9 @@
  * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/check.php
  */
 
-use Elinweb\UnusedMediaFinder\Admin;
-use Elinweb\UnusedMediaFinder\Cleanup;
-use Elinweb\UnusedMediaFinder\Scanner;
+use ElinwebUnusedMediaFinder\Admin;
+use ElinwebUnusedMediaFinder\Cleanup;
+use ElinwebUnusedMediaFinder\Scanner;
 
 defined('ABSPATH') || exit;
 
