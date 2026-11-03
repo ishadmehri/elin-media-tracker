@@ -29,7 +29,7 @@ final class Admin
 
     public static function menu(): void
     {
-        add_media_page(__('Media Tracker', 'elinweb-unused-media-finder'), __('Media Tracker', 'elinweb-unused-media-finder'), Scanner::CAP, 'elinweb-unused-media-finder', [Page::class, 'render']);
+        add_media_page(__('Unused Media Finder', 'elinweb-unused-media-finder'), __('Unused Media Finder', 'elinweb-unused-media-finder'), Scanner::CAP, 'elinweb-unused-media-finder', [Page::class, 'render']);
     }
 
     public static function assets(string $hook): void

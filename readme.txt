@@ -42,7 +42,7 @@ English and Persian (fa_IR).
 
 1. Upload the plugin folder to `/wp-content/plugins/`, or install it from the Plugins screen.
 2. Activate it.
-3. Go to **Media → Media Tracker → Scan** and run a "Database + source code" scan.
+3. Go to **Media → Unused Media Finder → Scan** and run a "Database + source code" scan.
 4. Review the **Unreferenced** tab. Quarantine, wait, then delete.
 
 == Frequently Asked Questions ==

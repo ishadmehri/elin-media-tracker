@@ -8,8 +8,8 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Domain: elinweb-unused-media-finder\n"
 
-msgid "Media Tracker"
-msgstr "ردیاب رسانه"
+msgid "Unused Media Finder"
+msgstr "یابنده‌ی رسانه‌های بی‌استفاده"
 
 msgid "Where it is used"
 msgstr "محل‌های استفاده"
@@ -284,8 +284,8 @@ msgstr "فایل‌های اضافه"
 msgid "Unregistered sizes"
 msgstr "سایزهای ثبت‌نشده"
 
-msgid "Media Tracker sections"
-msgstr "بخش‌های ردیاب رسانه"
+msgid "Unused Media Finder sections"
+msgstr "بخش‌های یابنده‌ی رسانه‌های بی‌استفاده"
 
 msgid "This section needs the result of a full scan."
 msgstr "این بخش به نتیجه‌ی یک اسکن کامل نیاز دارد."

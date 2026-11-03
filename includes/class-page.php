@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 
 // phpcs:disable WordPress.Security.NonceVerification -- Every AJAX handler starts with Admin::guard() (check_ajax_referer plus a capability check); the $_GET values read on screens only pick a tab, page or filter and change nothing.
 
-/** The plugin's own screen (Media → Media Tracker), in tabs. Unreferenced media comes first. */
+/** The plugin's own screen (Media → Unused Media Finder), in tabs. Unreferenced media comes first. */
 final class Page
 {
     private const PER_PAGE = 40;
@@ -63,8 +63,8 @@ final class Page
         }
         ?>
         <div class="wrap mtrk-page">
-            <h1><?php esc_html_e('Media Tracker', 'elinweb-unused-media-finder'); ?></h1>
-            <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e('Media Tracker sections', 'elinweb-unused-media-finder'); ?>">
+            <h1><?php esc_html_e('Unused Media Finder', 'elinweb-unused-media-finder'); ?></h1>
+            <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e('Unused Media Finder sections', 'elinweb-unused-media-finder'); ?>">
                 <?php foreach ($tabs as $key => $label) : ?>
                     <a href="<?php echo esc_url(self::url($key)); ?>" class="nav-tab<?php echo $key === $tab ? ' nav-tab-active' : ''; ?>"<?php echo $key === $tab ? ' aria-current="page"' : ''; ?>><?php echo esc_html($label); ?></a>
                 <?php endforeach; ?>
