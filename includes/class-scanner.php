@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaTracker;
+namespace Elinweb\UnusedMediaFinder;
 
 defined('ABSPATH') || exit;
 
@@ -279,7 +279,7 @@ final class Scanner
         if (!self::rebuild_index()) { // keep the previous results rather than produce wrong ones
             return ['error' => sprintf(
                 /* translators: %s: database error */
-                __('Building the media index failed on this site, so the scan did not start and the previous result was left untouched. Database error: %s', 'elin-media-tracker'),
+                __('Building the media index failed on this site, so the scan did not start and the previous result was left untouched. Database error: %s', 'elinweb-unused-media-finder'),
                 $wpdb->last_error ?: '—'
             )];
         }
@@ -394,18 +394,18 @@ final class Scanner
     private static function label(string $step): string
     {
         $labels = [
-            'posts' => __('Post content', 'elin-media-tracker'),
-            'postmeta' => __('Post meta', 'elin-media-tracker'),
-            'termmeta' => __('Term meta', 'elin-media-tracker'),
-            'usermeta' => __('User meta', 'elin-media-tracker'),
-            'commentmeta' => __('Comment meta', 'elin-media-tracker'),
-            'options' => __('Settings', 'elin-media-tracker'),
-            'terms' => __('Term descriptions', 'elin-media-tracker'),
-            'comments' => __('Comments', 'elin-media-tracker'),
-            'files' => __('Code files', 'elin-media-tracker'),
+            'posts' => __('Post content', 'elinweb-unused-media-finder'),
+            'postmeta' => __('Post meta', 'elinweb-unused-media-finder'),
+            'termmeta' => __('Term meta', 'elinweb-unused-media-finder'),
+            'usermeta' => __('User meta', 'elinweb-unused-media-finder'),
+            'commentmeta' => __('Comment meta', 'elinweb-unused-media-finder'),
+            'options' => __('Settings', 'elinweb-unused-media-finder'),
+            'terms' => __('Term descriptions', 'elinweb-unused-media-finder'),
+            'comments' => __('Comments', 'elinweb-unused-media-finder'),
+            'files' => __('Code files', 'elinweb-unused-media-finder'),
         ];
         /* translators: %s: database table name */
-        return $labels[$step] ?? sprintf(__('Table %s', 'elin-media-tracker'), substr($step, 6));
+        return $labels[$step] ?? sprintf(__('Table %s', 'elinweb-unused-media-finder'), substr($step, 6));
     }
 
     // ---- results ---------------------------------------------------------------------------------------------

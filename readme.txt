@@ -1,10 +1,10 @@
-=== Elin Media Tracker ===
+=== Elinweb Unused Media Finder ===
 Contributors: imansh
 Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.9.2
+Stable tag: 0.9.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,9 +12,9 @@ Find unreferenced media, see where each file is used, find duplicate files, and 
 
 == Description ==
 
-Elin Media Tracker scans your site and tells you which files in the Media Library are not used anywhere, where the others are used, and which files are exact duplicates. Then it helps you remove them without breaking pages.
+Elinweb Unused Media Finder scans your site and tells you which files in the Media Library are not used anywhere, where the others are used, and which files are exact duplicates. Then it helps you remove them with less risk.
 
-Deleting media is the one thing in WordPress you cannot take back, so the plugin is built around caution: quarantine first, delete later, and refuse anything that looks wrong.
+A permanent delete removes the files from the server, so the plugin is built around caution: quarantine first (reversible), delete later, and refuse to continue when a scan looks wrong. No scan can see every use of a file, so keep a backup and quarantine before you delete.
 
 **What it does**
 
@@ -28,7 +28,7 @@ Deleting media is the one thing in WordPress you cannot take back, so the plugin
 * **Extra files.** Leftover sizes and files on disk that no media item owns, with a preview, the full server path, and a ZIP download of the selection.
 * **Unregistered sizes.** Files generated for image sizes that no theme or plugin registers any more.
 * **Safety.** A scan that reports a featured image as unreferenced is marked untrustworthy and quarantine and delete are refused. Attachments sharing one file move together.
-* **WP-CLI.** `wp elin-media-tracker scan|status|unused|usage|quarantine|restore|delete|keep`
+* **WP-CLI.** `wp elinweb-unused-media-finder scan|status|unused|usage|quarantine|restore|delete|keep`
 
 **What it cannot see**
 
@@ -45,8 +45,6 @@ English and Persian (fa_IR).
 3. Go to **Media → Media Tracker → Scan** and run a "Database + source code" scan.
 4. Review the **Unreferenced** tab. Quarantine, wait, then delete.
 
-If you have an older copy in a `media-tracker` folder, deactivate and delete it first. The data is kept because the internal `mtrk_` prefix did not change.
-
 == Frequently Asked Questions ==
 
 = Will it delete anything on its own? =
@@ -59,11 +57,11 @@ A quarantined file is still served for its old URL, so pages that still use it k
 
 = What data does it store? =
 
-It has no settings page. It creates four tables (`mtrk_refs`, `mtrk_paths`, `mtrk_files`, `mtrk_hashes`), a few options prefixed `mtrk_`, the post meta `_mtrk_quarantine` and `_mtrk_keep`, and the user meta `mtrk_per_page` and `mtrk_view`. For quarantined files it logs the time, referring URL and user agent of each request, locally in the database. Nothing is sent to any other server.
+It has no settings page. It creates up to five tables (`mtrk_refs`, `mtrk_paths`, `mtrk_files`, `mtrk_hashes`, and `mtrk_xhashes` while a duplicates check includes extra files), a few options prefixed `mtrk_`, the post meta `_mtrk_quarantine` and `_mtrk_keep`, and the user meta `mtrk_per_page` and `mtrk_view`. For quarantined files it logs the time, referring URL and user agent of each request, locally in the database. Nothing is sent to any other server.
 
 = What happens when I uninstall it? =
 
-Quarantined files are restored to their original place first, then the tables, options and meta above are removed. Deactivating keeps everything.
+Quarantined files are moved back to their original place first, then the tables, options and meta above are removed. A file that cannot go back (its original path is taken again, or the folder is not writable) is not deleted: it stays in the `mtrk-quarantine-…` folder inside the uploads folder for you to handle. Deactivating keeps everything.
 
 = Does it work on multisite? =
 
@@ -82,6 +80,12 @@ Open "Where it is used". Tables of plugins you removed long ago and caches (for 
 5. Scan: a full scan of the database, plugin tables and source code, with progress.
 
 == Changelog ==
+
+= 0.9.3 =
+* Renamed from "Elin Media Tracker" to "Elinweb Unused Media Finder". The WP-CLI command is now `wp elinweb-unused-media-finder`.
+* The "Where it is used" dialog escapes every label and title it shows.
+* Uninstall never deletes a quarantined file it could not move back; restore keeps such a file in quarantine.
+* Readme: no absolute claims about deleting or about pages never breaking.
 
 = 0.9.2 =
 * Screenshots added to the plugin page.

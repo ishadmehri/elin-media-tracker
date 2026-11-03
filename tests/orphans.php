@@ -3,10 +3,10 @@
  * Files on disk that no attachment owns: what is listed, what is deletable, what must never be touched.
  * Truncates scan results.
  *
- * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/orphans.php
+ * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/orphans.php
  */
 
-use MediaTracker\Orphans;
+use Elinweb\UnusedMediaFinder\Orphans;
 
 defined('ABSPATH') || exit;
 

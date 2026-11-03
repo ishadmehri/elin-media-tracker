@@ -3,12 +3,12 @@
  * Duplicate files: identical content found, same size alone is not enough, twins are not duplicates, a changed
  * file is recomputed, and only unreferenced copies can go. Truncates scan results.
  *
- * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/duplicates.php
+ * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/duplicates.php
  */
 
-use MediaTracker\Cleanup;
-use MediaTracker\Duplicates;
-use MediaTracker\Orphans;
+use Elinweb\UnusedMediaFinder\Cleanup;
+use Elinweb\UnusedMediaFinder\Duplicates;
+use Elinweb\UnusedMediaFinder\Orphans;
 
 defined('ABSPATH') || exit;
 

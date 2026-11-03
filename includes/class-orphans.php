@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaTracker;
+namespace Elinweb\UnusedMediaFinder;
 
 defined('ABSPATH') || exit;
 
@@ -87,21 +87,21 @@ final class Orphans
     {
         $listed = self::listed($paths, false);
         if (!$listed) {
-            return ['error' => __('Nothing selected.', 'elin-media-tracker')];
+            return ['error' => __('Nothing selected.', 'elinweb-unused-media-finder')];
         }
         $bytes = array_sum($listed);
         if ($bytes > $cap) {
             /* translators: 1: size of the selection, 2: size limit of one ZIP */
-            return ['error' => sprintf(__('The selection is %1$s; one ZIP is limited to %2$s. Select fewer files.', 'elin-media-tracker'), size_format($bytes), size_format($cap))];
+            return ['error' => sprintf(__('The selection is %1$s; one ZIP is limited to %2$s. Select fewer files.', 'elinweb-unused-media-finder'), size_format($bytes), size_format($cap))];
         }
         if (!class_exists('ZipArchive')) {
-            return ['error' => __('ZIP support (ZipArchive) is not available on this server.', 'elin-media-tracker')];
+            return ['error' => __('ZIP support (ZipArchive) is not available on this server.', 'elinweb-unused-media-finder')];
         }
         $base = wp_upload_dir(null, false)['basedir'];
         $tmp = wp_tempnam('mtrk-extra.zip');
         $zip = new \ZipArchive();
         if (!$tmp || $zip->open($tmp, \ZipArchive::OVERWRITE) !== true) {
-            return ['error' => __('Could not create the ZIP file.', 'elin-media-tracker')];
+            return ['error' => __('Could not create the ZIP file.', 'elinweb-unused-media-finder')];
         }
         foreach (array_keys($listed) as $path) {
             $zip->addFile("$base/$path", $path);
@@ -109,7 +109,7 @@ final class Orphans
         }
         if (!$zip->close()) {
             wp_delete_file($tmp);
-            return ['error' => __('Could not create the ZIP file.', 'elin-media-tracker')];
+            return ['error' => __('Could not create the ZIP file.', 'elinweb-unused-media-finder')];
         }
         return ['file' => $tmp, 'count' => count($listed), 'bytes' => $bytes];
     }

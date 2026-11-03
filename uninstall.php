@@ -10,20 +10,32 @@ require_once __DIR__ . '/includes/class-cleanup.php';
     global $wpdb;
 
     // Quarantined files go back first: uninstalling must not leave media broken.
-    MediaTracker\Cleanup::restore(array_keys(MediaTracker\Cleanup::quarantined()));
+    Elinweb\UnusedMediaFinder\Cleanup::restore(array_keys(Elinweb\UnusedMediaFinder\Cleanup::quarantined()));
+    // The closed folder is removed only when nothing is left in it. A file that could not be moved back (its
+    // original path is taken, or the folder is not writable) stays there: deleting it would destroy the only copy.
     $qdir = get_option('mtrk_quarantine_dir');
     if ($qdir) {
         $dir = wp_upload_dir(null, false)['basedir'] . '/' . $qdir;
         if (is_dir($dir)) {
+            $guards = ['index.php', '.htaccess']; // the two files the plugin put there itself
             $items = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+            $kept = false;
             foreach ($items as $item) {
-                if ($item->isDir()) {
-                    @rmdir($item->getPathname()); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- uninstall removes our own quarantine folder; WP_Filesystem may need credentials here
-                } else {
-                    wp_delete_file($item->getPathname());
+                if (!$item->isDir() && !in_array($item->getFilename(), $guards, true)) {
+                    $kept = true;
+                    break;
                 }
             }
-            @rmdir($dir); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- same folder, now empty
+            if (!$kept) {
+                foreach ($items as $item) {
+                    if ($item->isDir()) {
+                        @rmdir($item->getPathname()); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- our own, now empty quarantine folder; WP_Filesystem may need credentials here
+                    } else {
+                        wp_delete_file($item->getPathname());
+                    }
+                }
+                @rmdir($dir); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- same folder, now empty
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaTracker;
+namespace Elinweb\UnusedMediaFinder;
 
 use WP_CLI;
 use WP_CLI\Utils;
@@ -12,10 +12,10 @@ defined('ABSPATH') || exit;
  *
  * ## EXAMPLES
  *
- *     wp elin-media-tracker scan --code
- *     wp elin-media-tracker unused --format=csv > unused.csv
- *     wp elin-media-tracker usage 123
- *     wp elin-media-tracker quarantine $(wp elin-media-tracker unused --format=ids)
+ *     wp elinweb-unused-media-finder scan --code
+ *     wp elinweb-unused-media-finder unused --format=csv > unused.csv
+ *     wp elinweb-unused-media-finder usage 123
+ *     wp elinweb-unused-media-finder quarantine $(wp elinweb-unused-media-finder unused --format=ids)
  */
 final class CLI
 {
@@ -61,7 +61,7 @@ final class CLI
     {
         $last = Scanner::last();
         if (!$last) {
-            WP_CLI::warning('No scan yet: run `wp elin-media-tracker scan --code`.');
+            WP_CLI::warning('No scan yet: run `wp elinweb-unused-media-finder scan --code`.');
             return;
         }
         $s = Scanner::summary();

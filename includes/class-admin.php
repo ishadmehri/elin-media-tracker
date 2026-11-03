@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaTracker;
+namespace Elinweb\UnusedMediaFinder;
 
 defined('ABSPATH') || exit;
 
@@ -29,12 +29,12 @@ final class Admin
 
     public static function menu(): void
     {
-        add_media_page(__('Media Tracker', 'elin-media-tracker'), __('Media Tracker', 'elin-media-tracker'), Scanner::CAP, 'elin-media-tracker', [Page::class, 'render']);
+        add_media_page(__('Media Tracker', 'elinweb-unused-media-finder'), __('Media Tracker', 'elinweb-unused-media-finder'), Scanner::CAP, 'elinweb-unused-media-finder', [Page::class, 'render']);
     }
 
     public static function assets(string $hook): void
     {
-        if (in_array($hook, ['upload.php', 'post.php', 'media_page_elin-media-tracker'], true)) {
+        if (in_array($hook, ['upload.php', 'post.php', 'media_page_elinweb-unused-media-finder'], true)) {
             self::enqueue();
         }
         if ($hook === 'upload.php' && current_user_can(Scanner::CAP)) { // the grid's usage filter extends media-views
@@ -54,64 +54,64 @@ final class Admin
             'nonce' => wp_create_nonce('mtrk'),
             'uploads' => ['url' => wp_upload_dir(null, false)['baseurl'], 'root' => wp_normalize_path(wp_upload_dir(null, false)['basedir'])],
             'i18n' => [
-                'zipBuilding' => __('Building the ZIP…', 'elin-media-tracker'),
+                'zipBuilding' => __('Building the ZIP…', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of files */
-                'zipDone' => __('%s file(s) added to the ZIP.', 'elin-media-tracker'),
+                'zipDone' => __('%s file(s) added to the ZIP.', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of folders left */
-                'dupsList' => __('Listing extra files… %s folder(s) left', 'elin-media-tracker'),
+                'dupsList' => __('Listing extra files… %s folder(s) left', 'elinweb-unused-media-finder'),
                 /* translators: 1: number of media, 2: number of extra files */
-                'confirmMixed' => __('%1$s media and %2$s extra file(s) will be deleted permanently. This cannot be undone. Continue?', 'elin-media-tracker'),
-                'title' => __('Where it is used', 'elin-media-tracker'),
-                'close' => __('Close', 'elin-media-tracker'),
-                'loading' => __('Loading…', 'elin-media-tracker'),
-                'error' => __('Could not reach the server.', 'elin-media-tracker'),
-                'done' => __('Scan finished.', 'elin-media-tracker'),
-                'stopping' => __('Stopping…', 'elin-media-tracker'),
+                'confirmMixed' => __('%1$s media and %2$s extra file(s) will be deleted permanently. This cannot be undone. Continue?', 'elinweb-unused-media-finder'),
+                'title' => __('Where it is used', 'elinweb-unused-media-finder'),
+                'close' => __('Close', 'elinweb-unused-media-finder'),
+                'loading' => __('Loading…', 'elinweb-unused-media-finder'),
+                'error' => __('Could not reach the server.', 'elinweb-unused-media-finder'),
+                'done' => __('Scan finished.', 'elinweb-unused-media-finder'),
+                'stopping' => __('Stopping…', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of images checked */
-                'sizesChecking' => __('Checking… %s image(s)', 'elin-media-tracker'),
-                'sizesNone' => __('No unregistered sizes found.', 'elin-media-tracker'),
-                'mb' => __('MB', 'elin-media-tracker'),
-                'kb' => __('KB', 'elin-media-tracker'),
+                'sizesChecking' => __('Checking… %s image(s)', 'elinweb-unused-media-finder'),
+                'sizesNone' => __('No unregistered sizes found.', 'elinweb-unused-media-finder'),
+                'mb' => __('MB', 'elinweb-unused-media-finder'),
+                'kb' => __('KB', 'elinweb-unused-media-finder'),
                 /* translators: 1: number of files, 2: size with unit */
-                'sizesFound' => __('%1$s file(s), %2$s deletable.', 'elin-media-tracker'),
+                'sizesFound' => __('%1$s file(s), %2$s deletable.', 'elinweb-unused-media-finder'),
                 /* translators: 1: number of files, 2: size with unit */
-                'sizesConfirm' => __('%1$s file(s) (%2$s) will be deleted permanently. Continue?', 'elin-media-tracker'),
+                'sizesConfirm' => __('%1$s file(s) (%2$s) will be deleted permanently. Continue?', 'elinweb-unused-media-finder'),
                 /* translators: 1: number of files, 2: size with unit */
-                'sizesDeleted' => __('%1$s file(s) deleted (%2$s).', 'elin-media-tracker'),
-                'preview' => __('Preview', 'elin-media-tracker'),
+                'sizesDeleted' => __('%1$s file(s) deleted (%2$s).', 'elinweb-unused-media-finder'),
+                'preview' => __('Preview', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of attachments left */
-                'dupsSizes' => __('Comparing sizes… %s media left', 'elin-media-tracker'),
+                'dupsSizes' => __('Comparing sizes… %s media left', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of files left */
-                'dupsHashes' => __('Comparing the content of same-size files… %s file(s) left', 'elin-media-tracker'),
-                'usageLabel' => __('Usage status', 'elin-media-tracker'),
-                'usageAll' => __('Usage status: all', 'elin-media-tracker'),
-                'usageUsed' => __('Used', 'elin-media-tracker'),
-                'usageUnused' => __('Unreferenced', 'elin-media-tracker'),
-                'usageNew' => __('New, unreferenced', 'elin-media-tracker'),
+                'dupsHashes' => __('Comparing the content of same-size files… %s file(s) left', 'elinweb-unused-media-finder'),
+                'usageLabel' => __('Usage status', 'elinweb-unused-media-finder'),
+                'usageAll' => __('Usage status: all', 'elinweb-unused-media-finder'),
+                'usageUsed' => __('Used', 'elinweb-unused-media-finder'),
+                'usageUnused' => __('Unreferenced', 'elinweb-unused-media-finder'),
+                'usageNew' => __('New, unreferenced', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of items */
-                'selected' => __('%s selected', 'elin-media-tracker'),
+                'selected' => __('%s selected', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of media items */
-                'confirmDelete' => __('%s media and all their files will be deleted permanently. This cannot be undone. Continue?', 'elin-media-tracker'),
+                'confirmDelete' => __('%s media and all their files will be deleted permanently. This cannot be undone. Continue?', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of files */
-                'confirmFiles' => __('%s file(s) will be deleted permanently. This cannot be undone. Continue?', 'elin-media-tracker'),
+                'confirmFiles' => __('%s file(s) will be deleted permanently. This cannot be undone. Continue?', 'elinweb-unused-media-finder'),
                 /* translators: %s: number of folders */
-                'orphansChecking' => __('Checking… %s folder(s)', 'elin-media-tracker'),
-                'orphansNone' => __('No extra files found.', 'elin-media-tracker'),
+                'orphansChecking' => __('Checking… %s folder(s)', 'elinweb-unused-media-finder'),
+                'orphansNone' => __('No extra files found.', 'elinweb-unused-media-finder'),
                 /* translators: 1: number of files, 2: size with unit */
-                'orphansFound' => __('%1$s file(s), %2$s deletable.', 'elin-media-tracker'),
+                'orphansFound' => __('%1$s file(s), %2$s deletable.', 'elinweb-unused-media-finder'),
                 /* translators: %s: attachment id */
-                'orphanSize' => __('Extra size of attachment #%s', 'elin-media-tracker'),
-                'orphanFile' => __('No media item owns this file', 'elin-media-tracker'),
+                'orphanSize' => __('Extra size of attachment #%s', 'elinweb-unused-media-finder'),
+                'orphanFile' => __('No media item owns this file', 'elinweb-unused-media-finder'),
                 /* translators: %s: date */
-                'checkedAt' => __('Last checked: %s', 'elin-media-tracker'),
-                'noPreview' =>__('No preview for this file type.', 'elin-media-tracker'),
-                'fileLabel' => __('File', 'elin-media-tracker'),
-                'sizeLabel' => __('Size', 'elin-media-tracker'),
-                'openTab' =>__('Open in a new tab', 'elin-media-tracker'),
-                'orphanKept' =>__('Its URL appears somewhere; it is kept', 'elin-media-tracker'),
-                'more' => __('Show more', 'elin-media-tracker'),
-                'probeOk' => __('Requests for quarantined files reach WordPress: visitors are served the file and the request is logged.', 'elin-media-tracker'),
-                'probeFail' => __('Requests for missing files do not reach WordPress (probably an nginx/LiteSpeed rule for image files, or a CDN). A quarantined file returns a 404 to visitors and no hit is logged. In this setup, quarantine is only a reversible delete.', 'elin-media-tracker'),
+                'checkedAt' => __('Last checked: %s', 'elinweb-unused-media-finder'),
+                'noPreview' =>__('No preview for this file type.', 'elinweb-unused-media-finder'),
+                'fileLabel' => __('File', 'elinweb-unused-media-finder'),
+                'sizeLabel' => __('Size', 'elinweb-unused-media-finder'),
+                'openTab' =>__('Open in a new tab', 'elinweb-unused-media-finder'),
+                'orphanKept' =>__('Its URL appears somewhere; it is kept', 'elinweb-unused-media-finder'),
+                'more' => __('Show more', 'elinweb-unused-media-finder'),
+                'probeOk' => __('Requests for quarantined files reach WordPress: visitors are served the file and the request is logged.', 'elinweb-unused-media-finder'),
+                'probeFail' => __('Requests for missing files do not reach WordPress (probably an nginx/LiteSpeed rule for image files, or a CDN). A quarantined file returns a 404 to visitors and no hit is logged. In this setup, quarantine is only a reversible delete.', 'elinweb-unused-media-finder'),
             ],
         ]) . ';', 'before');
     }
@@ -123,7 +123,7 @@ final class Admin
         self::guard();
         $id = absint($_POST['id'] ?? 0);
         if (get_post_type($id) !== 'attachment') {
-            wp_send_json_error(__('Media not found.', 'elin-media-tracker'), 404);
+            wp_send_json_error(__('Media not found.', 'elinweb-unused-media-finder'), 404);
         }
         try {
             wp_send_json_success(['html' => self::usage_html($id)]);
@@ -135,10 +135,10 @@ final class Admin
     public static function guard(): void
     {
         if (!check_ajax_referer('mtrk', false, false)) {
-            wp_send_json_error(__('Your session has expired; reload the page.', 'elin-media-tracker'), 403);
+            wp_send_json_error(__('Your session has expired; reload the page.', 'elinweb-unused-media-finder'), 403);
         }
         if (!current_user_can(Scanner::CAP)) {
-            wp_send_json_error(__('You are not allowed to do this.', 'elin-media-tracker'), 403);
+            wp_send_json_error(__('You are not allowed to do this.', 'elinweb-unused-media-finder'), 403);
         }
     }
 
@@ -161,32 +161,32 @@ final class Admin
             <?php echo wp_get_attachment_image($id, [60, 60], true); ?>
             <div>
                 <strong><?php echo esc_html(get_the_title($id) ?: wp_basename((string) get_attached_file($id))); ?></strong><br>
-                <?php echo self::badge($id, count($groups), false); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+                <?php echo wp_kses(self::badge($id, count($groups), false), self::allowed_html()); ?>
             </div>
         </div>
         <?php if (get_post_meta($id, Cleanup::META, true)) : ?>
             <p>
-                <?php esc_html_e('This media is quarantined: its files were moved out of their original path and requests for them are logged.', 'elin-media-tracker'); ?>
-                <a href="<?php echo esc_url(admin_url('upload.php?page=elin-media-tracker&tab=quarantine')); ?>"><?php esc_html_e('Quarantine', 'elin-media-tracker'); ?></a>
+                <?php esc_html_e('This media is quarantined: its files were moved out of their original path and requests for them are logged.', 'elinweb-unused-media-finder'); ?>
+                <a href="<?php echo esc_url(admin_url('upload.php?page=elinweb-unused-media-finder&tab=quarantine')); ?>"><?php esc_html_e('Quarantine', 'elinweb-unused-media-finder'); ?></a>
             </p>
         <?php endif; ?>
         <?php if ($status === 'none') : ?>
             <p>
-                <?php esc_html_e('No scan has been run yet.', 'elin-media-tracker'); ?>
-                <a href="<?php echo esc_url(admin_url('upload.php?page=elin-media-tracker')); ?>"><?php esc_html_e('Scan', 'elin-media-tracker'); ?></a>
+                <?php esc_html_e('No scan has been run yet.', 'elinweb-unused-media-finder'); ?>
+                <a href="<?php echo esc_url(admin_url('upload.php?page=elinweb-unused-media-finder')); ?>"><?php esc_html_e('Scan', 'elinweb-unused-media-finder'); ?></a>
             </p>
         <?php elseif ($status === 'new') : ?>
-            <p><?php esc_html_e('This media was uploaded after the last full scan and has not been used in posts, meta or settings since. Plugin tables and code files are only checked by a full scan.', 'elin-media-tracker'); ?></p>
+            <p><?php esc_html_e('This media was uploaded after the last full scan and has not been used in posts, meta or settings since. Plugin tables and code files are only checked by a full scan.', 'elinweb-unused-media-finder'); ?></p>
         <?php elseif ($status === 'unused') : ?>
-            <p><?php esc_html_e('No reference to this media was found within the scope of the last scan.', 'elin-media-tracker'); ?></p>
+            <p><?php esc_html_e('No reference to this media was found within the scope of the last scan.', 'elinweb-unused-media-finder'); ?></p>
         <?php else : ?>
             <ul class="mtrk-list">
                 <?php foreach ($groups as $rows) : ?>
-                    <li><?php echo self::item($rows); // phpcs:ignore WordPress.Security.EscapeOutput ?></li>
+                    <li><?php echo wp_kses(self::item($rows), self::allowed_html()); ?></li>
                 <?php endforeach; ?>
             </ul>
             <?php if (count($refs) >= 500) : ?>
-                <p class="mtrk-note"><?php esc_html_e('Only the first 500 items are shown.', 'elin-media-tracker'); ?></p>
+                <p class="mtrk-note"><?php esc_html_e('Only the first 500 items are shown.', 'elinweb-unused-media-finder'); ?></p>
             <?php endif; ?>
         <?php endif; ?>
         <?php if ($last) : ?>
@@ -194,7 +194,7 @@ final class Admin
                 <?php
                 printf(
                     /* translators: 1: date, 2: scope */
-                    esc_html__('Last full scan: %1$s — %2$s. Changes since then to posts, meta, terms, users and settings are recorded live; plugin tables and code only by a full scan. Use outside the site (email, social media, other sites) cannot be detected.', 'elin-media-tracker'),
+                    esc_html__('Last full scan: %1$s — %2$s. Changes since then to posts, meta, terms, users and settings are recorded live; plugin tables and code only by a full scan. Use outside the site (email, social media, other sites) cannot be detected.', 'elinweb-unused-media-finder'),
                     esc_html(wp_date(get_option('date_format') . ' H:i', $last['time'])),
                     esc_html(Page::scope($last))
                 );
@@ -218,62 +218,62 @@ final class Admin
                 $post = get_post($sid);
                 if (!$post) {
                     /* translators: %d: post id */
-                    return esc_html(sprintf(__('Deleted post #%d', 'elin-media-tracker'), $sid));
+                    return esc_html(sprintf(__('Deleted post #%d', 'elinweb-unused-media-finder'), $sid));
                 }
                 $pto = get_post_type_object($post->post_type);
                 $pso = get_post_status_object($post->post_status);
-                $meta = [$pto ? $pto->labels->singular_name : $post->post_type, $pso ? $pso->label : $post->post_status, $fields];
+                $meta = [esc_html($pto ? $pto->labels->singular_name : $post->post_type), esc_html($pso ? $pso->label : $post->post_status), $fields];
                 $view = is_post_type_viewable($post->post_type) && $post->post_status === 'publish'
-                    ? sprintf(' <a href="%s" target="_blank" rel="noopener">%s</a>', esc_url(get_permalink($post)), esc_html__('View', 'elin-media-tracker'))
+                    ? sprintf(' <a href="%s" target="_blank" rel="noopener">%s</a>', esc_url(get_permalink($post)), esc_html__('View', 'elinweb-unused-media-finder'))
                     : '';
-                return self::line(get_the_title($post) ?: __('(no title)', 'elin-media-tracker'), get_edit_post_link($post->ID, 'raw'), $meta) . $view;
+                return self::line(get_the_title($post) ?: __('(no title)', 'elinweb-unused-media-finder'), get_edit_post_link($post->ID, 'raw'), $meta) . $view;
 
             case 'term':
                 $term = get_term($sid);
                 if (!$term || is_wp_error($term)) {
                     /* translators: %d: term id */
-                    return esc_html(sprintf(__('Deleted term #%d', 'elin-media-tracker'), $sid));
+                    return esc_html(sprintf(__('Deleted term #%d', 'elinweb-unused-media-finder'), $sid));
                 }
                 $tax = get_taxonomy($term->taxonomy);
-                return self::line($term->name, get_edit_term_link($term), [$tax ? $tax->labels->singular_name : $term->taxonomy, $fields]);
+                return self::line($term->name, get_edit_term_link($term), [esc_html($tax ? $tax->labels->singular_name : $term->taxonomy), $fields]);
 
             case 'user':
                 $user = get_userdata($sid);
                 if (!$user) {
                     /* translators: %d: user id */
-                    return esc_html(sprintf(__('Deleted user #%d', 'elin-media-tracker'), $sid));
+                    return esc_html(sprintf(__('Deleted user #%d', 'elinweb-unused-media-finder'), $sid));
                 }
-                return self::line($user->display_name, get_edit_user_link($sid), [__('User', 'elin-media-tracker'), $fields]);
+                return self::line($user->display_name, get_edit_user_link($sid), [esc_html__('User', 'elinweb-unused-media-finder'), $fields]);
 
             case 'comment':
                 $comment = get_comment($sid);
                 /* translators: %d: comment id */
-                $title = sprintf(__('Comment #%d', 'elin-media-tracker'), $sid);
+                $title = sprintf(__('Comment #%d', 'elinweb-unused-media-finder'), $sid);
                 return $comment
-                    ? self::line($title, get_edit_comment_link($comment), [get_the_title((int) $comment->comment_post_ID), $fields])
+                    ? self::line($title, get_edit_comment_link($comment), [esc_html(get_the_title((int) $comment->comment_post_ID)), $fields])
                     : esc_html($title);
 
             case 'option':
                 if (strpos($key, 'theme_mods_') === 0) {
-                    return self::line(__('Theme customizer', 'elin-media-tracker'), admin_url('customize.php'), ['<code>' . esc_html($key) . '</code>']);
+                    return self::line(__('Theme customizer', 'elinweb-unused-media-finder'), admin_url('customize.php'), ['<code>' . esc_html($key) . '</code>']);
                 }
                 if (strpos($key, 'widget_') === 0) {
-                    return self::line(__('Widgets', 'elin-media-tracker'), admin_url('widgets.php'), ['<code>' . esc_html($key) . '</code>']);
+                    return self::line(__('Widgets', 'elinweb-unused-media-finder'), admin_url('widgets.php'), ['<code>' . esc_html($key) . '</code>']);
                 }
-                $named = ['site_icon' => __('Site icon', 'elin-media-tracker'), 'site_logo' => __('Site logo', 'elin-media-tracker')];
-                return self::line($named[$key] ?? __('Settings', 'elin-media-tracker'), '', ['<code>' . esc_html($key) . '</code>']);
+                $named = ['site_icon' => __('Site icon', 'elinweb-unused-media-finder'), 'site_logo' => __('Site logo', 'elinweb-unused-media-finder')];
+                return self::line($named[$key] ?? __('Settings', 'elinweb-unused-media-finder'), '', ['<code>' . esc_html($key) . '</code>']);
 
             case 'file':
-                return self::line(__('Code file', 'elin-media-tracker'), '', ['<code dir="ltr">' . esc_html($key) . '</code>']);
+                return self::line(__('Code file', 'elinweb-unused-media-finder'), '', ['<code dir="ltr">' . esc_html($key) . '</code>']);
 
             case 'keep':
-                return self::line(__('Kept by you', 'elin-media-tracker'), '', [esc_html__('Marked as used outside the site.', 'elin-media-tracker')])
-                    . sprintf(' <button type="button" class="button-link" data-act="unkeep" data-id="%d">%s</button>', (int) $rows[0]['attachment_id'], esc_html__('Remove the mark', 'elin-media-tracker'));
+                return self::line(__('Kept by you', 'elinweb-unused-media-finder'), '', [esc_html__('Marked as used outside the site.', 'elinweb-unused-media-finder')])
+                    . sprintf(' <button type="button" class="button-link" data-act="unkeep" data-id="%d">%s</button>', (int) $rows[0]['attachment_id'], esc_html__('Remove the mark', 'elinweb-unused-media-finder'));
 
             case 'shared':
                 /* translators: %d: attachment id */
-                $title = get_the_title($sid) ?: sprintf(__('Attachment #%d', 'elin-media-tracker'), $sid);
-                return self::line($title, get_edit_post_link($sid, 'raw') ?: '', [esc_html__('It has the same file and is in use; deleting this attachment deletes the shared file and breaks the other one\'s image too.', 'elin-media-tracker')]);
+                $title = get_the_title($sid) ?: sprintf(__('Attachment #%d', 'elinweb-unused-media-finder'), $sid);
+                return self::line($title, get_edit_post_link($sid, 'raw') ?: '', [esc_html__('It has the same file and is in use; deleting this attachment deletes the shared file and breaks the other one\'s image too.', 'elinweb-unused-media-finder')]);
 
             default:
                 return self::plugin_row($key, $sid);
@@ -294,11 +294,22 @@ final class Admin
             [$plugin, $titles, $url] = $known[$name];
             $title = $wpdb->get_var($wpdb->prepare("SELECT title FROM `{$wpdb->prefix}$titles` WHERE id = %d", $sid)); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.DirectDatabaseQuery -- $titles is a table name from the fixed list above
             /* translators: %d: form id */
-            return self::line($title ?: sprintf(__('Form #%d', 'elin-media-tracker'), $sid), admin_url(sprintf($url, $sid)), [esc_html($plugin)]);
+            return self::line($title ?: sprintf(__('Form #%d', 'elinweb-unused-media-finder'), $sid), admin_url(sprintf($url, $sid)), [esc_html($plugin)]);
         }
         /* translators: %d: row id */
-        $row = $sid ? sprintf(__('Row #%d', 'elin-media-tracker'), $sid) : '';
-        return self::line(__('Plugin table', 'elin-media-tracker'), '', array_filter(['<code dir="ltr">' . esc_html($key) . '</code>', esc_html($row)]));
+        $row = $sid ? sprintf(__('Row #%d', 'elinweb-unused-media-finder'), $sid) : '';
+        return self::line(__('Plugin table', 'elinweb-unused-media-finder'), '', array_filter(['<code dir="ltr">' . esc_html($key) . '</code>', esc_html($row)]));
+    }
+
+    /** The markup item(), badge() and line() build (their text is already escaped); anything else is stripped on output. */
+    public static function allowed_html(): array
+    {
+        return [
+            'a' => ['href' => true, 'target' => true, 'rel' => true],
+            'strong' => [], 'br' => [], 'code' => ['dir' => true],
+            'span' => ['class' => true],
+            'button' => ['type' => true, 'class' => true, 'data-id' => true, 'data-act' => true, 'aria-haspopup' => true],
+        ];
     }
 
     /** $meta parts are already escaped HTML. */
@@ -311,15 +322,15 @@ final class Admin
     private static function field_label(string $key, string $how): string
     {
         $labels = [
-            '' => __('Content', 'elin-media-tracker'),
-            '_thumbnail_id' => __('Featured image', 'elin-media-tracker'),
-            'thumbnail_id' => __('Featured image', 'elin-media-tracker'),
-            '_product_image_gallery' => __('Product gallery', 'elin-media-tracker'),
-            '_elementor_data' => __('Elementor', 'elin-media-tracker'),
-            'description' => __('Description', 'elin-media-tracker'),
+            '' => __('Content', 'elinweb-unused-media-finder'),
+            '_thumbnail_id' => __('Featured image', 'elinweb-unused-media-finder'),
+            'thumbnail_id' => __('Featured image', 'elinweb-unused-media-finder'),
+            '_product_image_gallery' => __('Product gallery', 'elinweb-unused-media-finder'),
+            '_elementor_data' => __('Elementor', 'elinweb-unused-media-finder'),
+            'description' => __('Description', 'elinweb-unused-media-finder'),
         ];
         $label = isset($labels[$key]) ? esc_html($labels[$key]) : '<code dir="ltr">' . esc_html($key) . '</code>';
-        $how = $how === 'id' ? __('By ID', 'elin-media-tracker') : __('By URL', 'elin-media-tracker');
+        $how = $how === 'id' ? __('By ID', 'elinweb-unused-media-finder') : __('By URL', 'elinweb-unused-media-finder');
         return $label . ' <span class="mtrk-how">(' . esc_html($how) . ')</span>';
     }
 
@@ -327,12 +338,12 @@ final class Admin
     {
         $status = get_post_meta($id, Cleanup::META, true) ? 'quarantine' : Scanner::status($id, $count);
         $text = [
-            'quarantine' => __('Quarantined', 'elin-media-tracker'),
-            'none' => __('Not scanned', 'elin-media-tracker'),
+            'quarantine' => __('Quarantined', 'elinweb-unused-media-finder'),
+            'none' => __('Not scanned', 'elinweb-unused-media-finder'),
             /* translators: %s: number of places */
-            'used' => sprintf(__('Used in %s place(s)', 'elin-media-tracker'), number_format_i18n($count)),
-            'unused' => __('Unreferenced', 'elin-media-tracker'),
-            'new' => __('New, unreferenced', 'elin-media-tracker'),
+            'used' => sprintf(__('Used in %s place(s)', 'elinweb-unused-media-finder'), number_format_i18n($count)),
+            'unused' => __('Unreferenced', 'elinweb-unused-media-finder'),
+            'new' => __('New, unreferenced', 'elinweb-unused-media-finder'),
         ][$status];
         return $button
             ? sprintf('<button type="button" class="mtrk-badge mtrk-%s mtrk-open" data-id="%d" aria-haspopup="dialog">%s</button>', $status, $id, esc_html($text))
@@ -344,7 +355,7 @@ final class Admin
     public static function column(array $cols): array
     {
         if (current_user_can(Scanner::CAP)) {
-            $cols['mtrk'] = __('Usage', 'elin-media-tracker');
+            $cols['mtrk'] = __('Usage', 'elinweb-unused-media-finder');
         }
         return $cols;
     }
@@ -359,7 +370,7 @@ final class Admin
             global $wp_query;
             $counts = Scanner::counts(wp_list_pluck($wp_query->posts ?? [], 'ID'));
         }
-        echo self::badge($id, $counts[$id] ?? 0); // phpcs:ignore WordPress.Security.EscapeOutput
+        echo wp_kses(self::badge($id, $counts[$id] ?? 0), self::allowed_html());
     }
 
     public static function filter_select($post_type): void
@@ -369,12 +380,12 @@ final class Admin
         }
         $current = sanitize_key(wp_unslash($_GET['mtrk_usage'] ?? ''));
         $options = [
-            '' => __('Usage status: all', 'elin-media-tracker'),
-            'used' => __('Used', 'elin-media-tracker'),
-            'unused' => __('Unreferenced', 'elin-media-tracker'),
-            'new' => __('New, unreferenced', 'elin-media-tracker'),
+            '' => __('Usage status: all', 'elinweb-unused-media-finder'),
+            'used' => __('Used', 'elinweb-unused-media-finder'),
+            'unused' => __('Unreferenced', 'elinweb-unused-media-finder'),
+            'new' => __('New, unreferenced', 'elinweb-unused-media-finder'),
         ];
-        echo '<label for="mtrk-usage" class="screen-reader-text">' . esc_html__('Usage status', 'elin-media-tracker') . '</label><select name="mtrk_usage" id="mtrk-usage">';
+        echo '<label for="mtrk-usage" class="screen-reader-text">' . esc_html__('Usage status', 'elinweb-unused-media-finder') . '</label><select name="mtrk_usage" id="mtrk-usage">';
         foreach ($options as $value => $label) {
             printf('<option value="%s"%s>%s</option>', esc_attr($value), selected($current, $value, false), esc_html($label));
         }
@@ -423,7 +434,7 @@ final class Admin
     {
         if (current_user_can(Scanner::CAP)) {
             $fields['mtrk'] = [
-                'label' => __('Usage', 'elin-media-tracker'),
+                'label' => __('Usage', 'elinweb-unused-media-finder'),
                 'input' => 'html',
                 'html' => self::badge($post->ID, Scanner::counts([$post->ID])[$post->ID] ?? 0),
             ];

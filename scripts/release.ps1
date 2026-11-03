@@ -1,5 +1,5 @@
 <#
-  Builds dist/elin-media-tracker-<version>.zip from the committed HEAD (git archive, so .gitattributes decides
+  Builds dist/elinweb-unused-media-finder-<version>.zip from the committed HEAD (git archive, so .gitattributes decides
   what stays out: tests, scripts) and, with -Publish, tags the version and creates the GitHub release.
 
     pwsh scripts/release.ps1             # zip only
@@ -12,7 +12,7 @@ param([switch]$Publish, [string]$Notes = '')
 
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot -Parent)
-$slug = 'elin-media-tracker'
+$slug = 'elinweb-unused-media-finder'
 
 function Fail($msg) { Write-Error $msg; exit 1 }
 function Invoke-Git { & git @args; if ($LASTEXITCODE) { Fail "git $($args -join ' ') failed" } }
@@ -32,7 +32,7 @@ Invoke-Git archive --format=zip --prefix="$slug/" -o $zip HEAD
 
 if (-not $Publish) { return }
 
-if (-not $Notes) { $Notes = "Elin Media Tracker $version" }
+if (-not $Notes) { $Notes = "Elinweb Unused Media Finder $version" }
 Invoke-Git tag -a "v$version" -m "v$version"
 Invoke-Git push origin "v$version"
 & gh release create "v$version" $zip --title "v$version" --notes $Notes

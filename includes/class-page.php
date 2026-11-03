@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaTracker;
+namespace Elinweb\UnusedMediaFinder;
 
 defined('ABSPATH') || exit;
 
@@ -25,7 +25,7 @@ final class Page
 
     public static function url(string $tab, array $args = []): string
     {
-        return add_query_arg(['page' => 'elin-media-tracker', 'tab' => $tab] + $args, admin_url('upload.php'));
+        return add_query_arg(['page' => 'elinweb-unused-media-finder', 'tab' => $tab] + $args, admin_url('upload.php'));
     }
 
     public static function suspect_text(): string
@@ -33,7 +33,7 @@ final class Page
         $ids = (array) (Scanner::last()['suspect'] ?? []);
         return sprintf(
             /* translators: 1: number of images, 2: attachment ids */
-            __('This scan cannot be trusted: %1$s featured image(s) (such as %2$s) that are certainly in use came back unreferenced. Quarantine and delete are disabled. Run the scan again; if it repeats, report it.', 'elin-media-tracker'),
+            __('This scan cannot be trusted: %1$s featured image(s) (such as %2$s) that are certainly in use came back unreferenced. Quarantine and delete are disabled. Run the scan again; if it repeats, report it.', 'elinweb-unused-media-finder'),
             number_format_i18n(count($ids)),
             '#' . implode(wp_get_list_item_separator() . '#', array_slice($ids, 0, 5))
         );
@@ -41,8 +41,8 @@ final class Page
 
     public static function scope(array $last): string
     {
-        $scope = $last['code'] ? __('Database + source code', 'elin-media-tracker') : __('Database only', 'elin-media-tracker');
-        return $last['tables'] ? $scope . __(', with plugin tables', 'elin-media-tracker') : $scope;
+        $scope = $last['code'] ? __('Database + source code', 'elinweb-unused-media-finder') : __('Database only', 'elinweb-unused-media-finder');
+        return $last['tables'] ? $scope . __(', with plugin tables', 'elinweb-unused-media-finder') : $scope;
     }
 
     public static function render(): void
@@ -50,12 +50,12 @@ final class Page
         $last = Scanner::last();
         $quarantined = count(Cleanup::quarantined());
         $tabs = [
-            'unused' => __('Unreferenced', 'elin-media-tracker'),
-            'duplicates' => __('Duplicates', 'elin-media-tracker'),
-            'quarantine' => $quarantined ? sprintf('%s (%s)', __('Quarantine', 'elin-media-tracker'), number_format_i18n($quarantined)) : __('Quarantine', 'elin-media-tracker'),
-            'orphans' => __('Extra files', 'elin-media-tracker'),
-            'sizes' => __('Unregistered sizes', 'elin-media-tracker'),
-            'scan' => __('Scan', 'elin-media-tracker'),
+            'unused' => __('Unreferenced', 'elinweb-unused-media-finder'),
+            'duplicates' => __('Duplicates', 'elinweb-unused-media-finder'),
+            'quarantine' => $quarantined ? sprintf('%s (%s)', __('Quarantine', 'elinweb-unused-media-finder'), number_format_i18n($quarantined)) : __('Quarantine', 'elinweb-unused-media-finder'),
+            'orphans' => __('Extra files', 'elinweb-unused-media-finder'),
+            'sizes' => __('Unregistered sizes', 'elinweb-unused-media-finder'),
+            'scan' => __('Scan', 'elinweb-unused-media-finder'),
         ];
         $tab = sanitize_key(wp_unslash($_GET['tab'] ?? ''));
         if (!isset($tabs[$tab])) {
@@ -63,8 +63,8 @@ final class Page
         }
         ?>
         <div class="wrap mtrk-page">
-            <h1><?php esc_html_e('Media Tracker', 'elin-media-tracker'); ?></h1>
-            <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e('Media Tracker sections', 'elin-media-tracker'); ?>">
+            <h1><?php esc_html_e('Media Tracker', 'elinweb-unused-media-finder'); ?></h1>
+            <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e('Media Tracker sections', 'elinweb-unused-media-finder'); ?>">
                 <?php foreach ($tabs as $key => $label) : ?>
                     <a href="<?php echo esc_url(self::url($key)); ?>" class="nav-tab<?php echo $key === $tab ? ' nav-tab-active' : ''; ?>"<?php echo $key === $tab ? ' aria-current="page"' : ''; ?>><?php echo esc_html($label); ?></a>
                 <?php endforeach; ?>
@@ -77,9 +77,9 @@ final class Page
             if (!$last && $tab !== 'scan' && $tab !== 'quarantine') {
                 printf(
                     '<p>%s <a href="%s">%s</a></p>',
-                    esc_html__('This section needs the result of a full scan.', 'elin-media-tracker'),
+                    esc_html__('This section needs the result of a full scan.', 'elinweb-unused-media-finder'),
                     esc_url(self::url('scan')),
-                    esc_html__('Run a scan', 'elin-media-tracker')
+                    esc_html__('Run a scan', 'elinweb-unused-media-finder')
                 );
             } else {
                 self::{"tab_$tab"}($last);
@@ -97,15 +97,15 @@ final class Page
         $bytes = absint($_GET['b'] ?? 0);
         $messages = [
             /* translators: %s: number of media items */
-            'quarantine' => __('%s media moved to quarantine.', 'elin-media-tracker'),
+            'quarantine' => __('%s media moved to quarantine.', 'elinweb-unused-media-finder'),
             /* translators: %s: number of media items */
-            'restore' => __('%s media restored to their original place.', 'elin-media-tracker'),
+            'restore' => __('%s media restored to their original place.', 'elinweb-unused-media-finder'),
             /* translators: %s: number of media items */
-            'delete' => __('%s media deleted permanently.', 'elin-media-tracker'),
+            'delete' => __('%s media deleted permanently.', 'elinweb-unused-media-finder'),
             /* translators: %s: number of media items */
-            'keep' => __('%s media will be kept and left this list.', 'elin-media-tracker'),
+            'keep' => __('%s media will be kept and left this list.', 'elinweb-unused-media-finder'),
             /* translators: %s: number of media items */
-            'unkeep' => __('The "keep" mark was removed from %s media.', 'elin-media-tracker'),
+            'unkeep' => __('The "keep" mark was removed from %s media.', 'elinweb-unused-media-finder'),
         ];
         if (!isset($messages[$act])) {
             return;
@@ -113,7 +113,7 @@ final class Page
         $text = sprintf($messages[$act], number_format_i18n($n));
         if ($bytes) {
             /* translators: %s: size, e.g. 12 MB */
-            $text .= ' ' . sprintf(__('Space freed: %s', 'elin-media-tracker'), size_format($bytes));
+            $text .= ' ' . sprintf(__('Space freed: %s', 'elinweb-unused-media-finder'), size_format($bytes));
         }
         printf('<div class="notice notice-success is-dismissible"><p>%s</p></div>', esc_html($text));
     }
@@ -132,45 +132,45 @@ final class Page
             <?php
             printf(
                 /* translators: 1: number of media items, 2: size */
-                esc_html__('%1$s unreferenced media, %2$s in total.', 'elin-media-tracker'),
+                esc_html__('%1$s unreferenced media, %2$s in total.', 'elinweb-unused-media-finder'),
                 '<strong>' . esc_html(number_format_i18n($list['total'])) . '</strong>',
                 '<strong>' . esc_html(size_format($list['bytes']) ?: '0 B') . '</strong>'
             );
             ?>
         </p>
         <?php self::scope_notice($last); ?>
-        <p class="description"><?php esc_html_e('Use outside the site (newsletters, social media, other sites) cannot be detected. The safe way: quarantine first, wait a few weeks, and only delete what received no requests in that time.', 'elin-media-tracker'); ?></p>
+        <p class="description"><?php esc_html_e('Use outside the site (newsletters, social media, other sites) cannot be detected. The safe way: quarantine first, wait a few weeks, and only delete what received no requests in that time.', 'elinweb-unused-media-finder'); ?></p>
 
         <form method="get" class="mtrk-filters">
-            <input type="hidden" name="page" value="elin-media-tracker">
+            <input type="hidden" name="page" value="elinweb-unused-media-finder">
             <input type="hidden" name="tab" value="unused">
-            <label for="mtrk-type" class="screen-reader-text"><?php esc_html_e('Type', 'elin-media-tracker'); ?></label>
+            <label for="mtrk-type" class="screen-reader-text"><?php esc_html_e('Type', 'elinweb-unused-media-finder'); ?></label>
             <select name="type" id="mtrk-type">
-                <?php foreach (['' => __('All types', 'elin-media-tracker'), 'image' => __('Image', 'elin-media-tracker'), 'video' => __('Video', 'elin-media-tracker'), 'audio' => __('Audio', 'elin-media-tracker'), 'document' => __('Document', 'elin-media-tracker')] as $value => $label) : ?>
+                <?php foreach (['' => __('All types', 'elinweb-unused-media-finder'), 'image' => __('Image', 'elinweb-unused-media-finder'), 'video' => __('Video', 'elinweb-unused-media-finder'), 'audio' => __('Audio', 'elinweb-unused-media-finder'), 'document' => __('Document', 'elinweb-unused-media-finder')] as $value => $label) : ?>
                     <option value="<?php echo esc_attr($value); ?>" <?php selected($type, $value); ?>><?php echo esc_html($label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <label for="mtrk-order" class="screen-reader-text"><?php esc_html_e('Order', 'elin-media-tracker'); ?></label>
+            <label for="mtrk-order" class="screen-reader-text"><?php esc_html_e('Order', 'elinweb-unused-media-finder'); ?></label>
             <select name="order" id="mtrk-order">
-                <?php foreach (['largest' => __('Largest first', 'elin-media-tracker'), 'newest' => __('Newest first', 'elin-media-tracker'), 'oldest' => __('Oldest first', 'elin-media-tracker')] as $value => $label) : ?>
+                <?php foreach (['largest' => __('Largest first', 'elinweb-unused-media-finder'), 'newest' => __('Newest first', 'elinweb-unused-media-finder'), 'oldest' => __('Oldest first', 'elinweb-unused-media-finder')] as $value => $label) : ?>
                     <option value="<?php echo esc_attr($value); ?>" <?php selected($order, $value); ?>><?php echo esc_html($label); ?></option>
                 <?php endforeach; ?>
             </select>
             <?php self::screen_fields($per, $view); ?>
-            <button class="button"><?php esc_html_e('Apply', 'elin-media-tracker'); ?></button>
+            <button class="button"><?php esc_html_e('Apply', 'elinweb-unused-media-finder'); ?></button>
         </form>
 
         <?php if (!$list['items']) : ?>
-            <p><?php esc_html_e('No unreferenced media found.', 'elin-media-tracker'); ?></p>
+            <p><?php esc_html_e('No unreferenced media found.', 'elinweb-unused-media-finder'); ?></p>
             <?php return; ?>
         <?php endif; ?>
 
         <div class="mtrk-bulk" data-scope="unused">
-            <label><input type="checkbox" class="mtrk-all"> <?php esc_html_e('Select all on this page', 'elin-media-tracker'); ?></label>
+            <label><input type="checkbox" class="mtrk-all"> <?php esc_html_e('Select all on this page', 'elinweb-unused-media-finder'); ?></label>
             <span class="mtrk-count" aria-live="polite"></span>
-            <button type="button" class="button button-primary" data-act="quarantine" disabled><?php esc_html_e('Quarantine', 'elin-media-tracker'); ?></button>
-            <button type="button" class="button" data-act="keep" disabled><?php esc_html_e('Keep', 'elin-media-tracker'); ?></button>
-            <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('Delete permanently', 'elin-media-tracker'); ?></button>
+            <button type="button" class="button button-primary" data-act="quarantine" disabled><?php esc_html_e('Quarantine', 'elinweb-unused-media-finder'); ?></button>
+            <button type="button" class="button" data-act="keep" disabled><?php esc_html_e('Keep', 'elinweb-unused-media-finder'); ?></button>
+            <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('Delete permanently', 'elinweb-unused-media-finder'); ?></button>
         </div>
         <?php if ($view === 'list') : ?>
             <?php self::media_table($list['items']); ?>
@@ -179,8 +179,8 @@ final class Page
                 <?php foreach ($list['items'] as $id => $bytes) : ?>
                     <?php $file = wp_basename((string) get_attached_file($id)); ?>
                     <li class="mtrk-item">
-                        <input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elin-media-tracker'), $file)); ?>">
-                        <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Preview %s', 'elin-media-tracker'), $file)); ?>" aria-haspopup="dialog">
+                        <input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elinweb-unused-media-finder'), $file)); ?>">
+                        <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Preview %s', 'elinweb-unused-media-finder'), $file)); ?>" aria-haspopup="dialog">
                             <?php echo wp_get_attachment_image($id, 'medium', true, ['alt' => '', 'loading' => 'lazy']); ?>
                         </button>
                         <span class="mtrk-item-name" dir="auto"><?php echo esc_html($file); ?></span>
@@ -222,16 +222,16 @@ final class Page
     {
         ?>
         <?php if ($view !== '') : ?>
-            <label for="mtrk-view" class="screen-reader-text"><?php esc_html_e('View mode', 'elin-media-tracker'); ?></label>
+            <label for="mtrk-view" class="screen-reader-text"><?php esc_html_e('View mode', 'elinweb-unused-media-finder'); ?></label>
             <select name="view" id="mtrk-view">
-                <option value="grid" <?php selected($view, 'grid'); ?>><?php esc_html_e('Card view', 'elin-media-tracker'); ?></option>
-                <option value="list" <?php selected($view, 'list'); ?>><?php esc_html_e('List view', 'elin-media-tracker'); ?></option>
+                <option value="grid" <?php selected($view, 'grid'); ?>><?php esc_html_e('Card view', 'elinweb-unused-media-finder'); ?></option>
+                <option value="list" <?php selected($view, 'list'); ?>><?php esc_html_e('List view', 'elinweb-unused-media-finder'); ?></option>
             </select>
         <?php endif; ?>
-        <label for="mtrk-per-page" class="screen-reader-text"><?php esc_html_e('Per page', 'elin-media-tracker'); ?></label>
+        <label for="mtrk-per-page" class="screen-reader-text"><?php esc_html_e('Per page', 'elinweb-unused-media-finder'); ?></label>
         <select name="per_page" id="mtrk-per-page">
             <?php foreach (self::PER_PAGE_CHOICES as $n) : ?>
-                <option value="<?php echo (int) $n; ?>" <?php selected($per, $n); ?>><?php echo esc_html(sprintf(/* translators: %s: number */ __('%s per page', 'elin-media-tracker'), number_format_i18n($n))); ?></option>
+                <option value="<?php echo (int) $n; ?>" <?php selected($per, $n); ?>><?php echo esc_html(sprintf(/* translators: %s: number */ __('%s per page', 'elinweb-unused-media-finder'), number_format_i18n($n))); ?></option>
             <?php endforeach; ?>
         </select>
         <?php
@@ -241,12 +241,12 @@ final class Page
     {
         $pages = (int) ceil($total / max(1, $per));
         if ($pages > 1) {
-            echo '<div class="tablenav"><div class="tablenav-pages">' . paginate_links([ // phpcs:ignore WordPress.Security.EscapeOutput
+            echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post((string) paginate_links([
                 'base' => add_query_arg('paged', '%#%', remove_query_arg(['done', 'n', 'b'])),
                 'format' => '',
                 'current' => $paged,
                 'total' => $pages,
-            ]) . '</div></div>';
+            ])) . '</div></div>';
         }
     }
 
@@ -258,13 +258,13 @@ final class Page
         <table class="widefat striped mtrk-mtable">
             <thead><tr>
                 <td class="check-column"></td>
-                <th scope="col" class="mtrk-col-thumb"><span class="screen-reader-text"><?php esc_html_e('Preview', 'elin-media-tracker'); ?></span></th>
-                <th scope="col"><?php esc_html_e('File', 'elin-media-tracker'); ?></th>
-                <?php if ($status) : ?><th scope="col"><?php esc_html_e('Status', 'elin-media-tracker'); ?></th><?php endif; ?>
-                <th scope="col"><?php esc_html_e('Type', 'elin-media-tracker'); ?></th>
-                <th scope="col"><?php esc_html_e('Size', 'elin-media-tracker'); ?></th>
-                <th scope="col"><?php esc_html_e('Uploaded', 'elin-media-tracker'); ?></th>
-                <th scope="col"><?php esc_html_e('Uploaded to', 'elin-media-tracker'); ?></th>
+                <th scope="col" class="mtrk-col-thumb"><span class="screen-reader-text"><?php esc_html_e('Preview', 'elinweb-unused-media-finder'); ?></span></th>
+                <th scope="col"><?php esc_html_e('File', 'elinweb-unused-media-finder'); ?></th>
+                <?php if ($status) : ?><th scope="col"><?php esc_html_e('Status', 'elinweb-unused-media-finder'); ?></th><?php endif; ?>
+                <th scope="col"><?php esc_html_e('Type', 'elinweb-unused-media-finder'); ?></th>
+                <th scope="col"><?php esc_html_e('Size', 'elinweb-unused-media-finder'); ?></th>
+                <th scope="col"><?php esc_html_e('Uploaded', 'elinweb-unused-media-finder'); ?></th>
+                <th scope="col"><?php esc_html_e('Uploaded to', 'elinweb-unused-media-finder'); ?></th>
             </tr></thead>
             <tbody>
             <?php foreach ($items as $id => $bytes) : ?>
@@ -277,14 +277,14 @@ final class Page
                 <tr>
                     <th scope="row" class="check-column">
                         <?php if ($can_pick) : ?>
-                            <input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elin-media-tracker'), $file)); ?>">
+                            <input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elinweb-unused-media-finder'), $file)); ?>">
                         <?php endif; ?>
                     </th>
                     <td class="mtrk-col-thumb">
-                        <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-haspopup="dialog" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Preview %s', 'elin-media-tracker'), $file)); ?>"><?php echo wp_get_attachment_image($id, [48, 48], true, ['alt' => '', 'loading' => 'lazy']); ?></button>
+                        <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-haspopup="dialog" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Preview %s', 'elinweb-unused-media-finder'), $file)); ?>"><?php echo wp_get_attachment_image($id, [48, 48], true, ['alt' => '', 'loading' => 'lazy']); ?></button>
                     </td>
                     <td><strong dir="auto"><?php echo esc_html($file); ?></strong><br><bdi class="mtrk-from" dir="ltr"><?php echo esc_html(dirname($path) === '.' ? '/' : dirname($path)); ?></bdi></td>
-                    <?php if ($status) : ?><td><?php echo Admin::badge($id, $counts[$id] ?? 0); // phpcs:ignore WordPress.Security.EscapeOutput ?></td><?php endif; ?>
+                    <?php if ($status) : ?><td><?php echo wp_kses(Admin::badge($id, $counts[$id] ?? 0), Admin::allowed_html()); ?></td><?php endif; ?>
                     <td><?php echo esc_html((string) get_post_mime_type($id)); ?></td>
                     <td><?php echo esc_html(size_format($bytes) ?: '—'); ?></td>
                     <td><?php echo esc_html(get_the_date('', $id)); ?></td>
@@ -302,17 +302,17 @@ final class Page
     {
         $checked = (int) get_option('mtrk_dups_at');
         ?>
-        <p class="description"><?php esc_html_e('Files with exactly identical content that were uploaded more than once. Sizes are compared first, and only same-size files are checked by content hash (MD5). Attachments that share one file from the start (such as media translations) are not counted as duplicates. Only unreferenced copies can be selected; if every copy is in use, point the references at one copy first.', 'elin-media-tracker'); ?></p>
+        <p class="description"><?php esc_html_e('Files with exactly identical content that were uploaded more than once. Sizes are compared first, and only same-size files are checked by content hash (MD5). Attachments that share one file from the start (such as media translations) are not counted as duplicates. Only unreferenced copies can be selected; if every copy is in use, point the references at one copy first.', 'elinweb-unused-media-finder'); ?></p>
         <div id="mtrk-dups">
             <p>
-                <button type="button" class="button<?php echo $checked ? '' : ' button-primary'; ?> mtrk-dups-check"><?php echo $checked ? esc_html__('Check again', 'elin-media-tracker') : esc_html__('Check for duplicates', 'elin-media-tracker'); ?></button>
+                <button type="button" class="button<?php echo $checked ? '' : ' button-primary'; ?> mtrk-dups-check"><?php echo $checked ? esc_html__('Check again', 'elinweb-unused-media-finder') : esc_html__('Check for duplicates', 'elinweb-unused-media-finder'); ?></button>
                 <?php if ($checked) : ?>
-                    <span class="mtrk-note"><?php echo esc_html(sprintf(/* translators: %s: date */ __('Last checked: %s', 'elin-media-tracker'), wp_date(get_option('date_format') . ' H:i', $checked))); ?></span>
+                    <span class="mtrk-note"><?php echo esc_html(sprintf(/* translators: %s: date */ __('Last checked: %s', 'elinweb-unused-media-finder'), wp_date(get_option('date_format') . ' H:i', $checked))); ?></span>
                 <?php endif; ?>
             </p>
             <p>
-                <label><input type="checkbox" class="mtrk-dups-extras" <?php checked((bool) get_option(Duplicates::WITH_EXTRAS)); ?>> <?php esc_html_e('Also compare extra files (files on disk that no media item owns)', 'elin-media-tracker'); ?></label><br>
-                <span class="description"><?php esc_html_e('Finds stray copies of library files (FTP uploads, imports). Needs a recent full scan; extra files whose URL is used somewhere cannot be selected.', 'elin-media-tracker'); ?></span>
+                <label><input type="checkbox" class="mtrk-dups-extras" <?php checked((bool) get_option(Duplicates::WITH_EXTRAS)); ?>> <?php esc_html_e('Also compare extra files (files on disk that no media item owns)', 'elinweb-unused-media-finder'); ?></label><br>
+                <span class="description"><?php esc_html_e('Finds stray copies of library files (FTP uploads, imports). Needs a recent full scan; extra files whose URL is used somewhere cannot be selected.', 'elinweb-unused-media-finder'); ?></span>
             </p>
             <p class="mtrk-dups-status" aria-live="polite"></p>
         </div>
@@ -328,26 +328,26 @@ final class Page
             <?php
             printf(
                 /* translators: 1: number of groups, 2: size */
-                esc_html__('%1$s duplicate group(s); the extra copies take %2$s in total.', 'elin-media-tracker'),
+                esc_html__('%1$s duplicate group(s); the extra copies take %2$s in total.', 'elinweb-unused-media-finder'),
                 '<strong>' . esc_html(number_format_i18n($list['total'])) . '</strong>',
                 '<strong>' . esc_html(size_format($list['bytes']) ?: '0 B') . '</strong>'
             );
             ?>
         </p>
         <?php if (!$list['groups']) : ?>
-            <p><?php esc_html_e('No duplicate files found.', 'elin-media-tracker'); ?></p>
+            <p><?php esc_html_e('No duplicate files found.', 'elinweb-unused-media-finder'); ?></p>
             <?php return; ?>
         <?php endif; ?>
         <form method="get" class="mtrk-filters">
-            <input type="hidden" name="page" value="elin-media-tracker">
+            <input type="hidden" name="page" value="elinweb-unused-media-finder">
             <input type="hidden" name="tab" value="duplicates">
             <?php self::screen_fields($per, ''); ?>
-            <button class="button"><?php esc_html_e('Apply', 'elin-media-tracker'); ?></button>
+            <button class="button"><?php esc_html_e('Apply', 'elinweb-unused-media-finder'); ?></button>
         </form>
         <div class="mtrk-bulk" data-scope="duplicates">
             <span class="mtrk-count" aria-live="polite"></span>
-            <button type="button" class="button button-primary" data-act="quarantine" disabled><?php esc_html_e('Quarantine', 'elin-media-tracker'); ?></button>
-            <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('Delete permanently', 'elin-media-tracker'); ?></button>
+            <button type="button" class="button button-primary" data-act="quarantine" disabled><?php esc_html_e('Quarantine', 'elinweb-unused-media-finder'); ?></button>
+            <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('Delete permanently', 'elinweb-unused-media-finder'); ?></button>
         </div>
         <?php
         $ids = array_merge([], ...array_column($list['groups'], 'ids'));
@@ -358,9 +358,9 @@ final class Page
             $free_files = array_filter($group['paths'], fn($f) => !$f['kept']);
             ?>
             <section class="mtrk-dup">
-                <h3><?php echo esc_html(sprintf(/* translators: 1: number of copies, 2: size of one copy */ __('%1$s copies, %2$s each', 'elin-media-tracker'), number_format_i18n($group['copies']), size_format($group['size']) ?: '—')); ?></h3>
+                <h3><?php echo esc_html(sprintf(/* translators: 1: number of copies, 2: size of one copy */ __('%1$s copies, %2$s each', 'elinweb-unused-media-finder'), number_format_i18n($group['copies']), size_format($group['size']) ?: '—')); ?></h3>
                 <?php if (!$pickable && !$free_files) : ?>
-                    <p class="mtrk-note"><?php esc_html_e('Every copy is in use; there is nothing safe to delete.', 'elin-media-tracker'); ?></p>
+                    <p class="mtrk-note"><?php esc_html_e('Every copy is in use; there is nothing safe to delete.', 'elinweb-unused-media-finder'); ?></p>
                 <?php endif; ?>
                 <?php if ($group['ids']) : ?>
                     <?php self::media_table(array_fill_keys($group['ids'], $group['size']), true, $pickable); ?>
@@ -385,14 +385,14 @@ final class Page
                 <tr>
                     <th scope="row" class="check-column">
                         <?php if (!$f['kept']) : ?>
-                            <input type="checkbox" class="mtrk-xpick" value="<?php echo esc_attr($path); ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elin-media-tracker'), wp_basename($path))); ?>">
+                            <input type="checkbox" class="mtrk-xpick" value="<?php echo esc_attr($path); ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elinweb-unused-media-finder'), wp_basename($path))); ?>">
                         <?php endif; ?>
                     </th>
                     <td>
                         <code dir="ltr"><?php echo esc_html("$root/$path"); ?></code><br>
-                        <button type="button" class="button-link mtrk-xpreview" data-path="<?php echo esc_attr($path); ?>" data-bytes="<?php echo (int) $f['bytes']; ?>" aria-haspopup="dialog"><?php esc_html_e('Preview', 'elin-media-tracker'); ?></button>
+                        <button type="button" class="button-link mtrk-xpreview" data-path="<?php echo esc_attr($path); ?>" data-bytes="<?php echo (int) $f['bytes']; ?>" aria-haspopup="dialog"><?php esc_html_e('Preview', 'elinweb-unused-media-finder'); ?></button>
                     </td>
-                    <td><?php echo $f['kept'] ? esc_html__('Its URL appears somewhere; it is kept', 'elin-media-tracker') : esc_html__('No media item owns this file', 'elin-media-tracker'); ?></td>
+                    <td><?php echo $f['kept'] ? esc_html__('Its URL appears somewhere; it is kept', 'elinweb-unused-media-finder') : esc_html__('No media item owns this file', 'elinweb-unused-media-finder'); ?></td>
                     <td><?php echo esc_html(size_format($f['bytes']) ?: '—'); ?></td>
                 </tr>
             <?php endforeach; ?>
@@ -407,32 +407,32 @@ final class Page
     {
         $rows = Cleanup::quarantined();
         $kinds = [
-            'site' => __('Pages of this site', 'elin-media-tracker'),
-            'google' => __('Google', 'elin-media-tracker'),
-            'external' => __('Other sites', 'elin-media-tracker'),
-            'bot' => __('Bots', 'elin-media-tracker'),
-            'direct' => __('Direct', 'elin-media-tracker'),
+            'site' => __('Pages of this site', 'elinweb-unused-media-finder'),
+            'google' => __('Google', 'elinweb-unused-media-finder'),
+            'external' => __('Other sites', 'elinweb-unused-media-finder'),
+            'bot' => __('Bots', 'elinweb-unused-media-finder'),
+            'direct' => __('Direct', 'elinweb-unused-media-finder'),
         ];
         ?>
-        <p class="description"><?php esc_html_e('Quarantined files were moved out of their original path. If anyone asks for them, the plugin serves the file and logs the request. Anything that received no requests for a few weeks is safe to delete. A request from "Pages of this site" means something still links to the file that the scan did not find: restore it.', 'elin-media-tracker'); ?></p>
-        <p class="mtrk-probe notice inline" data-url="<?php echo esc_url(Cleanup::probe_url()); ?>" aria-live="polite"><?php esc_html_e('Checking that requests for quarantined files reach WordPress…', 'elin-media-tracker'); ?></p>
+        <p class="description"><?php esc_html_e('Quarantined files were moved out of their original path. If anyone asks for them, the plugin serves the file and logs the request. Anything that received no requests for a few weeks is safe to delete. A request from "Pages of this site" means something still links to the file that the scan did not find: restore it.', 'elinweb-unused-media-finder'); ?></p>
+        <p class="mtrk-probe notice inline" data-url="<?php echo esc_url(Cleanup::probe_url()); ?>" aria-live="polite"><?php esc_html_e('Checking that requests for quarantined files reach WordPress…', 'elinweb-unused-media-finder'); ?></p>
         <?php if (!$rows) : ?>
-            <p><?php esc_html_e('Nothing is quarantined.', 'elin-media-tracker'); ?></p>
+            <p><?php esc_html_e('Nothing is quarantined.', 'elinweb-unused-media-finder'); ?></p>
             <?php return; ?>
         <?php endif; ?>
         <div class="mtrk-bulk" data-scope="quarantine">
-            <label><input type="checkbox" class="mtrk-all"> <?php esc_html_e('Select all', 'elin-media-tracker'); ?></label>
+            <label><input type="checkbox" class="mtrk-all"> <?php esc_html_e('Select all', 'elinweb-unused-media-finder'); ?></label>
             <span class="mtrk-count" aria-live="polite"></span>
-            <button type="button" class="button button-primary" data-act="restore" disabled><?php esc_html_e('Restore', 'elin-media-tracker'); ?></button>
-            <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('Delete permanently', 'elin-media-tracker'); ?></button>
+            <button type="button" class="button button-primary" data-act="restore" disabled><?php esc_html_e('Restore', 'elinweb-unused-media-finder'); ?></button>
+            <button type="button" class="button mtrk-danger" data-act="delete" disabled><?php esc_html_e('Delete permanently', 'elinweb-unused-media-finder'); ?></button>
         </div>
         <table class="widefat striped mtrk-qtable">
             <thead><tr>
                 <td class="check-column"></td>
-                <th scope="col"><?php esc_html_e('Media', 'elin-media-tracker'); ?></th>
-                <th scope="col"><?php esc_html_e('Quarantined since', 'elin-media-tracker'); ?></th>
-                <th scope="col"><?php esc_html_e('Requests', 'elin-media-tracker'); ?></th>
-                <th scope="col"><?php esc_html_e('Last request', 'elin-media-tracker'); ?></th>
+                <th scope="col"><?php esc_html_e('Media', 'elinweb-unused-media-finder'); ?></th>
+                <th scope="col"><?php esc_html_e('Quarantined since', 'elinweb-unused-media-finder'); ?></th>
+                <th scope="col"><?php esc_html_e('Requests', 'elinweb-unused-media-finder'); ?></th>
+                <th scope="col"><?php esc_html_e('Last request', 'elinweb-unused-media-finder'); ?></th>
             </tr></thead>
             <tbody>
             <?php foreach ($rows as $id => $q) : ?>
@@ -441,15 +441,15 @@ final class Page
                 $file = wp_basename((string) get_attached_file($id));
                 ?>
                 <tr class="<?php echo !empty($hits['site']) ? 'mtrk-warn' : ''; ?>">
-                    <th scope="row" class="check-column"><input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elin-media-tracker'), $file)); ?>"></th>
+                    <th scope="row" class="check-column"><input type="checkbox" class="mtrk-pick" value="<?php echo (int) $id; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Select %s', 'elinweb-unused-media-finder'), $file)); ?>"></th>
                     <td class="mtrk-qmedia">
-                        <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-haspopup="dialog" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Preview %s', 'elin-media-tracker'), $file)); ?>"><?php echo wp_get_attachment_image($id, [60, 60], true, ['alt' => '']); ?></button>
+                        <button type="button" class="mtrk-thumb mtrk-preview" data-id="<?php echo (int) $id; ?>" aria-haspopup="dialog" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: file name */ __('Preview %s', 'elinweb-unused-media-finder'), $file)); ?>"><?php echo wp_get_attachment_image($id, [60, 60], true, ['alt' => '']); ?></button>
                         <span dir="auto"><?php echo esc_html($file); ?></span>
                     </td>
-                    <td><?php echo esc_html(sprintf(/* translators: %s: time span */ __('%s ago', 'elin-media-tracker'), human_time_diff((int) $q['time']))); ?></td>
+                    <td><?php echo esc_html(sprintf(/* translators: %s: time span */ __('%s ago', 'elinweb-unused-media-finder'), human_time_diff((int) $q['time']))); ?></td>
                     <td>
                         <?php if (!$hits) : ?>
-                            <?php esc_html_e('None', 'elin-media-tracker'); ?>
+                            <?php esc_html_e('None', 'elinweb-unused-media-finder'); ?>
                         <?php else : ?>
                             <?php foreach ($kinds as $kind => $label) : ?>
                                 <?php if (!empty($hits[$kind])) : ?>
@@ -460,7 +460,7 @@ final class Page
                     </td>
                     <td>
                         <?php if ($q['last']) : ?>
-                            <?php echo esc_html(sprintf(/* translators: %s: time span */ __('%s ago', 'elin-media-tracker'), human_time_diff((int) $q['last']))); ?>
+                            <?php echo esc_html(sprintf(/* translators: %s: time span */ __('%s ago', 'elinweb-unused-media-finder'), human_time_diff((int) $q['last']))); ?>
                             <?php if ($q['from']) : ?><br><bdi class="mtrk-from" dir="ltr"><?php echo esc_html(wp_parse_url($q['from'], PHP_URL_HOST) . wp_parse_url($q['from'], PHP_URL_PATH)); ?></bdi><?php endif; ?>
                         <?php else : ?>—<?php endif; ?>
                     </td>
@@ -476,28 +476,28 @@ final class Page
     private static function tab_orphans(array $last): void
     {
         ?>
-        <p class="description"><?php esc_html_e('Files on disk that no media owns: old sizes of an image that are no longer in its metadata (for example after regenerating thumbnails) and files that were never added to the library (FTP uploads, imports). Only folders that contain media are read; plugin folders (such as form uploads) are not touched.', 'elin-media-tracker'); ?></p>
+        <p class="description"><?php esc_html_e('Files on disk that no media owns: old sizes of an image that are no longer in its metadata (for example after regenerating thumbnails) and files that were never added to the library (FTP uploads, imports). Only folders that contain media are read; plugin folders (such as form uploads) are not touched.', 'elinweb-unused-media-finder'); ?></p>
         <?php if ((int) ($last['paths'] ?? 0) < 2) : ?>
-            <p><?php esc_html_e('Run the scan again with this version for this section.', 'elin-media-tracker'); ?> <a href="<?php echo esc_url(self::url('scan')); ?>"><?php esc_html_e('Scan', 'elin-media-tracker'); ?></a></p>
+            <p><?php esc_html_e('Run the scan again with this version for this section.', 'elinweb-unused-media-finder'); ?> <a href="<?php echo esc_url(self::url('scan')); ?>"><?php esc_html_e('Scan', 'elinweb-unused-media-finder'); ?></a></p>
             <?php return; ?>
         <?php endif; ?>
         <?php self::scope_notice($last); ?>
         <div id="mtrk-orphans" data-scan="<?php echo (int) ($last['time'] ?? 0); ?>" data-base="<?php echo esc_url(wp_upload_dir(null, false)['baseurl']); ?>" data-root="<?php echo esc_attr(wp_normalize_path(wp_upload_dir(null, false)['basedir'])); ?>">
-            <p><button type="button" class="button mtrk-orphans-check"><?php esc_html_e('Check for extra files', 'elin-media-tracker'); ?></button></p>
+            <p><button type="button" class="button mtrk-orphans-check"><?php esc_html_e('Check for extra files', 'elinweb-unused-media-finder'); ?></button></p>
             <p class="mtrk-orphans-status" aria-live="polite"></p>
             <div class="mtrk-orphans-result" hidden>
                 <div class="mtrk-bulk">
-                    <label><input type="checkbox" class="mtrk-orphans-all"> <?php esc_html_e('Select everything deletable', 'elin-media-tracker'); ?></label>
+                    <label><input type="checkbox" class="mtrk-orphans-all"> <?php esc_html_e('Select everything deletable', 'elinweb-unused-media-finder'); ?></label>
                     <span class="mtrk-count" aria-live="polite"></span>
-                    <button type="button" class="button mtrk-orphans-zip" disabled><?php esc_html_e('Download selected as ZIP', 'elin-media-tracker'); ?></button>
-                    <button type="button" class="button mtrk-danger mtrk-orphans-delete" disabled><?php esc_html_e('Delete permanently', 'elin-media-tracker'); ?></button>
+                    <button type="button" class="button mtrk-orphans-zip" disabled><?php esc_html_e('Download selected as ZIP', 'elinweb-unused-media-finder'); ?></button>
+                    <button type="button" class="button mtrk-danger mtrk-orphans-delete" disabled><?php esc_html_e('Delete permanently', 'elinweb-unused-media-finder'); ?></button>
                 </div>
                 <table class="widefat striped">
                     <thead><tr>
                         <td class="check-column"></td>
-                        <th scope="col"><?php esc_html_e('File', 'elin-media-tracker'); ?></th>
-                        <th scope="col"><?php esc_html_e('Type', 'elin-media-tracker'); ?></th>
-                        <th scope="col"><?php esc_html_e('Size', 'elin-media-tracker'); ?></th>
+                        <th scope="col"><?php esc_html_e('File', 'elinweb-unused-media-finder'); ?></th>
+                        <th scope="col"><?php esc_html_e('Type', 'elinweb-unused-media-finder'); ?></th>
+                        <th scope="col"><?php esc_html_e('Size', 'elinweb-unused-media-finder'); ?></th>
                     </tr></thead>
                     <tbody></tbody>
                 </table>
@@ -512,29 +512,29 @@ final class Page
     private static function tab_sizes(array $last): void
     {
         ?>
-        <p class="description"><?php esc_html_e('Files made for sizes that no theme or plugin registers any more (for example a previous theme\'s sizes). WordPress no longer serves them, but they stay on disk as long as the image exists. A file whose exact URL appears somewhere, or that is the same as an active size, is kept.', 'elin-media-tracker'); ?></p>
+        <p class="description"><?php esc_html_e('Files made for sizes that no theme or plugin registers any more (for example a previous theme\'s sizes). WordPress no longer serves them, but they stay on disk as long as the image exists. A file whose exact URL appears somewhere, or that is the same as an active size, is kept.', 'elinweb-unused-media-finder'); ?></p>
         <?php if (empty($last['paths'])) : ?>
-            <p><?php esc_html_e('Run the scan again with this version for this section.', 'elin-media-tracker'); ?> <a href="<?php echo esc_url(self::url('scan')); ?>"><?php esc_html_e('Scan', 'elin-media-tracker'); ?></a></p>
+            <p><?php esc_html_e('Run the scan again with this version for this section.', 'elinweb-unused-media-finder'); ?> <a href="<?php echo esc_url(self::url('scan')); ?>"><?php esc_html_e('Scan', 'elinweb-unused-media-finder'); ?></a></p>
             <?php return; ?>
         <?php endif; ?>
         <?php self::scope_notice($last); ?>
         <div id="mtrk-sizes" data-scan="<?php echo (int) ($last['time'] ?? 0); ?>">
-            <p><button type="button" class="button mtrk-sizes-check"><?php esc_html_e('Check sizes', 'elin-media-tracker'); ?></button></p>
+            <p><button type="button" class="button mtrk-sizes-check"><?php esc_html_e('Check sizes', 'elinweb-unused-media-finder'); ?></button></p>
             <p class="mtrk-sizes-status" aria-live="polite"></p>
             <div class="mtrk-sizes-result" hidden>
                 <table class="widefat striped mtrk-sizes-table">
                     <thead><tr>
-                        <td class="check-column"><input type="checkbox" class="mtrk-sizes-all" aria-label="<?php esc_attr_e('Select all', 'elin-media-tracker'); ?>"></td>
-                        <th scope="col"><?php esc_html_e('Image size', 'elin-media-tracker'); ?></th>
-                        <th scope="col"><?php esc_html_e('Dimensions', 'elin-media-tracker'); ?></th>
-                        <th scope="col"><?php esc_html_e('Deletable file', 'elin-media-tracker'); ?></th>
-                        <th scope="col"><?php esc_html_e('Size', 'elin-media-tracker'); ?></th>
-                        <th scope="col"><?php esc_html_e('Kept', 'elin-media-tracker'); ?></th>
+                        <td class="check-column"><input type="checkbox" class="mtrk-sizes-all" aria-label="<?php esc_attr_e('Select all', 'elinweb-unused-media-finder'); ?>"></td>
+                        <th scope="col"><?php esc_html_e('Image size', 'elinweb-unused-media-finder'); ?></th>
+                        <th scope="col"><?php esc_html_e('Dimensions', 'elinweb-unused-media-finder'); ?></th>
+                        <th scope="col"><?php esc_html_e('Deletable file', 'elinweb-unused-media-finder'); ?></th>
+                        <th scope="col"><?php esc_html_e('Size', 'elinweb-unused-media-finder'); ?></th>
+                        <th scope="col"><?php esc_html_e('Kept', 'elinweb-unused-media-finder'); ?></th>
                     </tr></thead>
                     <tbody></tbody>
                 </table>
-                <p class="description"><?php esc_html_e('Deleting cannot be undone; take a backup first. The WebP/AVIF versions of the same files are deleted too.', 'elin-media-tracker'); ?></p>
-                <p><button type="button" class="button button-primary mtrk-sizes-clean" disabled><?php esc_html_e('Delete the files of the selected sizes', 'elin-media-tracker'); ?></button></p>
+                <p class="description"><?php esc_html_e('Deleting cannot be undone; take a backup first. The WebP/AVIF versions of the same files are deleted too.', 'elinweb-unused-media-finder'); ?></p>
+                <p><button type="button" class="button button-primary mtrk-sizes-clean" disabled><?php esc_html_e('Delete the files of the selected sizes', 'elinweb-unused-media-finder'); ?></button></p>
             </div>
         </div>
         <?php
@@ -553,7 +553,7 @@ final class Page
                 <?php
                 printf(
                     /* translators: 1: date, 2: scope, 3: duration */
-                    esc_html__('Last scan: %1$s — %2$s — took %3$s', 'elin-media-tracker'),
+                    esc_html__('Last scan: %1$s — %2$s — took %3$s', 'elinweb-unused-media-finder'),
                     esc_html(wp_date(get_option('date_format') . ' H:i', $last['time'])),
                     esc_html(self::scope($last)),
                     esc_html(human_time_diff(0, max(1, $last['secs'])))
@@ -561,41 +561,41 @@ final class Page
                 ?>
             </p>
             <div class="mtrk-cards">
-                <a class="mtrk-card mtrk-card-unused" href="<?php echo esc_url(self::url('unused')); ?>"><strong><?php echo esc_html(number_format_i18n($summary['unused'])); ?></strong><?php esc_html_e('Unreferenced', 'elin-media-tracker'); ?></a>
-                <a class="mtrk-card" href="<?php echo esc_url($library . 'used'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['used'])); ?></strong><?php esc_html_e('Used', 'elin-media-tracker'); ?></a>
-                <a class="mtrk-card" href="<?php echo esc_url($library . 'new'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['new'])); ?></strong><?php esc_html_e('New, unreferenced', 'elin-media-tracker'); ?></a>
+                <a class="mtrk-card mtrk-card-unused" href="<?php echo esc_url(self::url('unused')); ?>"><strong><?php echo esc_html(number_format_i18n($summary['unused'])); ?></strong><?php esc_html_e('Unreferenced', 'elinweb-unused-media-finder'); ?></a>
+                <a class="mtrk-card" href="<?php echo esc_url($library . 'used'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['used'])); ?></strong><?php esc_html_e('Used', 'elinweb-unused-media-finder'); ?></a>
+                <a class="mtrk-card" href="<?php echo esc_url($library . 'new'); ?>"><strong><?php echo esc_html(number_format_i18n($summary['new'])); ?></strong><?php esc_html_e('New, unreferenced', 'elinweb-unused-media-finder'); ?></a>
             </div>
-            <p class="description"><?php esc_html_e('After a scan, changes to posts, meta, terms, users and settings are recorded live; plugin tables and code files are only updated by a full scan.', 'elin-media-tracker'); ?></p>
+            <p class="description"><?php esc_html_e('After a scan, changes to posts, meta, terms, users and settings are recorded live; plugin tables and code files are only updated by a full scan.', 'elinweb-unused-media-finder'); ?></p>
             <?php
         } elseif (!$job) {
-            echo '<p>' . esc_html__('No scan has been run yet.', 'elin-media-tracker') . '</p>';
+            echo '<p>' . esc_html__('No scan has been run yet.', 'elinweb-unused-media-finder') . '</p>';
         }
         ?>
-        <h2><?php esc_html_e('New scan', 'elin-media-tracker'); ?></h2>
+        <h2><?php esc_html_e('New scan', 'elinweb-unused-media-finder'); ?></h2>
         <form id="mtrk-form" <?php echo $job ? 'hidden' : ''; ?>>
             <fieldset>
-                <legend class="screen-reader-text"><?php esc_html_e('Scan scope', 'elin-media-tracker'); ?></legend>
+                <legend class="screen-reader-text"><?php esc_html_e('Scan scope', 'elinweb-unused-media-finder'); ?></legend>
                 <p>
-                    <label><input type="radio" name="code" value="0"> <strong><?php esc_html_e('Database only', 'elin-media-tracker'); ?></strong></label><br>
-                    <span class="description"><?php esc_html_e('Fast. Posts and pages, meta (Elementor, WooCommerce, ACF), settings and widgets, terms, users and comments.', 'elin-media-tracker'); ?></span>
+                    <label><input type="radio" name="code" value="0"> <strong><?php esc_html_e('Database only', 'elinweb-unused-media-finder'); ?></strong></label><br>
+                    <span class="description"><?php esc_html_e('Fast. Posts and pages, meta (Elementor, WooCommerce, ACF), settings and widgets, terms, users and comments.', 'elinweb-unused-media-finder'); ?></span>
                 </p>
                 <p>
-                    <label><input type="radio" name="code" value="1" checked> <strong><?php esc_html_e('Database + source code', 'elin-media-tracker'); ?></strong></label><br>
-                    <span class="description"><?php esc_html_e('Plus the files of the active theme, active plugins, mu-plugins and the CSS/JS files inside the uploads folder (such as Elementor\'s generated CSS). Run this before any deletion.', 'elin-media-tracker'); ?></span>
+                    <label><input type="radio" name="code" value="1" checked> <strong><?php esc_html_e('Database + source code', 'elinweb-unused-media-finder'); ?></strong></label><br>
+                    <span class="description"><?php esc_html_e('Plus the files of the active theme, active plugins, mu-plugins and the CSS/JS files inside the uploads folder (such as Elementor\'s generated CSS). Run this before any deletion.', 'elinweb-unused-media-finder'); ?></span>
                 </p>
                 <p>
-                    <label><input type="checkbox" name="tables" value="1" checked> <?php esc_html_e('Also check plugins\' own tables', 'elin-media-tracker'); ?></label><br>
-                    <span class="description"><?php esc_html_e('Such as sliders and form builders. Log, session and cache tables are skipped.', 'elin-media-tracker'); ?></span>
+                    <label><input type="checkbox" name="tables" value="1" checked> <?php esc_html_e('Also check plugins\' own tables', 'elinweb-unused-media-finder'); ?></label><br>
+                    <span class="description"><?php esc_html_e('Such as sliders and form builders. Log, session and cache tables are skipped.', 'elinweb-unused-media-finder'); ?></span>
                 </p>
             </fieldset>
-            <p class="description"><?php esc_html_e('The previous scan\'s result is cleared. If you close the page mid-scan, it continues from where it stopped next time.', 'elin-media-tracker'); ?></p>
-            <?php submit_button(__('Start scan', 'elin-media-tracker'), 'primary', 'submit', false); ?>
+            <p class="description"><?php esc_html_e('The previous scan\'s result is cleared. If you close the page mid-scan, it continues from where it stopped next time.', 'elinweb-unused-media-finder'); ?></p>
+            <?php submit_button(__('Start scan', 'elinweb-unused-media-finder'), 'primary', 'submit', false); ?>
         </form>
         <div id="mtrk-progress" <?php echo $job ? '' : 'hidden'; ?> data-running="<?php echo esc_attr(wp_json_encode($job ? Scanner::progress($job) : null)); ?>">
             <progress max="100" value="0"></progress>
             <p class="mtrk-label" aria-live="polite"></p>
-            <button type="button" class="button mtrk-cancel"><?php esc_html_e('Stop scan', 'elin-media-tracker'); ?></button>
-            <button type="button" class="button button-primary mtrk-retry" hidden><?php esc_html_e('Continue', 'elin-media-tracker'); ?></button>
+            <button type="button" class="button mtrk-cancel"><?php esc_html_e('Stop scan', 'elinweb-unused-media-finder'); ?></button>
+            <button type="button" class="button button-primary mtrk-retry" hidden><?php esc_html_e('Continue', 'elinweb-unused-media-finder'); ?></button>
         </div>
         <?php
     }
@@ -605,9 +605,9 @@ final class Page
         if (!$last['code']) {
             printf(
                 '<div class="notice notice-warning inline"><p>%s <a href="%s">%s</a></p></div>',
-                esc_html__('The last scan was "database only"; URLs written directly in theme or plugin code were not checked. Run a "database + source code" scan before deleting.', 'elin-media-tracker'),
+                esc_html__('The last scan was "database only"; URLs written directly in theme or plugin code were not checked. Run a "database + source code" scan before deleting.', 'elinweb-unused-media-finder'),
                 esc_url(self::url('scan')),
-                esc_html__('Scan', 'elin-media-tracker')
+                esc_html__('Scan', 'elinweb-unused-media-finder')
             );
         }
     }
@@ -642,41 +642,41 @@ final class Page
         </div>
         <div class="mtrk-preview-info">
         <dl class="mtrk-details">
-            <dt><?php esc_html_e('Status', 'elin-media-tracker'); ?></dt>
-            <dd><?php echo Admin::badge($id, $count, false); // phpcs:ignore WordPress.Security.EscapeOutput ?></dd>
-            <dt><?php esc_html_e('File', 'elin-media-tracker'); ?></dt>
+            <dt><?php esc_html_e('Status', 'elinweb-unused-media-finder'); ?></dt>
+            <dd><?php echo wp_kses(Admin::badge($id, $count, false), Admin::allowed_html()); ?></dd>
+            <dt><?php esc_html_e('File', 'elinweb-unused-media-finder'); ?></dt>
             <dd><bdi dir="ltr"><?php echo esc_html((string) get_post_meta($id, '_wp_attached_file', true)); ?></bdi></dd>
-            <dt><?php esc_html_e('Size on disk', 'elin-media-tracker'); ?></dt>
-            <dd><?php echo esc_html(size_format(Cleanup::bytes($id, $meta)) ?: '—'); ?><?php echo !empty($meta['sizes']) ? esc_html(sprintf(/* translators: %s: number of sizes */ __(' (with %s sizes)', 'elin-media-tracker'), number_format_i18n(count($meta['sizes'])))) : ''; ?></dd>
+            <dt><?php esc_html_e('Size on disk', 'elinweb-unused-media-finder'); ?></dt>
+            <dd><?php echo esc_html(size_format(Cleanup::bytes($id, $meta)) ?: '—'); ?><?php echo !empty($meta['sizes']) ? esc_html(sprintf(/* translators: %s: number of sizes */ __(' (with %s sizes)', 'elinweb-unused-media-finder'), number_format_i18n(count($meta['sizes'])))) : ''; ?></dd>
             <?php if (!empty($meta['width'])) : ?>
-                <dt><?php esc_html_e('Dimensions', 'elin-media-tracker'); ?></dt>
+                <dt><?php esc_html_e('Dimensions', 'elinweb-unused-media-finder'); ?></dt>
                 <dd><bdi dir="ltr"><?php echo (int) $meta['width'] . '×' . (int) $meta['height']; ?></bdi></dd>
             <?php endif; ?>
-            <dt><?php esc_html_e('Uploaded', 'elin-media-tracker'); ?></dt>
+            <dt><?php esc_html_e('Uploaded', 'elinweb-unused-media-finder'); ?></dt>
             <dd><?php echo esc_html(get_the_date('', $id)); ?></dd>
             <?php if ($parent) : ?>
-                <dt><?php esc_html_e('Uploaded to', 'elin-media-tracker'); ?></dt>
-                <dd><a href="<?php echo esc_url((string) get_edit_post_link($parent, 'raw')); ?>"><?php echo esc_html(get_the_title($parent) ?: "#$parent"); ?></a> <span class="mtrk-note"><?php esc_html_e('(this is only where it was uploaded, not a use)', 'elin-media-tracker'); ?></span></dd>
+                <dt><?php esc_html_e('Uploaded to', 'elinweb-unused-media-finder'); ?></dt>
+                <dd><a href="<?php echo esc_url((string) get_edit_post_link($parent, 'raw')); ?>"><?php echo esc_html(get_the_title($parent) ?: "#$parent"); ?></a> <span class="mtrk-note"><?php esc_html_e('(this is only where it was uploaded, not a use)', 'elinweb-unused-media-finder'); ?></span></dd>
             <?php endif; ?>
             <?php if ($twins) : ?>
-                <dt><?php esc_html_e('Shared file', 'elin-media-tracker'); ?></dt>
-                <dd><?php echo esc_html(sprintf(/* translators: %s: attachment ids */ __('With attachment %s; they are moved or deleted together.', 'elin-media-tracker'), '#' . implode(wp_get_list_item_separator() . '#', $twins))); ?></dd>
+                <dt><?php esc_html_e('Shared file', 'elinweb-unused-media-finder'); ?></dt>
+                <dd><?php echo esc_html(sprintf(/* translators: %s: attachment ids */ __('With attachment %s; they are moved or deleted together.', 'elinweb-unused-media-finder'), '#' . implode(wp_get_list_item_separator() . '#', $twins))); ?></dd>
             <?php endif; ?>
         </dl>
         <div class="mtrk-actions">
             <?php if ($quarantined) : ?>
-                <button type="button" class="button button-primary" data-act="restore" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Restore', 'elin-media-tracker'); ?></button>
-                <button type="button" class="button mtrk-danger" data-act="delete" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Delete permanently', 'elin-media-tracker'); ?></button>
+                <button type="button" class="button button-primary" data-act="restore" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Restore', 'elinweb-unused-media-finder'); ?></button>
+                <button type="button" class="button mtrk-danger" data-act="delete" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Delete permanently', 'elinweb-unused-media-finder'); ?></button>
             <?php elseif ($kept) : ?>
-                <button type="button" class="button" data-act="unkeep" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Remove the keep mark', 'elin-media-tracker'); ?></button>
+                <button type="button" class="button" data-act="unkeep" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Remove the keep mark', 'elinweb-unused-media-finder'); ?></button>
             <?php elseif (!$count && Scanner::last()) : ?>
-                <button type="button" class="button button-primary" data-act="quarantine" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Quarantine', 'elin-media-tracker'); ?></button>
-                <button type="button" class="button" data-act="keep" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Keep', 'elin-media-tracker'); ?></button>
-                <button type="button" class="button mtrk-danger" data-act="delete" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Delete permanently', 'elin-media-tracker'); ?></button>
+                <button type="button" class="button button-primary" data-act="quarantine" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Quarantine', 'elinweb-unused-media-finder'); ?></button>
+                <button type="button" class="button" data-act="keep" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Keep', 'elinweb-unused-media-finder'); ?></button>
+                <button type="button" class="button mtrk-danger" data-act="delete" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Delete permanently', 'elinweb-unused-media-finder'); ?></button>
             <?php else : ?>
-                <button type="button" class="button mtrk-open" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Where it is used', 'elin-media-tracker'); ?></button>
+                <button type="button" class="button mtrk-open" data-id="<?php echo (int) $id; ?>"><?php esc_html_e('Where it is used', 'elinweb-unused-media-finder'); ?></button>
             <?php endif; ?>
-            <a class="button-link" href="<?php echo esc_url((string) get_edit_post_link($id, 'raw')); ?>"><?php esc_html_e('Edit media', 'elin-media-tracker'); ?></a>
+            <a class="button-link" href="<?php echo esc_url((string) get_edit_post_link($id, 'raw')); ?>"><?php esc_html_e('Edit media', 'elinweb-unused-media-finder'); ?></a>
         </div>
         </div>
         </div>
@@ -701,19 +701,19 @@ final class Page
             Scanner::cancel();
             wp_send_json_success();
         }
-        wp_send_json_error(__('Invalid request.', 'elin-media-tracker'), 400);
+        wp_send_json_error(__('Invalid request.', 'elinweb-unused-media-finder'), 400);
     }
 
     public static function ajax_sizes(): void
     {
         Admin::guard();
         if (empty(Scanner::last()['paths'])) {
-            wp_send_json_error(__('Run a full scan first.', 'elin-media-tracker'), 409);
+            wp_send_json_error(__('Run a full scan first.', 'elinweb-unused-media-finder'), 409);
         }
         $do = sanitize_key(wp_unslash($_POST['do'] ?? ''));
         $names = array_map('sanitize_text_field', (array) wp_unslash($_POST['names'] ?? []));
         if ($do === 'clean' && !$names) {
-            wp_send_json_error(__('No size selected.', 'elin-media-tracker'), 400);
+            wp_send_json_error(__('No size selected.', 'elinweb-unused-media-finder'), 400);
         }
         if ($do === 'clean' && !Scanner::trusted()) {
             wp_send_json_error(self::suspect_text(), 409);
@@ -725,7 +725,7 @@ final class Page
     {
         Admin::guard();
         if ((int) (Scanner::last()['paths'] ?? 0) < 2) {
-            wp_send_json_error(__('Run the scan again with this version.', 'elin-media-tracker'), 409);
+            wp_send_json_error(__('Run the scan again with this version.', 'elinweb-unused-media-finder'), 409);
         }
         if (sanitize_key(wp_unslash($_POST['do'] ?? '')) === 'delete') {
             if (!Scanner::trusted()) {
@@ -760,7 +760,7 @@ final class Page
     {
         Admin::guard();
         if (!empty($_POST['start']) && (int) (Scanner::last()['paths'] ?? 0) < 2 && !empty($_POST['extras'])) {
-            wp_send_json_error(__('Run the scan again with this version.', 'elin-media-tracker'), 409); // extra files need the exact-paths index
+            wp_send_json_error(__('Run the scan again with this version.', 'elinweb-unused-media-finder'), 409); // extra files need the exact-paths index
         }
         wp_send_json_success(Duplicates::step(!empty($_POST['start']), !empty($_POST['extras'])));
     }
@@ -771,7 +771,7 @@ final class Page
         $act = sanitize_key(wp_unslash($_POST['act'] ?? ''));
         $ids = array_filter(array_map('absint', (array) ($_POST['ids'] ?? [])));
         if (!$ids) {
-            wp_send_json_error(__('Nothing selected.', 'elin-media-tracker'), 400);
+            wp_send_json_error(__('Nothing selected.', 'elinweb-unused-media-finder'), 400);
         }
         if (in_array($act, ['quarantine', 'delete'], true) && !Scanner::trusted()) {
             wp_send_json_error(self::suspect_text(), 409);
@@ -794,7 +794,7 @@ final class Page
                 $done = Cleanup::keep($ids, $act === 'keep');
                 break;
             default:
-                wp_send_json_error(__('Invalid request.', 'elin-media-tracker'), 400);
+                wp_send_json_error(__('Invalid request.', 'elinweb-unused-media-finder'), 400);
         }
         wp_send_json_success(['done' => $done, 'bytes' => $bytes]);
     }
@@ -804,7 +804,7 @@ final class Page
         Admin::guard();
         $id = absint($_POST['id'] ?? 0);
         if (get_post_type($id) !== 'attachment') {
-            wp_send_json_error(__('Media not found.', 'elin-media-tracker'), 404);
+            wp_send_json_error(__('Media not found.', 'elinweb-unused-media-finder'), 404);
         }
         wp_send_json_success(['html' => self::preview_html($id), 'title' => get_the_title($id) ?: wp_basename((string) get_attached_file($id))]);
     }

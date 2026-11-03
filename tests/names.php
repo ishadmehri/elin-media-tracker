@@ -3,7 +3,7 @@
  * Non-Latin file names: real uploads (media_handle_sideload, so WordPress sanitizes and NFC-normalizes the name
  * as it does for the upload form), each referenced in exactly one encoding form. Truncates scan results.
  *
- * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/names.php
+ * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/names.php
  */
 
 defined('ABSPATH') || exit;

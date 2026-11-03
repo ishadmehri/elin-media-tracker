@@ -23,5 +23,5 @@ Ideas and open work, not promises. Move an item to the changelog in `readme.txt`
 ## Ideas, not decided / ایده‌های تصمیم‌نگرفته
 
 - A button on the Duplicates tab to point every reference at one copy, so duplicates can be deleted when all copies are in use. / دکمه‌ی انتقال ارجاع‌ها به یک نسخه در تب تکراری‌ها.
-- Pick "all but one" copy in each duplicate group automatically, and a `wp elin-media-tracker duplicates` command. / انتخاب خودکار «همه به‌جز یکی» در هر گروه تکراری و دستور WP-CLI برای تکراری‌ها.
+- Pick "all but one" copy in each duplicate group automatically, and a `wp elinweb-unused-media-finder duplicates` command. / انتخاب خودکار «همه به‌جز یکی» در هر گروه تکراری و دستور WP-CLI برای تکراری‌ها.
 - Warn before selecting every copy of a duplicate group. / هشدار قبل از انتخاب همه‌ی نسخه‌های یک گروه تکراری.

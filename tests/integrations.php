@@ -5,7 +5,7 @@
  * Content is created through each plugin's own API, so what gets scanned is the plugin's real storage format.
  * Missing plugins are skipped. It truncates previous scan results.
  *
- * Run: wp eval-file wp-content/plugins/elin-media-tracker/tests/integrations.php
+ * Run: wp eval-file wp-content/plugins/elinweb-unused-media-finder/tests/integrations.php
  */
 
 defined('ABSPATH') || exit;

@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaTracker;
+namespace Elinweb\UnusedMediaFinder;
 
 defined('ABSPATH') || exit;
 
@@ -132,12 +132,19 @@ final class Cleanup
             if (!is_array($q)) {
                 continue;
             }
+            $moved_back = true;
             foreach ((array) $q['files'] as $rel) {
                 if (!file_exists("$base/$rel")) { // never overwrite a file uploaded since under the same name
                     wp_mkdir_p(dirname("$base/$rel"));
-                    @rename("$dir/$rel", "$base/$rel"); // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- see above
+                    if (!@rename("$dir/$rel", "$base/$rel")) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- see above
+                        $moved_back = false; // still in quarantine: keep it recorded there, so nothing is lost
+                        continue;
+                    }
                 }
                 unset($map[$rel]);
+            }
+            if (!$moved_back) {
+                continue;
             }
             foreach ($group as $id) {
                 delete_post_meta($id, self::META);
