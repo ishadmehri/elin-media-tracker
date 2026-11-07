@@ -4,7 +4,7 @@ Tags: media library, unused media, duplicate images, cleanup, storage
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.9.3
+Stable tag: 0.9.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,6 +80,11 @@ Open "Where it is used". Tables of plugins you removed long ago and caches (for 
 5. Scan: a full scan of the database, plugin tables and source code, with progress.
 
 == Changelog ==
+
+= 0.9.4 =
+* The per-page and view choices on the plugin's screen are only remembered when they come from its own filter form (nonce plus capability check); a link without the nonce shows the list as asked but saves nothing.
+* Every AJAX handler checks its nonce and the user's capability itself.
+* Page links of the lists no longer carry the screen nonce or repeat the last action's notice.
 
 = 0.9.3 =
 * Renamed from "Elin Media Tracker" to "Elinweb Unused Media Finder". The WP-CLI command is now `wp elinweb-unused-media-finder`.

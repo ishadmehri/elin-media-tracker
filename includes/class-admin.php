@@ -4,8 +4,6 @@ namespace ElinwebUnusedMediaFinder;
 
 defined('ABSPATH') || exit;
 
-// phpcs:disable WordPress.Security.NonceVerification -- Every AJAX handler starts with Admin::guard() (check_ajax_referer plus a capability check); the $_GET values read on screens only pick a tab, page or filter and change nothing.
-
 /** Media library integration (usage column, filter, modal) and the assets shared with the plugin page. */
 final class Admin
 {
@@ -120,7 +118,7 @@ final class Admin
 
     public static function ajax_usage(): void
     {
-        self::guard();
+        self::guard(check_ajax_referer('mtrk', false, false));
         $id = absint($_POST['id'] ?? 0);
         if (get_post_type($id) !== 'attachment') {
             wp_send_json_error(__('Media not found.', 'elinweb-unused-media-finder'), 404);
@@ -132,9 +130,10 @@ final class Admin
         }
     }
 
-    public static function guard(): void
+    /** Every AJAX handler starts with self::guard(check_ajax_referer('mtrk', false, false)): stops unless the nonce is valid and the user may manage media. */
+    public static function guard($nonce): void
     {
-        if (!check_ajax_referer('mtrk', false, false)) {
+        if (!$nonce) {
             wp_send_json_error(__('Your session has expired; reload the page.', 'elinweb-unused-media-finder'), 403);
         }
         if (!current_user_can(Scanner::CAP)) {
@@ -378,7 +377,7 @@ final class Admin
         if ($post_type !== 'attachment' || !current_user_can(Scanner::CAP)) {
             return;
         }
-        $current = sanitize_key(wp_unslash($_GET['mtrk_usage'] ?? ''));
+        $current = sanitize_key(wp_unslash($_GET['mtrk_usage'] ?? '')); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only marks the selected option of the list filter
         $options = [
             '' => __('Usage status: all', 'elinweb-unused-media-finder'),
             'used' => __('Used', 'elinweb-unused-media-finder'),
@@ -395,9 +394,11 @@ final class Admin
     public static function filter_query(\WP_Query $q): void
     {
         global $pagenow;
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- a Media Library list filter, like core's own filters there; it only narrows what is shown
         if ($q->is_main_query() && $pagenow === 'upload.php' && !empty($_GET['mtrk_usage']) && current_user_can(Scanner::CAP)) {
             $q->set('mtrk_usage', sanitize_key(wp_unslash($_GET['mtrk_usage'])));
         }
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
     }
 
     /** List view sorted by the usage column: fewest places first (ascending), so unreferenced media leads. */
@@ -416,7 +417,7 @@ final class Admin
     /** Grid view: WordPress drops unknown query args before this filter, so the usage filter comes from the request. */
     public static function grid_query(array $query): array
     {
-        $usage = sanitize_key(wp_unslash($_REQUEST['query']['mtrk_usage'] ?? ''));
+        $usage = sanitize_key(wp_unslash($_REQUEST['query']['mtrk_usage'] ?? '')); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a filter of core's query-attachments request; it only narrows what is shown
         if ($usage && current_user_can(Scanner::CAP)) {
             $query['mtrk_usage'] = $usage;
         }

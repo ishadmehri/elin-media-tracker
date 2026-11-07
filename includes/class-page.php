@@ -4,8 +4,6 @@ namespace ElinwebUnusedMediaFinder;
 
 defined('ABSPATH') || exit;
 
-// phpcs:disable WordPress.Security.NonceVerification -- Every AJAX handler starts with Admin::guard() (check_ajax_referer plus a capability check); the $_GET values read on screens only pick a tab, page or filter and change nothing.
-
 /** The plugin's own screen (Media → Unused Media Finder), in tabs. Unreferenced media comes first. */
 final class Page
 {
@@ -57,7 +55,7 @@ final class Page
             'sizes' => __('Unregistered sizes', 'elinweb-unused-media-finder'),
             'scan' => __('Scan', 'elinweb-unused-media-finder'),
         ];
-        $tab = sanitize_key(wp_unslash($_GET['tab'] ?? ''));
+        $tab = sanitize_key(wp_unslash($_GET['tab'] ?? '')); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only picks which tab to show
         if (!isset($tabs[$tab])) {
             $tab = $last ? 'unused' : 'scan';
         }
@@ -92,9 +90,11 @@ final class Page
     /** After an action the page reloads with ?done=act&n=&b=; say what happened. */
     private static function done_notice(): void
     {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- only picks which notice to print; the action itself ran over a nonce-checked AJAX call
         $act = sanitize_key(wp_unslash($_GET['done'] ?? ''));
         $n = absint($_GET['n'] ?? 0);
         $bytes = absint($_GET['b'] ?? 0);
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         $messages = [
             /* translators: %s: number of media items */
             'quarantine' => __('%s media moved to quarantine.', 'elinweb-unused-media-finder'),
@@ -122,9 +122,11 @@ final class Page
 
     private static function tab_unused(array $last): void
     {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- display filters (type, order, page number) that change nothing; they must keep working in pagination links and bookmarks
         $type = sanitize_key(wp_unslash($_GET['type'] ?? ''));
         $order = sanitize_key(wp_unslash($_GET['order'] ?? 'largest'));
         $paged = max(1, absint($_GET['paged'] ?? 1));
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         [$per, $view] = self::screen();
         $list = Cleanup::unused($paged, $per, $type, $order);
         ?>
@@ -194,23 +196,25 @@ final class Page
     }
 
     /**
-     * Items per page and grid/list view: from the request when given (and then remembered for this user, like
-     * WordPress screen options), otherwise the user's last choice.
+     * Items per page and grid/list view: from the request when given, otherwise the user's last choice. Only the
+     * filter form's own submit (valid nonce) remembers them for this user; a link or a bookmark without it is shown
+     * as asked but saves nothing.
      * @return array{0:int,1:string}
      */
     private static function screen(): array
     {
+        $save = isset($_GET['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'mtrk_screen') && current_user_can(Scanner::CAP);
         $user = get_current_user_id();
         $per = absint($_GET['per_page'] ?? 0);
         if (in_array($per, self::PER_PAGE_CHOICES, true)) {
-            update_user_meta($user, 'mtrk_per_page', $per);
+            $save && update_user_meta($user, 'mtrk_per_page', $per);
         } else {
             $per = (int) get_user_meta($user, 'mtrk_per_page', true);
             $per = in_array($per, self::PER_PAGE_CHOICES, true) ? $per : self::PER_PAGE;
         }
         $view = sanitize_key(wp_unslash($_GET['view'] ?? ''));
         if (in_array($view, ['grid', 'list'], true)) {
-            update_user_meta($user, 'mtrk_view', $view);
+            $save && update_user_meta($user, 'mtrk_view', $view);
         } else {
             $view = get_user_meta($user, 'mtrk_view', true) === 'list' ? 'list' : 'grid';
         }
@@ -220,6 +224,7 @@ final class Page
     /** $view '' leaves the view choice out (lists that have only one layout). */
     private static function screen_fields(int $per, string $view): void
     {
+        wp_nonce_field('mtrk_screen', '_wpnonce', false);
         ?>
         <?php if ($view !== '') : ?>
             <label for="mtrk-view" class="screen-reader-text"><?php esc_html_e('View mode', 'elinweb-unused-media-finder'); ?></label>
@@ -241,12 +246,17 @@ final class Page
     {
         $pages = (int) ceil($total / max(1, $per));
         if ($pages > 1) {
+            // paginate_links() copies every current query arg back into each link: drop the notice and the screen nonce
+            // (page links never re-save the screen choice).
+            $strip = fn($link) => remove_query_arg(['done', 'n', 'b', '_wpnonce'], $link);
+            add_filter('paginate_links', $strip);
             echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post((string) paginate_links([
-                'base' => add_query_arg('paged', '%#%', remove_query_arg(['done', 'n', 'b'])),
+                'base' => add_query_arg('paged', '%#%'),
                 'format' => '',
                 'current' => $paged,
                 'total' => $pages,
             ])) . '</div></div>';
+            remove_filter('paginate_links', $strip);
         }
     }
 
@@ -320,7 +330,7 @@ final class Page
         if (!$checked) {
             return;
         }
-        $paged = max(1, absint($_GET['paged'] ?? 1));
+        $paged = max(1, absint($_GET['paged'] ?? 1)); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only the page number of the list
         [$per] = self::screen();
         $list = Duplicates::groups($paged, $per);
         ?>
@@ -688,7 +698,7 @@ final class Page
 
     public static function ajax_scan(): void
     {
-        Admin::guard();
+        Admin::guard(check_ajax_referer('mtrk', false, false));
         $do = sanitize_key(wp_unslash($_POST['do'] ?? ''));
         if ($do === 'start') {
             $started = Scanner::start(!empty($_POST['code']), !empty($_POST['tables']));
@@ -706,7 +716,7 @@ final class Page
 
     public static function ajax_sizes(): void
     {
-        Admin::guard();
+        Admin::guard(check_ajax_referer('mtrk', false, false));
         if (empty(Scanner::last()['paths'])) {
             wp_send_json_error(__('Run a full scan first.', 'elinweb-unused-media-finder'), 409);
         }
@@ -723,7 +733,7 @@ final class Page
 
     public static function ajax_orphans(): void
     {
-        Admin::guard();
+        Admin::guard(check_ajax_referer('mtrk', false, false));
         if ((int) (Scanner::last()['paths'] ?? 0) < 2) {
             wp_send_json_error(__('Run the scan again with this version.', 'elinweb-unused-media-finder'), 409);
         }
@@ -741,7 +751,7 @@ final class Page
     /** Sends the ZIP of the selected extra files as a download (or a JSON error the page shows). */
     public static function ajax_zip(): void
     {
-        Admin::guard();
+        Admin::guard(check_ajax_referer('mtrk', false, false));
         $paths = json_decode((string) wp_unslash($_POST['paths'] ?? '[]'), true); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON list; each path is checked against a fresh listing of its folder
         $zip = Orphans::zip(is_array($paths) ? array_map('strval', $paths) : []);
         if (isset($zip['error'])) {
@@ -758,7 +768,7 @@ final class Page
 
     public static function ajax_dups(): void
     {
-        Admin::guard();
+        Admin::guard(check_ajax_referer('mtrk', false, false));
         if (!empty($_POST['start']) && (int) (Scanner::last()['paths'] ?? 0) < 2 && !empty($_POST['extras'])) {
             wp_send_json_error(__('Run the scan again with this version.', 'elinweb-unused-media-finder'), 409); // extra files need the exact-paths index
         }
@@ -767,7 +777,7 @@ final class Page
 
     public static function ajax_act(): void
     {
-        Admin::guard();
+        Admin::guard(check_ajax_referer('mtrk', false, false));
         $act = sanitize_key(wp_unslash($_POST['act'] ?? ''));
         $ids = array_filter(array_map('absint', (array) ($_POST['ids'] ?? [])));
         if (!$ids) {
@@ -801,7 +811,7 @@ final class Page
 
     public static function ajax_preview(): void
     {
-        Admin::guard();
+        Admin::guard(check_ajax_referer('mtrk', false, false));
         $id = absint($_POST['id'] ?? 0);
         if (get_post_type($id) !== 'attachment') {
             wp_send_json_error(__('Media not found.', 'elinweb-unused-media-finder'), 404);
